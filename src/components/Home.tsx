@@ -1,9 +1,13 @@
-import { Button, Modal, Paper, Typography, TextField, FormControlLabel, Switch, CircularProgress, Input } from '@material-ui/core';
+import { Button, Modal, Paper, Typography, TextField, FormControlLabel, Switch, CircularProgress, AppBar, Toolbar, IconButton } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
+import DeleteIcon from '@material-ui/icons/Delete';
+import SaveIcon from '@material-ui/icons/Save';
+import PhotoCamera from '@material-ui/icons/PhotoCamera';
 import { inject, observer } from 'mobx-react';
 import * as React from 'react';
 import { HomeState } from 'src/stores/HomeStore';
 import CanvasContainer, { ContainerProps } from './ImageCanvas';
+import { SpeedDial, SpeedDialIcon, SpeedDialAction } from '@material-ui/lab';
 
 interface IHomeProps {
     home?: HomeState;
@@ -12,6 +16,12 @@ interface IHomeProps {
 @inject('home')
 @observer
 export default class Home extends React.Component<IHomeProps> {
+    private actions = [
+        { icon: <AddIcon />, name: 'Add Image' },
+        { icon: <SaveIcon />, name: 'Save Image' },
+        { icon: <DeleteIcon />, name: 'Delete All' },
+    ]
+
     public render() {
         const { home } = this.props;
 
@@ -22,11 +32,17 @@ export default class Home extends React.Component<IHomeProps> {
         return (
             <div style={{
                 position: 'relative',
-                margin: '16px',
                 textAlign: 'center',
                 overflow: 'hidden',
                 minHeight: '100vh'
             }}>
+                <AppBar position="static" color="primary">
+                    <Toolbar>
+                        <Typography variant="h6" color="inherit">
+                            Multi-size Image Editor
+                    </Typography>
+                    </Toolbar>
+                </AppBar>
                 {home.imageCanvas.map((container: ContainerProps, index: number) => (
                     <CanvasContainer
                         key={index}
@@ -36,18 +52,27 @@ export default class Home extends React.Component<IHomeProps> {
                         isSeam={container.isSeam}
                     />
                 ))}
-                <Button
+                <SpeedDial
                     style={{
                         bottom: '24px',
                         position: 'fixed',
                         right: '24px',
                     }}
-                    variant="fab"
-                    color="primary"
-                    onClick={home.toggleModalOpen}
+                    ariaLabel="File"
+                    icon={<SpeedDialIcon />}
+                    onClick={home.toggleDialOpen}
+                    open={home.isDialOpen}
                 >
-                    <AddIcon />
-                </Button>
+                    {this.actions.map(action => (
+                        <SpeedDialAction
+                            key={action.name}
+                            icon={action.icon}
+                            tooltipTitle={action.name}
+                            tooltipOpen
+                            onClick={() => this.onClickDialAction(action.name)}
+                        />
+                    ))}
+                </SpeedDial>
                 <Modal
                     open={home.isModalOpen}
                     onClose={home.toggleModalOpen}
@@ -80,8 +105,13 @@ export default class Home extends React.Component<IHomeProps> {
                                 label="Initial Seam"
                             />
                             <div style={{ overflow: 'hidden', flexDirection: 'row' }}>
-                                {home.fileName ? <Typography variant="caption">{home.fileName!}</Typography> :
-                                    <Input type="file" onChange={this.onClickOpenButton}></Input>}
+                                <input accept="image/*" style={{ display: 'none' }} id="icon-button-file" type="file" onChange={this.onClickOpenButton} />
+                                <label htmlFor="icon-button-file">
+                                    <IconButton color="primary" component="span">
+                                        <PhotoCamera />
+                                    </IconButton>
+                                </label>
+                                <Typography variant="caption">{home.fileName ? home.fileName! : 'Select a Photo.'}</Typography>
                             </div>
                         </div>
                         <div>
@@ -160,5 +190,20 @@ export default class Home extends React.Component<IHomeProps> {
             throw new Error('no props');
         }
         home.onClickOpenButton(URL.createObjectURL(files[0]));
+    }
+
+    public onClickDialAction = (type: string) => {
+        const { home } = this.props;
+        if (!home) {
+            throw new Error('no props');
+        }
+
+        if (type === this.actions[0].name) {        // Add Image
+            home.toggleModalOpen();
+        } else if (type === this.actions[1].name) { // Save Image
+            /** TODO */
+        } else if (type === this.actions[2].name) { // Delete Image
+            home.onClickDeleteAllButton();
+        }
     }
 }

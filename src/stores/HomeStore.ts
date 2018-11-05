@@ -15,6 +15,8 @@ export class HomeState {
     @observable
     public isLoading: boolean = false;
     @observable
+    public isDialOpen: boolean = false;
+    @observable
     public addWidth: number = 0;
     @observable
     public addHeight: number = 0;
@@ -32,6 +34,11 @@ export class HomeState {
     @action.bound
     public toggleLoading() {
         this.isLoading = !this.isLoading;
+    }
+
+    @action.bound
+    public toggleDialOpen() {
+        this.isDialOpen = !this.isDialOpen;
     }
 
     @action.bound
@@ -64,5 +71,10 @@ export class HomeState {
     @action.bound
     public onClickOpenButton(value: string) {
         this.fileName = value;
+    }
+
+    @action.bound
+    public onClickDeleteAllButton() {
+        this.imageCanvas = [];
     }
 }
