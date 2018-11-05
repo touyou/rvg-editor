@@ -1,20 +1,22 @@
 import * as React from 'react';
 import './App.css';
-import Home from './components/Home';
-import { HomeState } from './stores/HomeStore';
+import { HomeStore } from './stores/HomeStore';
 import { Provider } from 'mobx-react';
 import ImageCanvasStore from './stores/ImageCanvasStore';
+import SplitContainer from './components/SplitContainer';
+import { AppStore } from './stores/AppStore';
 
 const store = {
-  home: new HomeState(),
-  imageCanvas: new Array<ImageCanvasStore>(),
+  app: new AppStore(),
+  home: new HomeStore(),
+  images: new ImageCanvasStore(),
 };
 
 class App extends React.Component {
   public render() {
     return (
       <Provider {...store}>
-        <Home />
+        <SplitContainer />
       </Provider>
     );
   }

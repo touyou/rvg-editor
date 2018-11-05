@@ -1,78 +1,42 @@
-import { Button, Modal, Paper, Typography, TextField, FormControlLabel, Switch, CircularProgress, AppBar, Toolbar, IconButton } from '@material-ui/core';
-import AddIcon from '@material-ui/icons/Add';
-import DeleteIcon from '@material-ui/icons/Delete';
-import SaveIcon from '@material-ui/icons/Save';
+import { Button, Modal, Paper, Typography, TextField, FormControlLabel, Switch, CircularProgress, IconButton } from '@material-ui/core';
 import PhotoCamera from '@material-ui/icons/PhotoCamera';
 import { inject, observer } from 'mobx-react';
 import * as React from 'react';
-import { HomeState } from 'src/stores/HomeStore';
+import { HomeStore } from 'src/stores/HomeStore';
 import CanvasContainer, { ContainerProps } from './ImageCanvas';
-import { SpeedDial, SpeedDialIcon, SpeedDialAction } from '@material-ui/lab';
+import { AppStore, WindowMode } from 'src/stores/AppStore';
 
 interface IHomeProps {
-    home?: HomeState;
+    home?: HomeStore;
+    app?: AppStore;
 }
 
-@inject('home')
+@inject('home', 'app')
 @observer
 export default class Home extends React.Component<IHomeProps> {
-    private actions = [
-        { icon: <AddIcon />, name: 'Add Image' },
-        { icon: <SaveIcon />, name: 'Save Image' },
-        { icon: <DeleteIcon />, name: 'Delete All' },
-    ]
 
     public render() {
-        const { home } = this.props;
-
-        if (!home) {
-            throw new Error('no props');
-        }
+        const home = this.props.home as HomeStore;
+        const app = this.props.app as AppStore;
 
         return (
             <div style={{
-                position: 'relative',
+                zIndex: -10,
                 textAlign: 'center',
                 overflow: 'hidden',
-                minHeight: '100vh'
+                width: this.getEditorWidth(app.windowMode),
             }}>
-                <AppBar position="static" color="primary">
-                    <Toolbar>
-                        <Typography variant="h6" color="inherit">
-                            Multi-size Image Editor
-                    </Typography>
-                    </Toolbar>
-                </AppBar>
-                {home.imageCanvas.map((container: ContainerProps, index: number) => (
-                    <CanvasContainer
-                        key={index}
-                        image={container.image}
-                        width={container.width}
-                        height={container.height}
-                        isSeam={container.isSeam}
-                    />
-                ))}
-                <SpeedDial
-                    style={{
-                        bottom: '24px',
-                        position: 'fixed',
-                        right: '24px',
-                    }}
-                    ariaLabel="File"
-                    icon={<SpeedDialIcon />}
-                    onClick={home.toggleDialOpen}
-                    open={home.isDialOpen}
-                >
-                    {this.actions.map(action => (
-                        <SpeedDialAction
-                            key={action.name}
-                            icon={action.icon}
-                            tooltipTitle={action.name}
-                            tooltipOpen
-                            onClick={() => this.onClickDialAction(action.name)}
+                <div>
+                    {home.imageCanvas.map((container: ContainerProps, index: number) => (
+                        <CanvasContainer
+                            key={index}
+                            image={container.image}
+                            width={container.width}
+                            height={container.height}
+                            isSeam={container.isSeam}
                         />
                     ))}
-                </SpeedDial>
+                </div>
                 <Modal
                     open={home.isModalOpen}
                     onClose={home.toggleModalOpen}
@@ -139,10 +103,7 @@ export default class Home extends React.Component<IHomeProps> {
         if (isNaN(newWidth)) {
             return;
         }
-        const { home } = this.props;
-        if (!home) {
-            throw new Error('no props');
-        }
+        const home = this.props.home as HomeStore;
         home.onChangeWidth(newWidth);
     }
 
@@ -151,18 +112,12 @@ export default class Home extends React.Component<IHomeProps> {
         if (isNaN(newHeight)) {
             return;
         }
-        const { home } = this.props;
-        if (!home) {
-            throw new Error('no props');
-        }
+        const home = this.props.home as HomeStore;
         home.onChangeHeight(newHeight);
     }
 
     public onClickAddButton = () => {
-        const { home } = this.props;
-        if (!home) {
-            return;
-        }
+        const home = this.props.home as HomeStore;
         const { fileName, originalImage } = home;
         if (!fileName) {
             return;
@@ -185,25 +140,18 @@ export default class Home extends React.Component<IHomeProps> {
         if (files.length === 0) {
             return;
         }
-        const { home } = this.props;
-        if (!home) {
-            throw new Error('no props');
-        }
+        const home = this.props.home as HomeStore;
         home.onClickOpenButton(URL.createObjectURL(files[0]));
     }
 
-    public onClickDialAction = (type: string) => {
-        const { home } = this.props;
-        if (!home) {
-            throw new Error('no props');
-        }
-
-        if (type === this.actions[0].name) {        // Add Image
-            home.toggleModalOpen();
-        } else if (type === this.actions[1].name) { // Save Image
-            /** TODO */
-        } else if (type === this.actions[2].name) { // Delete Image
-            home.onClickDeleteAllButton();
+    public getEditorWidth = (state: WindowMode) => {
+        switch (state) {
+            case WindowMode.EDITOR:
+                return '100vw';
+            case WindowMode.SPLIT:
+                return '50vw';
+            default:
+                return '0vw';
         }
     }
 }

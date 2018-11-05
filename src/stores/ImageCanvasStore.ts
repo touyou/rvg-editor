@@ -1,6 +1,15 @@
 import { action, observable } from 'mobx';
 import Vec2 from 'src/lib/math/Vec2';
 
+export class ImagesStore {
+  @observable
+  public images: Array<ImageCanvasStore> = [];
+
+  @action.bound
+  public addImage(image: ImageCanvasStore) {
+    this.images.push(image);
+  }
+}
 
 export default class ImageCanvasStore {
   @observable
@@ -47,9 +56,38 @@ export default class ImageCanvasStore {
   }
 
   @action.bound
-  public onMouseUp() {
+  public onMouseUp(completion: Function) {
     this.isDragging = false;
     this.originPoint = this.diffPoint;
+    completion();
+  }
+
+  @action.bound
+  public onChangeCanvasWidth(value: number, completion: Function) {
+    this.canvasWidth = value;
+    completion();
+  }
+
+  @action.bound
+  public onChangeCanvasHeight(value: number, completion: Function) {
+    this.canvasHeight = value;
+    completion();
+  }
+
+  @action.bound
+  public onChangeScaleX(value: number, completion: Function) {
+    const diff = this.scale.x - value;
+    const newScale = new Vec2(value, this.isRatioLocked ? this.scale.y - diff : this.scale.y);
+    this.scale = newScale;
+    completion();
+  }
+
+  @action.bound
+  public onChangeScaleY(value: number, completion: Function) {
+    const diff = this.scale.y - value;
+    const newScale = new Vec2(this.isRatioLocked ? this.scale.x - diff : this.scale.x, value);
+    this.scale = newScale;
+    completion();
   }
 
 

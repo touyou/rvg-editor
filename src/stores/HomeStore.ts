@@ -1,7 +1,7 @@
 import { action, observable } from 'mobx';
 import { ContainerProps } from '../components/ImageCanvas';
 
-export class HomeState {
+export class HomeStore {
     @observable
     public imageCanvas: Array<ContainerProps> = [];
     @observable
