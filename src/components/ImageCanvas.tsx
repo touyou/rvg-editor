@@ -5,6 +5,9 @@ import SeamCarver from '../lib/seams/SeamCarver';
 import ActionSlider from './ActionSlider';
 import * as linear from '../lib/warping/Matrix';
 import { Paper, Button, FormControlLabel, Switch, TextField } from '@material-ui/core';
+import { inject, observer } from 'mobx-react';
+import { ImagesStore } from 'src/stores/ImageCanvasStore';
+import Vec2 from 'src/lib/math/Vec2';
 
 interface IContainerProps {
     image: HTMLImageElement;
@@ -14,15 +17,18 @@ interface IContainerProps {
     key: number;
 }
 
-class Vec2 {
-    constructor(public x: number, public y: number) { }
-}
-
 export class ContainerProps {
     constructor(public image: HTMLImageElement, public width: number, public height: number, public isSeam: boolean) { }
 }
 
-export default class CanvasContainer extends React.Component<IContainerProps, {}> {
+interface IImageProps {
+    images?: ImagesStore;
+    id: number;
+}
+
+@inject('images')
+@observer
+export default class CanvasContainer extends React.Component<IImageProps> {
 
     state = {
         canvasWidth: 0,
@@ -39,111 +45,130 @@ export default class CanvasContainer extends React.Component<IContainerProps, {}
         dragging: false,
     };
 
-    handleLockedChange = (event: any, locked: any) => {
-        this.setState({ locked: locked })
+    public render() {
+        const image = this.getImage();
+
+        return (
+            <Paper style={{
+                display: 'flex',
+                float: 'left',
+                flexDirection: 'column',
+                margin: '8px',
+            }}>
+                <canvas
+                    ref="canvas"
+                    width={image.canvasWidth}
+                    height={image.canvasHeight}
+                    onMouseDown={this.onMouseDown}
+                    onMouseMove={this.onMouseMove}
+                    onMouseUp={this.onMouseUp}
+                />
+
+                <div style={{ margin: '4px' }}>
+                    <TextField label="width" value={image.canvasWidth} onChange={this.onChangeCanvasWidth} margin="dense" />
+                    <TextField label="height" value={image.canvasHeight} onChange={this.onChangeCanvasHeight} margin="dense" />
+                </div>
+                <div style={{ color: '#424242' }}>
+                    <ActionSlider min={217} max={1000} step={1} value={image.seamWidth} title="seam width :" changeValue={this.onChangeSeamWidth} />
+                    <ActionSlider min={0.01} max={5} step={0.01} value={image.scale.x} title="width scale :" changeValue={this.onChangeScaleX} />
+                    <ActionSlider min={0.01} max={5} step={0.01} value={image.scale.y} title="height scale :" changeValue={this.onChangeScaleY} />
+                </div>
+                <div>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={image.isRatioLocked}
+                                onChange={image.toggleRatioLocked}
+                                value="locked"
+                                color="primary"
+                            />
+                        }
+                        label="Aspect Locked"
+                    />
+                    <Button
+                        style={{ margin: '8px' }}
+                        variant="contained"
+                        color="primary"
+                        onClick={this.handleResetButton}>reset</Button>
+                </div>
+            </Paper >
+        )
     }
 
-    handleMouseDown = (event: any) => {
-        this.setState({
-            dragging: true,
-            start: new Vec2(event.clientX, event.clientY),
-        })
+    private getImage = () => {
+        const id = this.props.id;
+        const images = this.props.images as ImagesStore;
+        const image = images.images[id];
+        return image;
     }
 
-    handleMouseMove = (event: any) => {
-        const {
-            dragging, start, scale, origin, canvasWidth, canvasHeight
-        } = this.state;
-        if (dragging) {
-            const diffX = (event.clientX - start.x) / scale.x + origin.x;
-            const diffY = (event.clientY - start.y) / scale.y + origin.y;
-            const diff = new Vec2(diffX, diffY);
-            this.setState({
-                diff: diff
-            }, () => {
-                this.drawImage(canvasWidth, canvasHeight, diff, scale);
-            })
+    onMouseDown = (event: any) => {
+        const image = this.getImage();
+        image.onMouseDownCanvas(new Vec2(event.clientX, event.clientY));
+    }
+
+    onMouseMove = (event: any) => {
+        const image = this.getImage();
+        if (image.isDragging) {
+            image.onMouseMove(new Vec2(event.clientX, event.clientY), () => {
+                this.drawImage(image.canvasWidth, image.canvasHeight, image.diffPoint, image.scale);
+            });
         }
     }
 
-    handleMouseUp = () => {
-        const { diff } = this.state;
-        this.setState({
-            dragging: false,
-            origin: diff
-        })
+    onMouseUp = (event: any) => {
+        const image = this.getImage();
+        image.onMouseUp();
     }
 
-    changeWidthLabel = (event: any) => {
+    onChangeCanvasWidth = (event: any) => {
         const newWidth = Number(event.target.value);
         if (isNaN(newWidth)) {
             return;
         }
-        const {
-            canvasHeight, scale, origin
-        } = this.state;
-        this.setState({
-            canvasWidth: newWidth
-        }, () => {
-            this.drawImage(newWidth, canvasHeight, origin, scale);
-        })
+        const image = this.getImage();
+        image.onChangeCanvasWidth(newWidth, () => {
+            this.drawImage(newWidth, image.canvasHeight, image.originPoint, image.scale);
+        });
     }
 
-    changeHeightLabel = (event: any) => {
+    onChangeCanvasHeight = (event: any) => {
         const newHeight = Number(event.target.value);
         if (isNaN(newHeight)) {
             return;
         }
-        const {
-            canvasWidth, scale, origin
-        } = this.state;
-        this.setState({
-            canvasHeight: newHeight
-        }, () => {
-            this.drawImage(canvasWidth, newHeight, origin, scale);
-        })
+        const image = this.getImage();
+        image.onChangeCanvasHeight(newHeight, () => {
+            this.drawImage(image.canvasWidth, newHeight, image.originPoint, image.scale);
+        });
     }
 
-    changeSeamWidth = (value: any) => {
+    onChangeSeamWidth = (value: any) => {
         const newWidth = Number(value);
         if (newWidth < 217) {
             return;
         }
-        const {
-            canvasWidth, canvasHeight, targetHeight, scale, origin
-        } = this.state;
-        this.newImage = this.seamCarver.resize(newWidth, targetHeight);
+        const image = this.getImage();
+        this.newImage = this.seamCarver.resize(newWidth, image.seamHeight);
         this.imageCanvas.width = newWidth;
         this.imageCtx.putImageData(this.newImage, 0, 0);
-        this.setState({
-            targetWidth: newWidth
-        }, () => {
-            this.drawImage(canvasWidth, canvasHeight, origin, scale);
-        })
+        image.onChangeSeamWidth(newWidth, () => {
+            this.drawImage(image.canvasWidth, image.canvasHeight, image.originPoint, image.scale);
+        });
     }
 
-    changeScaleX = (value: any) => {
-        const { scale, locked, canvasWidth, canvasHeight, origin } = this.state;
-        const newScaleX = Number(value);
-        const diff = scale.x - newScaleX;
-        const newScale = new Vec2(newScaleX, locked ? scale.y - diff : scale.y);
-        this.setState({
-            scale: newScale
-        }, () => {
-            this.drawImage(canvasWidth, canvasHeight, origin, newScale)
-        })
+    onChangeScaleX = (value: any) => {
+        const image = this.getImage();
+        image.onChangeScaleX(Number(value), (newScale: Vec2) => {
+            this.drawImage(image.canvasWidth, image.canvasHeight, image.originPoint, newScale);
+        });
     }
 
-    changeScaleY = (value: any) => {
-        const { scale, locked, canvasWidth, canvasHeight, origin } = this.state;
-        const newScaleY = Number(value);
-        const diff = scale.y - newScaleY;
-        const newScale = new Vec2(locked ? scale.x - diff : scale.x, newScaleY);
-        this.setState({
-            scale: newScale
-        }, () => {
-            this.drawImage(canvasWidth, canvasHeight, origin, newScale);
-        })
+    onChangeScaleY = (value: any) => {
+        const image = this.getImage();
+        image.onChangeScaleY(Number(value), (newScale: Vec2) => {
+            this.drawImage(image.canvasWidth, image.canvasHeight, image.originPoint, newScale);
+        });
     }
 
     handleResetButton = () => {
@@ -218,55 +243,5 @@ export default class CanvasContainer extends React.Component<IContainerProps, {}
         })
     }
 
-    public render() {
-        const {
-            locked, targetWidth, canvasWidth, canvasHeight, scale
-        } = this.state;
 
-        return (
-            <Paper style={{
-                display: 'flex',
-                float: 'left',
-                flexDirection: 'column',
-                margin: '8px',
-            }}>
-                <canvas
-                    ref="canvas"
-                    width={canvasWidth}
-                    height={canvasHeight}
-                    onMouseDown={this.handleMouseDown}
-                    onMouseMove={this.handleMouseMove}
-                    onMouseUp={this.handleMouseUp}
-                />
-
-                <div style={{ margin: '4px' }}>
-                    <TextField label="width" value={canvasWidth} onChange={this.changeWidthLabel} margin="dense" />
-                    <TextField label="height" value={canvasHeight} onChange={this.changeHeightLabel} margin="dense" />
-                </div>
-                <div style={{ color: '#424242' }}>
-                    <ActionSlider min={217} max={1000} step={1} value={targetWidth} title="seam width :" changeValue={this.changeSeamWidth} />
-                    <ActionSlider min={0.01} max={5} step={0.01} value={scale.x} title="width scale :" changeValue={this.changeScaleX} />
-                    <ActionSlider min={0.01} max={5} step={0.01} value={scale.y} title="height scale :" changeValue={this.changeScaleY} />
-                </div>
-                <div>
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={locked}
-                                onChange={this.handleLockedChange}
-                                value="locked"
-                                color="primary"
-                            />
-                        }
-                        label="Aspect Locked"
-                    />
-                    <Button
-                        style={{ margin: '8px' }}
-                        variant="contained"
-                        color="primary"
-                        onClick={this.handleResetButton}>reset</Button>
-                </div>
-            </Paper >
-        )
-    }
 }

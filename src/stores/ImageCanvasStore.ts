@@ -51,15 +51,15 @@ export default class ImageCanvasStore {
   }
 
   @action.bound
-  public onMouseMove(point: Vec2) {
+  public onMouseMove(point: Vec2, completion: Function) {
     this.diffPoint = Vec2.add(Vec2.div(Vec2.sub(point, this.startPoint), this.scale), this.originPoint);
+    completion();
   }
 
   @action.bound
-  public onMouseUp(completion: Function) {
+  public onMouseUp() {
     this.isDragging = false;
     this.originPoint = this.diffPoint;
-    completion();
   }
 
   @action.bound
@@ -79,7 +79,7 @@ export default class ImageCanvasStore {
     const diff = this.scale.x - value;
     const newScale = new Vec2(value, this.isRatioLocked ? this.scale.y - diff : this.scale.y);
     this.scale = newScale;
-    completion();
+    completion(newScale);
   }
 
   @action.bound
@@ -90,5 +90,9 @@ export default class ImageCanvasStore {
     completion();
   }
 
-
+  @action.bound
+  public onChangeSeamWidth(value: number, completion: Function) {
+    this.seamWidth = value;
+    completion();
+  }
 }
