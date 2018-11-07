@@ -1,19 +1,24 @@
-import { action, observable } from 'mobx';
+import { action, observable, IObservableArray } from 'mobx';
 import Vec2 from 'src/lib/math/Vec2';
+import { HomeStore } from './HomeStore';
 
 export class ImagesStore {
   @observable
-  public images: Array<ImageCanvasStore> = [];
+  public images: IObservableArray<ImageCanvasStore> = observable([]);
 
   @action.bound
   public addImage(image: ImageCanvasStore) {
     this.images.push(image);
   }
+
+  @action.bound
+  public deleteAll() {
+    this.images.clear();
+  }
 }
 
 export default class ImageCanvasStore {
-  @observable
-  public id: number = 0;
+  public id: string = '';
   @observable
   public canvasWidth: number = 0;
   @observable
@@ -39,42 +44,45 @@ export default class ImageCanvasStore {
   @observable
   public isDragging: boolean = false;
 
-  @action.bound
+  constructor(public isSeamRemove: boolean, home: HomeStore, id: string) {
+    this.canvasWidth = home.addWidth;
+    this.originalWidth = home.originalImage!.naturalWidth;
+    this.originalHeight = home.originalImage!.naturalHeight;
+    this.seamWidth = isSeamRemove ? this.canvasWidth : this.originalWidth;
+    this.canvasHeight = this.originalHeight;
+    this.seamHeight = this.originalHeight;
+    this.id = id;
+  }
+
   public toggleRatioLocked() {
     this.isRatioLocked = !this.isRatioLocked;
   }
 
-  @action.bound
   public onMouseDownCanvas(point: Vec2) {
     this.isDragging = true;
     this.startPoint = point;
   }
 
-  @action.bound
   public onMouseMove(point: Vec2, completion: Function) {
     this.diffPoint = Vec2.add(Vec2.div(Vec2.sub(point, this.startPoint), this.scale), this.originPoint);
     completion();
   }
 
-  @action.bound
   public onMouseUp() {
     this.isDragging = false;
     this.originPoint = this.diffPoint;
   }
 
-  @action.bound
   public onChangeCanvasWidth(value: number, completion: Function) {
     this.canvasWidth = value;
     completion();
   }
 
-  @action.bound
   public onChangeCanvasHeight(value: number, completion: Function) {
     this.canvasHeight = value;
     completion();
   }
 
-  @action.bound
   public onChangeScaleX(value: number, completion: Function) {
     const diff = this.scale.x - value;
     const newScale = new Vec2(value, this.isRatioLocked ? this.scale.y - diff : this.scale.y);
@@ -82,7 +90,6 @@ export default class ImageCanvasStore {
     completion(newScale);
   }
 
-  @action.bound
   public onChangeScaleY(value: number, completion: Function) {
     const diff = this.scale.y - value;
     const newScale = new Vec2(this.isRatioLocked ? this.scale.x - diff : this.scale.x, value);
@@ -90,9 +97,19 @@ export default class ImageCanvasStore {
     completion();
   }
 
-  @action.bound
   public onChangeSeamWidth(value: number, completion: Function) {
     this.seamWidth = value;
     completion();
+  }
+
+  public onClickResetButton() {
+    this.seamWidth = this.originalWidth;
+    this.seamHeight = this.originalHeight;
+    this.startPoint = new Vec2(0, 0);
+    this.diffPoint = new Vec2(0, 0);
+    this.originPoint = new Vec2(0, 0);
+    this.scale = new Vec2(1, 1);
+    this.isRatioLocked = false;
+    this.isDragging = false;
   }
 }

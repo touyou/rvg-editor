@@ -2,14 +2,14 @@ import * as React from 'react';
 import './App.css';
 import { HomeStore } from './stores/HomeStore';
 import { Provider } from 'mobx-react';
-import ImageCanvasStore from './stores/ImageCanvasStore';
+import { ImagesStore } from './stores/ImageCanvasStore';
 import SplitContainer from './components/SplitContainer';
 import { AppStore } from './stores/AppStore';
 
 const store = {
   app: new AppStore(),
   home: new HomeStore(),
-  images: new ImageCanvasStore(),
+  images: new ImagesStore(),
 };
 
 class App extends React.Component {

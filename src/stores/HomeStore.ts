@@ -1,9 +1,6 @@
 import { action, observable } from 'mobx';
-import { ContainerProps } from '../components/ImageCanvas';
 
 export class HomeStore {
-    @observable
-    public imageCanvas: Array<ContainerProps> = [];
     @observable
     public fileName: string | null = null;
     @observable
@@ -52,29 +49,16 @@ export class HomeStore {
     }
 
     @action.bound
-    public onClickAddButton(image?: HTMLImageElement) {
+    public onClickAddButton(image: HTMLImageElement | null, completion: Function) {
         if (image) {
             this.originalImage = image;
-            this.imageCanvas.push(
-                new ContainerProps(this.originalImage, this.addWidth,
-                    this.originalImage!.naturalHeight, this.isSeamRemove
-                ));
-        } else {
-            this.imageCanvas.push(
-                new ContainerProps(this.originalImage!, this.addWidth,
-                    this.originalImage!.naturalHeight, this.isSeamRemove
-                ));
         }
         this.isModalOpen = false;
+        completion();
     }
 
     @action.bound
     public onClickOpenButton(value: string) {
         this.fileName = value;
-    }
-
-    @action.bound
-    public onClickDeleteAllButton() {
-        this.imageCanvas = [];
     }
 }

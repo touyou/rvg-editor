@@ -1,52 +1,50 @@
 import * as React from 'react';
-// import CanvasView from './CanvasView';
 import SeamCarver from '../lib/seams/SeamCarver';
 // import SeamCarving from '../utils/warping/SeamCarving';
 import ActionSlider from './ActionSlider';
 import * as linear from '../lib/warping/Matrix';
 import { Paper, Button, FormControlLabel, Switch, TextField } from '@material-ui/core';
-import { inject, observer } from 'mobx-react';
-import { ImagesStore } from 'src/stores/ImageCanvasStore';
+import { observer } from 'mobx-react';
+import ImageCanvasStore from 'src/stores/ImageCanvasStore';
 import Vec2 from 'src/lib/math/Vec2';
 
-interface IContainerProps {
-    image: HTMLImageElement;
-    width: number;
-    height: number;
-    isSeam: boolean;
-    key: number;
-}
-
-export class ContainerProps {
-    constructor(public image: HTMLImageElement, public width: number, public height: number, public isSeam: boolean) { }
-}
-
 interface IImageProps {
-    images?: ImagesStore;
-    id: number;
+    image: ImageCanvasStore;
+    seamCarver: SeamCarver;
 }
 
-@inject('images')
 @observer
-export default class CanvasContainer extends React.Component<IImageProps> {
+export default class CanvasContainer extends React.Component<IImageProps, any> {
 
-    state = {
-        canvasWidth: 0,
-        canvasHeight: 0,
-        targetWidth: 0,
-        targetHeight: 0,
-        imageWidth: 0,
-        imageHeight: 0,
-        start: new Vec2(0, 0),
-        diff: new Vec2(0, 0),
-        origin: new Vec2(0, 0),
-        scale: new Vec2(1, 1),
-        locked: false,
-        dragging: false,
-    };
+    canvas: HTMLCanvasElement;
+    imageCanvas: HTMLCanvasElement;
+    newImage: ImageData;
+    ctx: CanvasRenderingContext2D;
+    imageCtx: CanvasRenderingContext2D;
+    imageMatrix: linear.ColorMatrix;
+    // seamCarving: SeamCarving;
+
+    componentDidMount() {
+        this.canvas = this.refs.canvas as HTMLCanvasElement;
+        this.ctx = this.canvas.getContext('2d')!;
+        this.imageCanvas = document.createElement('canvas');
+        this.imageCtx = this.imageCanvas.getContext('2d')!;
+
+        const image = this.props.image;
+
+        if (image.isSeamRemove) {
+            this.newImage = this.props.seamCarver.resize(image.seamWidth, image.seamHeight);
+        } else {
+            this.newImage = this.props.seamCarver.resize(image.originalWidth, image.originalHeight);
+        }
+        this.imageCanvas.width = this.newImage.width;
+        this.imageCanvas.height = this.newImage.height;
+        this.imageCtx.putImageData(this.newImage, 0, 0);
+        this.drawImage(image.canvasWidth, image.canvasHeight, image.originPoint, image.scale);
+    }
 
     public render() {
-        const image = this.getImage();
+        const image = this.props.image;
 
         return (
             <Paper style={{
@@ -78,7 +76,7 @@ export default class CanvasContainer extends React.Component<IImageProps> {
                         control={
                             <Switch
                                 checked={image.isRatioLocked}
-                                onChange={image.toggleRatioLocked}
+                                onChange={this.toggleRatioLocked}
                                 value="locked"
                                 color="primary"
                             />
@@ -89,26 +87,25 @@ export default class CanvasContainer extends React.Component<IImageProps> {
                         style={{ margin: '8px' }}
                         variant="contained"
                         color="primary"
-                        onClick={this.handleResetButton}>reset</Button>
+                        onClick={this.onClickResetButton}>reset</Button>
                 </div>
             </Paper >
         )
     }
 
-    private getImage = () => {
-        const id = this.props.id;
-        const images = this.props.images as ImagesStore;
-        const image = images.images[id];
-        return image;
+    public toggleRatioLocked = () => {
+        const image = this.props.image;
+        image.toggleRatioLocked();
     }
 
-    onMouseDown = (event: any) => {
-        const image = this.getImage();
+    public onMouseDown = (event: any) => {
+        console.log('hello');
+        const image = this.props.image;
         image.onMouseDownCanvas(new Vec2(event.clientX, event.clientY));
     }
 
-    onMouseMove = (event: any) => {
-        const image = this.getImage();
+    public onMouseMove = (event: any) => {
+        const image = this.props.image;
         if (image.isDragging) {
             image.onMouseMove(new Vec2(event.clientX, event.clientY), () => {
                 this.drawImage(image.canvasWidth, image.canvasHeight, image.diffPoint, image.scale);
@@ -116,40 +113,40 @@ export default class CanvasContainer extends React.Component<IImageProps> {
         }
     }
 
-    onMouseUp = (event: any) => {
-        const image = this.getImage();
+    public onMouseUp = (event: any) => {
+        const image = this.props.image;
         image.onMouseUp();
     }
 
-    onChangeCanvasWidth = (event: any) => {
+    public onChangeCanvasWidth = (event: any) => {
         const newWidth = Number(event.target.value);
         if (isNaN(newWidth)) {
             return;
         }
-        const image = this.getImage();
+        const image = this.props.image;
         image.onChangeCanvasWidth(newWidth, () => {
             this.drawImage(newWidth, image.canvasHeight, image.originPoint, image.scale);
         });
     }
 
-    onChangeCanvasHeight = (event: any) => {
+    public onChangeCanvasHeight = (event: any) => {
         const newHeight = Number(event.target.value);
         if (isNaN(newHeight)) {
             return;
         }
-        const image = this.getImage();
+        const image = this.props.image;
         image.onChangeCanvasHeight(newHeight, () => {
             this.drawImage(image.canvasWidth, newHeight, image.originPoint, image.scale);
         });
     }
 
-    onChangeSeamWidth = (value: any) => {
+    public onChangeSeamWidth = (value: any) => {
         const newWidth = Number(value);
         if (newWidth < 217) {
             return;
         }
-        const image = this.getImage();
-        this.newImage = this.seamCarver.resize(newWidth, image.seamHeight);
+        const image = this.props.image;
+        this.newImage = this.props.seamCarver.resize(newWidth, image.seamHeight);
         this.imageCanvas.width = newWidth;
         this.imageCtx.putImageData(this.newImage, 0, 0);
         image.onChangeSeamWidth(newWidth, () => {
@@ -157,40 +154,33 @@ export default class CanvasContainer extends React.Component<IImageProps> {
         });
     }
 
-    onChangeScaleX = (value: any) => {
-        const image = this.getImage();
+    public onChangeScaleX = (value: any) => {
+        const image = this.props.image;
         image.onChangeScaleX(Number(value), (newScale: Vec2) => {
             this.drawImage(image.canvasWidth, image.canvasHeight, image.originPoint, newScale);
         });
     }
 
-    onChangeScaleY = (value: any) => {
-        const image = this.getImage();
+    public onChangeScaleY = (value: any) => {
+        const image = this.props.image;
         image.onChangeScaleY(Number(value), (newScale: Vec2) => {
             this.drawImage(image.canvasWidth, image.canvasHeight, image.originPoint, newScale);
         });
     }
 
-    handleResetButton = () => {
-        const { canvasWidth, canvasHeight, imageWidth, imageHeight, targetWidth, targetHeight } = this.state;
-        this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-        this.imageCtx.clearRect(0, 0, targetWidth, targetHeight);
-        this.newImage = this.seamCarver.resize(imageWidth, imageHeight);
+    public onClickResetButton = () => {
+        const image = this.props.image;
+        this.ctx.clearRect(0, 0, image.canvasWidth, image.canvasHeight);
+        this.imageCtx.clearRect(0, 0, image.seamWidth, image.seamHeight);
+        this.newImage = this.props.seamCarver.resize(image.originalWidth, image.originalHeight);
         this.imageCtx.putImageData(this.newImage, 0, 0);
         this.ctx.drawImage(this.imageCanvas, 0, 0);
-        this.setState({
-            targetWidth: imageWidth,
-            targetHeight: imageHeight,
-            start: new Vec2(0, 0),
-            diff: new Vec2(0, 0),
-            origin: new Vec2(0, 0),
-            scale: new Vec2(1, 1),
-            locked: false,
-            dragging: false,
-        })
+        image.onClickResetButton();
     }
 
-    drawImage = (width: number, height: number, origin: Vec2, scale: Vec2) => {
+    private drawImage = (width: number, height: number, origin: Vec2, scale: Vec2) => {
+        console.log({ width: width, height: height, origin: origin, scale: scale });
+        console.log(this.canvas.width);
         this.ctx.clearRect(0, 0, width, height);
         this.ctx.scale(scale.x, scale.y);
         this.ctx.drawImage(this.imageCanvas, origin.x, origin.y);
@@ -201,47 +191,4 @@ export default class CanvasContainer extends React.Component<IImageProps> {
         this.ctx.strokeStyle = 'rgba(120,120,255,0.4)';
         this.ctx.strokeRect(0, 0, width, height);
     }
-
-    public seamCarver: SeamCarver;
-    canvas: HTMLCanvasElement;
-    imageCanvas: HTMLCanvasElement;
-    newImage: ImageData;
-    ctx: CanvasRenderingContext2D;
-    imageCtx: CanvasRenderingContext2D;
-    imageMatrix: linear.ColorMatrix;
-    // seamCarving: SeamCarving;
-
-    componentDidMount() {
-        this.canvas = this.refs.canvas as HTMLCanvasElement;
-        this.ctx = this.canvas.getContext('2d')!;
-        this.imageCanvas = document.createElement('canvas');
-        this.imageCtx = this.imageCanvas.getContext('2d')!;
-
-        const image = this.props.image!
-        this.imageCanvas.width = image.naturalWidth;
-        this.imageCanvas.height = image.naturalHeight;
-        this.imageCtx.drawImage(image, 0, 0, this.imageCanvas.width, this.imageCanvas.height);
-        this.seamCarver = new SeamCarver(this.imageCtx.getImageData(0, 0, this.imageCanvas.width, this.imageCanvas.height));
-        // this.seamCarving = new SeamCarving(this.imageCtx.getImageData(0, 0, this.imageCanvas.width, this.imageCanvas.height));
-        // this.imageMatrix = this.seamCarving.convertImage();
-        // this.newImage = this.seamCarving.seamCarving([this.props.width, this.props.height], this.imageMatrix);
-        if (this.props.isSeam) {
-            this.newImage = this.seamCarver.resize(this.props.width, this.props.height);
-        } else {
-            this.newImage = this.seamCarver.resize(this.imageCanvas.width, this.imageCanvas.height);
-        }
-        this.imageCtx.putImageData(this.newImage, 0, 0);
-        this.setState({
-            imageWidth: image.naturalWidth,
-            imageHeight: image.naturalHeight,
-            canvasWidth: this.props.width,
-            canvasHeight: this.props.height,
-            targetWidth: this.props.isSeam ? this.props.width : image.naturalWidth,
-            targetHeight: this.props.height
-        }, () => {
-            this.drawImage(this.props.width, this.props.height, new Vec2(0, 0), new Vec2(1, 1));
-        })
-    }
-
-
 }

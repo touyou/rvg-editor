@@ -11,13 +11,15 @@ import Home from './Home';
 import { AppStore, WindowMode } from 'src/stores/AppStore';
 import { SpeedDial, SpeedDialIcon, SpeedDialAction } from '@material-ui/lab';
 import { HomeStore } from 'src/stores/HomeStore';
+import { ImagesStore } from 'src/stores/ImageCanvasStore';
 
 interface ISplitProps {
     app?: AppStore;
     home?: HomeStore;
+    images?: ImagesStore;
 }
 
-@inject('app', 'home')
+@inject('app', 'home', 'images')
 @observer
 export default class SplitContainer extends React.Component<ISplitProps> {
     private actions = [
@@ -61,7 +63,6 @@ export default class SplitContainer extends React.Component<ISplitProps> {
                 }}>
                     <Home />
                     <div style={{
-                        zIndex: -10,
                         backgroundColor: '#FFECB3',
                         overflowX: 'hidden',
                         height: '100vh',
@@ -107,13 +108,14 @@ export default class SplitContainer extends React.Component<ISplitProps> {
 
     public onClickDialAction = (type: string) => {
         const home = this.props.home as HomeStore;
+        const images = this.props.images as ImagesStore;
 
         if (type === this.actions[0].name) {        // Add Image
             home.toggleModalOpen();
         } else if (type === this.actions[1].name) { // Save Image
             /** TODO */
         } else if (type === this.actions[2].name) { // Delete Image
-            home.onClickDeleteAllButton();
+            images.deleteAll();
         }
     }
 }

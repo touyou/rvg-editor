@@ -6,6 +6,7 @@
     "@material-ui/core": "^3.3.2",
     "@material-ui/icons": "^3.0.1",
     "@material-ui/lab": "^3.0.0-alpha.22",
+    "@types/uuid": "^3.4.4",
     "mobx": "^5.5.2",
     "mobx-react": "^5.3.6",
     "node-sass": "^4.10.0",
@@ -15,7 +16,8 @@
     "react-scrollarea": "^0.6.15",
     "sass": "^1.14.3",
     "sass-graph": "^3.0.3",
-    "sass-loader": "^7.1.0"
+    "sass-loader": "^7.1.0",
+    "uuid": "^3.3.2"
   },
   "scripts": {
     "start": "react-scripts-ts start",
