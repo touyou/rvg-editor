@@ -2,11 +2,13 @@
   "name": "multisize-image-editor",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://touyou.github.io/multisize-image-editor",
   "dependencies": {
     "@material-ui/core": "^3.3.2",
     "@material-ui/icons": "^3.0.1",
     "@material-ui/lab": "^3.0.0-alpha.22",
     "@types/uuid": "^3.4.4",
+    "gh-pages": "^2.0.1",
     "mobx": "^5.5.2",
     "mobx-react": "^5.3.6",
     "node-sass": "^4.10.0",
@@ -20,6 +22,8 @@
     "uuid": "^3.3.2"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts-ts start",
     "build": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
