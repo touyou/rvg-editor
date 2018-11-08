@@ -2,7 +2,7 @@ import * as React from 'react';
 import SeamCarver from '../lib/seams/SeamCarver';
 // import SeamCarving from '../utils/warping/SeamCarving';
 import ActionSlider from './ActionSlider';
-import * as linear from '../lib/warping/Matrix';
+import * as linear from '../lib/math/Matrix';
 import { Paper, Button, FormControlLabel, Switch, TextField } from '@material-ui/core';
 import { observer } from 'mobx-react';
 import ImageCanvasStore from 'src/stores/ImageCanvasStore';
