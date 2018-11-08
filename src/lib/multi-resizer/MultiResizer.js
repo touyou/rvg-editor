@@ -24,11 +24,12 @@ class MultiResizer {
    * @param {number} width
    * @param {number} height
    */
-  resize = (width, height) => {
+  seamImageData = (width, height) => {
     const newImage = new ImageData(width, height);
 
     const seamFactHorizontal = this.binarySearch(width, this.metainfo.widthKeys);
     const seamFactVertical = this.binarySearch(height, this.metainfo.heightKeys);
+
 
 
     // for (let y = 0; y < this.image.height; y++) {
@@ -43,9 +44,25 @@ class MultiResizer {
     // }
   }
 
+  originX = (width) => {
+    return this.binarySearch(width, this.metainfo.originXKeys);
+  }
+
+  originY = (height) => {
+    return this.binarySearch(height, this.metainfo.originYKeys);
+  }
+
+  scaleX = (width) => {
+    return this.binarySearch(width, this.metainfo.scaleXKeys);
+  }
+
+  scaleY = (height) => {
+    return this.binarySearch(height, this.metainfo.scaleYKeys);
+  }
+
   /**
    * @param {number} value
-   * @param {number[][]} keyFrames
+   * @param {any[][]} keyFrames
    */
   binarySearch = (value, keyFrames) => {
     let left = 0;
@@ -58,6 +75,32 @@ class MultiResizer {
         right = mid;
       }
     }
-    return 0;
+    if (keyFrames[left][0] === value || keyFrames.length === 1) {
+      return keyFrames[left][1];
+    } else if (left === keyFrames.length - 1) {
+      const source = keyFrames[left - 1][1];
+      const target = keyFrames[left][1];
+      const ts = keyFrames[left][0] - keyFrames[left - 1][0];
+      const vt = value - keyFrames[left][0];
+      return target + (target - source) / ts * vt;
+    } else if (left === 0) {
+      const source = keyFrames[left + 1][1];
+      const target = keyFrames[left][1];
+      const ts = keyFrames[left][0] - keyFrames[left + 1][0];
+      const vt = value - keyFrames[left][0];
+      return target + (target - source) / ts * vt;
+    } else if (keyFrames[left][0] < value) {
+      const lVal = keyFrames[left][1];
+      const rVal = keyFrames[left + 1][1];
+      const lr = keyFrames[left + 1][0] - keyFrames[left][0];
+      const lv = value - keyFrames[left][0];
+      return lVal + (rVal - lVal) / lr * lv;
+    } else {
+      const lVal = keyFrames[left - 1][1];
+      const rVal = keyFrames[left][1];
+      const lr = keyFrames[left][0] - keyFrames[left - 1][0];
+      const lv = keyFrames[left][0] - value;
+      return lVal + (rVal - lVal) / lr * lv;
+    }
   }
 }
