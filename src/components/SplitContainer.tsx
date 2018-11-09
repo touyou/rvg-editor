@@ -16,6 +16,7 @@ import ImageCanvasStore, { ImagesStore } from 'src/stores/ImageCanvasStore';
 import { MultiResizer } from '../lib/multi-resizer/MultiResizer';
 import SeamCarver from 'src/lib/seams/SeamCarver';
 import * as UUID from 'uuid/v4';
+import Resizable, { NumberSize } from 're-resizable';
 
 interface ISplitProps {
     app?: AppStore;
@@ -42,13 +43,23 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
     imageName: string;
     private tmpCanvas: HTMLCanvasElement;
     private tmpContext: CanvasRenderingContext2D;
+    resizable: Resizable | null;
+
+    colFlag: boolean;
+    rowFlag: boolean;
+    bothFlag: boolean;
+    startValue: number;
+    startValueRow: number;
 
     constructor(props: any, state: any) {
         super(props, state);
         this.state = {
-            canvasWidth: 500,
-            canvasHeight: 500
+            canvasWidth: 0,
+            canvasHeight: 0
         }
+        this.colFlag = false;
+        this.rowFlag = false;
+        this.bothFlag = false;
     }
 
     componentDidMount() {
@@ -72,7 +83,8 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                 overflow: 'hidden',
                 overflowY: 'scroll'
             }}>
-                <AppBar position="static" color="primary">
+                <AppBar
+                    position="relative" color="primary">
                     <Toolbar>
                         <Typography variant="h6" color="inherit">
                             Multi-size Image Editor
@@ -97,26 +109,60 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                     <Home />
                     {/* TODO: Split to component */}
                     <div style={{
-                        backgroundColor: '#FFECB3',
+                        backgroundColor: '#eee',
                         display: 'flex',
+                        flexDirection: 'row',
                         justifyContent: 'center',
                         textAlign: 'center',
                         overflowX: 'hidden',
                         height: '100vh',
                         width: this.getPreviewWidth(app.windowMode),
                     }}>
-                        <canvas
+                        <Resizable
+                            ref={c => { this.resizable = c; }}
                             style={{
-                                margin: 'auto'
+                                margin: 'auto',
+                                width: this.state.canvasWidth,
+                                height: this.state.canvasHeight,
                             }}
-                            ref="canvas"
-                            width={this.state.canvasWidth}
-                            height={this.state.canvasHeight}
-                        />
-                        <div style={{ margin: '4px' }}>
+                            handleStyles={{
+                                bottom: {
+                                    background: 'rgba(128,222,234,0.5)',
+                                    height: '5px',
+                                    bottom: '-2.5px'
+                                },
+                                bottomRight: {
+                                    background: 'rgba(128,222,234,0.5)',
+                                    width: '10px',
+                                    height: '10px',
+                                    borderRadius: '5px',
+                                    right: '-5px',
+                                    bottom: '-5px'
+                                },
+                                right: {
+                                    background: 'rgba(128,222,234,0.5)',
+                                    width: '5px',
+                                    right: '-2.5px',
+                                }
+                            }}
+                            onResizeStop={this.onResizeStop}
+                        >
+                            <canvas
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0
+                                }}
+                                ref="canvas"
+                                width={this.state.canvasWidth}
+                                height={this.state.canvasHeight}
+                            />
+                        </Resizable>
+
+                        {/* <div style={{ margin: '4px' }}>
                             <TextField label="width" value={this.state.canvasWidth} onChange={this.onChangeCanvasWidth} margin="dense" />
                             <TextField label="height" value={this.state.canvasHeight} onChange={this.onChangeCanvasHeight} margin="dense" />
-                        </div>
+                        </div> */}
                     </div>
                 </div>
                 <Modal
@@ -238,11 +284,17 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
         this.ctx.scale(scaleX, scaleY);
         this.ctx.drawImage(this.imageCanvas, originX, originY);
         this.ctx.scale(1 / scaleX, 1 / scaleY);
+    }
 
-        this.ctx.setLineDash([5, 10]);
-        this.ctx.lineWidth = 4;
-        this.ctx.strokeStyle = 'rgba(120,120,255,0.4)';
-        this.ctx.strokeRect(0, 0, canvasWidth, canvasHeight);
+    public onResizeStop = (event: any, direction: any, ref: HTMLDivElement, delta: NumberSize) => {
+        const { canvasWidth, canvasHeight } = this.state;
+        console.log(delta);
+        this.setState({
+            canvasWidth: canvasWidth + delta.width,
+            canvasHeight: canvasHeight + delta.height
+        }, () => {
+            this.drawImage();
+        })
     }
 
     public onChangeWidth = (event: any) => {
@@ -337,7 +389,13 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                 seamCarver = new SeamCarver(this.tmpContext.getImageData(0, 0, image.naturalWidth, image.naturalHeight));
                 home.onClickAddButton(image, () => {
                     images.addImage(new ImageCanvasStore(home.isSeamRemove, home, UUID()));
-                    this.drawImage();
+                    this.resizable!.updateSize({ width: image.naturalWidth, height: image.naturalHeight });
+                    this.setState({
+                        canvasWidth: image.naturalWidth,
+                        canvasHeight: image.naturalHeight
+                    }, () => {
+                        this.drawImage();
+                    })
                 });
                 home.toggleLoading();
             }

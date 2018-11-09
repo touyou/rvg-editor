@@ -22,6 +22,7 @@ export default class Home extends React.Component<IHomeProps> {
 
         return (
             <div style={{
+                backgroundColor: '#fff',
                 textAlign: 'center',
                 overflow: 'hidden',
                 width: this.getEditorWidth(app.windowMode),
