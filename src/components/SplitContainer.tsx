@@ -1,17 +1,21 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
-import { AppBar, Toolbar, Typography, IconButton } from '@material-ui/core';
+import { AppBar, Toolbar, Typography, IconButton, Button, Modal, Paper, TextField, FormControlLabel, Switch, CircularProgress } from '@material-ui/core';
 import CropRotateIcon from '@material-ui/icons/CropRotate';
 import ImageIcon from '@material-ui/icons/Image';
 import CompareIcon from '@material-ui/icons/Compare';
 import AddIcon from '@material-ui/icons/Add';
 import SaveIcon from '@material-ui/icons/Save';
 import DeleteIcon from '@material-ui/icons/Delete';
+import PhotoCamera from '@material-ui/icons/PhotoCamera';
 import Home from './Home';
 import { AppStore, WindowMode } from 'src/stores/AppStore';
 import { SpeedDial, SpeedDialIcon, SpeedDialAction } from '@material-ui/lab';
 import { HomeStore } from 'src/stores/HomeStore';
-import { ImagesStore } from 'src/stores/ImageCanvasStore';
+import ImageCanvasStore, { ImagesStore } from 'src/stores/ImageCanvasStore';
+import { MultiResizer } from '../lib/multi-resizer/MultiResizer';
+import SeamCarver from 'src/lib/seams/SeamCarver';
+import * as UUID from 'uuid/v4';
 
 interface ISplitProps {
     app?: AppStore;
@@ -19,14 +23,42 @@ interface ISplitProps {
     images?: ImagesStore;
 }
 
+export let seamCarver: SeamCarver | null = null;
+
 @inject('app', 'home', 'images')
 @observer
-export default class SplitContainer extends React.Component<ISplitProps> {
+export default class SplitContainer extends React.Component<ISplitProps, any> {
     private actions = [
         { icon: <AddIcon />, name: 'Add Image' },
         { icon: <SaveIcon />, name: 'Save Image' },
         { icon: <DeleteIcon />, name: 'Delete All' },
     ]
+
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    imageCanvas: HTMLCanvasElement;
+    imageCtx: CanvasRenderingContext2D;
+    resizer: MultiResizer;
+    private tmpCanvas: HTMLCanvasElement;
+    private tmpContext: CanvasRenderingContext2D;
+
+    constructor(props: any, state: any) {
+        super(props, state);
+        this.state = {
+            canvasWidth: 500,
+            canvasHeight: 500
+        }
+    }
+
+    componentDidMount() {
+        this.canvas = this.refs.canvas as HTMLCanvasElement;
+        this.ctx = this.canvas.getContext('2d')!;
+
+        this.imageCanvas = document.createElement('canvas');
+        this.imageCtx = this.imageCanvas.getContext('2d')!;
+        this.tmpCanvas = document.createElement('canvas');
+        this.tmpContext = this.tmpCanvas.getContext('2d') as CanvasRenderingContext2D;
+    }
 
     public render() {
         const app = this.props.app as AppStore;
@@ -62,14 +94,87 @@ export default class SplitContainer extends React.Component<ISplitProps> {
                     display: 'flex'
                 }}>
                     <Home />
+                    {/* TODO: Split to component */}
                     <div style={{
                         backgroundColor: '#FFECB3',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        textAlign: 'center',
                         overflowX: 'hidden',
                         height: '100vh',
                         width: this.getPreviewWidth(app.windowMode),
                     }}>
+                        <canvas
+                            style={{
+                                margin: 'auto'
+                            }}
+                            ref="canvas"
+                            width={this.state.canvasWidth}
+                            height={this.state.canvasHeight}
+                        />
+                        <div style={{ margin: '4px' }}>
+                            <TextField label="width" value={this.state.canvasWidth} onChange={this.onChangeCanvasWidth} margin="dense" />
+                            <TextField label="height" value={this.state.canvasHeight} onChange={this.onChangeCanvasHeight} margin="dense" />
+                        </div>
                     </div>
                 </div>
+                <Modal
+                    open={home.isModalOpen}
+                    onClose={home.toggleModalOpen}
+                >
+                    <Paper style={{
+                        top: '50%',
+                        left: '50%',
+                        width: '50%',
+                        height: 'auto',
+                        overflow: 'hidden',
+                        transform: 'translate(50%, 25%)',
+                    }}>
+                        <div style={{ margin: '2em', paddingTop: '1em' }}>
+                            <Typography variant="title">
+                                Add New Canvas
+                            </Typography>
+                        </div>
+                        <div style={{ margin: '1em' }}>
+                            <TextField label="width" value={home.addWidth} onChange={this.onChangeWidth} margin="normal" />
+                            <TextField label="height" value={home.addHeight} onChange={this.onChangeHeight} margin="normal" />
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={home.isSeamRemove}
+                                        onChange={home.toggleSeamState}
+                                        value="seam"
+                                        color="primary"
+                                    />
+                                }
+                                label="Initial Seam"
+                            />
+                            <div style={{ overflow: 'hidden', flexDirection: 'row' }}>
+                                <input accept="image/*" style={{ display: 'none' }} id="icon-button-file" type="file" onChange={this.onClickOpenButton} />
+                                <label htmlFor="icon-button-file">
+                                    <IconButton color="primary" component="span">
+                                        <PhotoCamera />
+                                    </IconButton>
+                                </label>
+                                <Typography variant="caption">{home.fileName ? home.fileName! : 'Select a Photo.'}</Typography>
+                            </div>
+                        </div>
+                        <div>
+                            <Button
+                                style={{ float: 'right', margin: '2em 1em' }}
+                                variant="contained"
+                                color="primary"
+                                onClick={this.onClickAddButton}>Add</Button>
+                            {home.isLoading && <CircularProgress size={24} style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                marginTop: -12,
+                                marginLeft: -12
+                            }} />}
+                        </div>
+                    </Paper>
+                </Modal>
                 <SpeedDial
                     style={{
                         position: 'fixed',
@@ -106,6 +211,90 @@ export default class SplitContainer extends React.Component<ISplitProps> {
         }
     }
 
+    public drawImage = () => {
+        const { canvasWidth, canvasHeight } = this.state;
+
+        if (!seamCarver || canvasWidth <= 0 || canvasHeight <= 0) {
+            return;
+        }
+
+        const images = this.props.images as ImagesStore;
+        this.resizer = images.getResizer(seamCarver!);
+
+        const originX = this.resizer.originX(canvasWidth);
+        const originY = this.resizer.originY(canvasHeight);
+        const scaleX = this.resizer.scaleX(canvasWidth);
+        const scaleY = this.resizer.scaleY(canvasHeight);
+        const newImage = this.resizer.seamImageData(canvasWidth, canvasHeight);
+
+        // console.log({ resizer: this.resizer.metainfo, originX: originX, originY: originY, scaleX: scaleX, scaleY: scaleY });
+
+        this.imageCanvas.width = newImage.width;
+        this.imageCanvas.height = newImage.height;
+        this.imageCtx.putImageData(newImage, 0, 0);
+
+        this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        this.ctx.scale(scaleX, scaleY);
+        this.ctx.drawImage(this.imageCanvas, originX, originY);
+        this.ctx.scale(1 / scaleX, 1 / scaleY);
+
+        this.ctx.setLineDash([5, 10]);
+        this.ctx.lineWidth = 4;
+        this.ctx.strokeStyle = 'rgba(120,120,255,0.4)';
+        this.ctx.strokeRect(0, 0, canvasWidth, canvasHeight);
+    }
+
+    public onChangeWidth = (event: any) => {
+        const newWidth = Number(event.target.value);
+        if (isNaN(newWidth)) {
+            return;
+        }
+        const home = this.props.home as HomeStore;
+        home.onChangeWidth(newWidth);
+    }
+
+    public onChangeHeight = (event: any) => {
+        const newHeight = Number(event.target.value);
+        if (isNaN(newHeight)) {
+            return;
+        }
+        const home = this.props.home as HomeStore;
+        home.onChangeHeight(newHeight);
+    }
+
+    public onChangeCanvasWidth = (event: any) => {
+        const newWidth = Number(event.target.value);
+        if (isNaN(newWidth)) {
+            return;
+        }
+        this.setState({
+            canvasWidth: newWidth
+        }, () => {
+            this.drawImage();
+        })
+    }
+
+    public onChangeCanvasHeight = (event: any) => {
+        const newHeight = Number(event.target.value);
+        if (isNaN(newHeight)) {
+            return;
+        }
+        this.setState({
+            canvasHeight: newHeight
+        }, () => {
+            this.drawImage();
+        })
+    }
+
+    public onClickOpenButton = (event: any) => {
+        const files = event.target.files;
+        if (files.length === 0) {
+            return;
+        }
+        const home = this.props.home as HomeStore;
+        home.onClickOpenButton(URL.createObjectURL(files[0]));
+    }
+
     public onClickDialAction = (type: string) => {
         const home = this.props.home as HomeStore;
         const images = this.props.images as ImagesStore;
@@ -118,4 +307,38 @@ export default class SplitContainer extends React.Component<ISplitProps> {
             images.deleteAll();
         }
     }
+
+    public onClickAddButton = () => {
+        const home = this.props.home as HomeStore;
+        const { fileName, originalImage } = home;
+        const images = this.props.images as ImagesStore;
+        if (!fileName) {
+            return;
+        }
+        if (!originalImage) {
+            let image = new Image();
+            image.src = fileName;
+            home.toggleLoading();
+            image.onload = () => {
+                this.tmpCanvas.width = image.naturalWidth;
+                this.tmpCanvas.height = image.naturalHeight;
+                this.tmpContext.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
+                this.imageCanvas.width = image.naturalWidth;
+                this.imageCanvas.height = image.naturalHeight;
+                this.imageCtx.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
+                seamCarver = new SeamCarver(this.tmpContext.getImageData(0, 0, image.naturalWidth, image.naturalHeight));
+                home.onClickAddButton(image, () => {
+                    images.addImage(new ImageCanvasStore(home.isSeamRemove, home, UUID()));
+                    this.drawImage();
+                });
+                home.toggleLoading();
+            }
+        } else {
+            home.onClickAddButton(null, () => {
+                images.addImage(new ImageCanvasStore(home.isSeamRemove, home, UUID()));
+                this.drawImage();
+            });
+        }
+    }
+
 }

@@ -11,6 +11,7 @@ export default class SeamCarver {
   // private maxHeat: number;
   private seams: number[][];
   private hSeams: number[][];
+  private seamMap: number[][];
 
   /**
    * constructor
@@ -21,6 +22,25 @@ export default class SeamCarver {
     this.newImage = new Uint8ClampedArray(image.width * image.height * 4);
     this.initHeatMap();
     this.initSeam();
+  }
+
+  public getSeamMap = () => {
+    if (this.seamMap) {
+      return this.seamMap
+    }
+    this.seamMap = [];
+    for (let y = 0; y < this.image.height; y++) {
+      this.seamMap[y] = [];
+      for (let x = 0; x < this.image.width; x++) {
+        this.seamMap[y][x] = 0;
+        for (let i = 0; i < this.seams.length; i++) {
+          if (this.seams[i][y] === x) {
+            this.seamMap[y][x] = i + 1;
+          }
+        }
+      }
+    }
+    return this.seamMap;
   }
 
   public copyImage = () => {

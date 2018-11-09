@@ -1,10 +1,46 @@
 import { action, observable, IObservableArray } from 'mobx';
-import Vec2 from 'src/lib/math/Vec2';
+import Vec2 from '../lib/math/Vec2';
 import { HomeStore } from './HomeStore';
+import { MultiResizer } from '../lib/multi-resizer/MultiResizer';
+import SeamCarver from 'src/lib/seams/SeamCarver';
 
 export class ImagesStore {
   @observable
   public images: IObservableArray<ImageCanvasStore> = observable([]);
+
+  public getResizer(seamCarver: SeamCarver) {
+    const imageData = seamCarver.image;
+    const seamMap = seamCarver.getSeamMap();
+    let images = this.images.slice();
+    images.sort((a, b) => { return a.canvasWidth < b.canvasWidth ? 1 : 0 });
+    let originXKeys: number[][] = [];
+    let originYKeys: number[][] = [];
+    let widthKeys: number[][] = [];
+    let heightKeys: number[][] = [];
+    let scaleXKeys: number[][] = [];
+    let scaleYKeys: number[][] = [];
+    for (let image of images) {
+      originXKeys.push([image.canvasWidth, image.originPoint.x]);
+      widthKeys.push([image.canvasWidth, image.seamWidth]);
+      scaleXKeys.push([image.canvasWidth, image.scale.x]);
+    }
+    images.sort((a, b) => { return a.canvasHeight < b.canvasHeight ? 1 : 0 });
+    for (let image of images) {
+      originYKeys.push([image.canvasHeight, image.originPoint.y]);
+      heightKeys.push([image.canvasHeight, image.seamHeight]);
+      scaleYKeys.push([image.canvasHeight, image.scale.y]);
+    }
+    const metainfo = {
+      originXKeys: originXKeys,
+      originYKeys: originYKeys,
+      widthKeys: widthKeys,
+      heightKeys: heightKeys,
+      scaleXKeys: scaleXKeys,
+      scaleYKeys: scaleYKeys,
+      seamMap: seamMap
+    };
+    return new MultiResizer(imageData, metainfo);
+  }
 
   @action.bound
   public addImage(image: ImageCanvasStore) {

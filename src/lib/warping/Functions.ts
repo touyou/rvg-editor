@@ -2,7 +2,7 @@
  * Retargeting Implementation Helper Functions
  */
 
-import * as linear from './Matrix';
+import * as linear from '../math/Matrix';
 
 /**
  * Energy Calculation Helper

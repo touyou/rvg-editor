@@ -2,7 +2,7 @@
  * Retargeting Implementation 
  */
 import * as func from './Functions';
-import * as linear from './Matrix';
+import * as linear from '../math/Matrix';
 
 export default class Warping {
     image?: Uint8ClampedArray;

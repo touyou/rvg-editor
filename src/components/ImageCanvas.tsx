@@ -54,6 +54,9 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
                 margin: '8px',
             }}>
                 <canvas
+                    style={{
+                        margin: 'auto'
+                    }}
                     ref="canvas"
                     width={image.canvasWidth}
                     height={image.canvasHeight}
@@ -179,8 +182,6 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
     }
 
     private drawImage = (width: number, height: number, origin: Vec2, scale: Vec2) => {
-        console.log({ width: width, height: height, origin: origin, scale: scale });
-        console.log(this.canvas.width);
         this.ctx.clearRect(0, 0, width, height);
         this.ctx.scale(scale.x, scale.y);
         this.ctx.drawImage(this.imageCanvas, origin.x, origin.y);
