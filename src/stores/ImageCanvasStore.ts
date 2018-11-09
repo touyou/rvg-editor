@@ -3,6 +3,8 @@ import Vec2 from '../lib/math/Vec2';
 import { HomeStore } from './HomeStore';
 import { MultiResizer } from '../lib/multi-resizer/MultiResizer';
 import SeamCarver from 'src/lib/seams/SeamCarver';
+import * as JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 export class ImagesStore {
   @observable
@@ -40,6 +42,52 @@ export class ImagesStore {
       seamMap: seamMap
     };
     return new MultiResizer(imageData, metainfo);
+  }
+
+  public saveFiles(path: string, seamCarver: SeamCarver) {
+    const imageData = seamCarver.image;
+    const seamMap = seamCarver.getSeamMap();
+    let images = this.images.slice();
+    images.sort((a, b) => { return a.canvasWidth < b.canvasWidth ? 1 : 0 });
+    let originXKeys: number[][] = [];
+    let originYKeys: number[][] = [];
+    let widthKeys: number[][] = [];
+    let heightKeys: number[][] = [];
+    let scaleXKeys: number[][] = [];
+    let scaleYKeys: number[][] = [];
+    for (let image of images) {
+      originXKeys.push([image.canvasWidth, image.originPoint.x]);
+      widthKeys.push([image.canvasWidth, image.seamWidth]);
+      scaleXKeys.push([image.canvasWidth, image.scale.x]);
+    }
+    images.sort((a, b) => { return a.canvasHeight < b.canvasHeight ? 1 : 0 });
+    for (let image of images) {
+      originYKeys.push([image.canvasHeight, image.originPoint.y]);
+      heightKeys.push([image.canvasHeight, image.seamHeight]);
+      scaleYKeys.push([image.canvasHeight, image.scale.y]);
+    }
+    const metainfo = {
+      originXKeys: originXKeys,
+      originYKeys: originYKeys,
+      widthKeys: widthKeys,
+      heightKeys: heightKeys,
+      scaleXKeys: scaleXKeys,
+      scaleYKeys: scaleYKeys,
+      seamMap: seamMap
+    };
+    const jsonText = JSON.stringify(metainfo);
+    const zip = new JSZip();
+    zip.file('metainfo.json', jsonText);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
+    const ctx = canvas.getContext('2d')!;
+    ctx.putImageData(imageData, 0, 0);
+    zip.file('image.png', canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, ''), { base64: true });
+    zip.generateAsync({ type: 'blob' }).then((blob) => {
+      saveAs(blob, path);
+    });
   }
 
   @action.bound

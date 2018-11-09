@@ -39,6 +39,7 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
     imageCanvas: HTMLCanvasElement;
     imageCtx: CanvasRenderingContext2D;
     resizer: MultiResizer;
+    imageName: string;
     private tmpCanvas: HTMLCanvasElement;
     private tmpContext: CanvasRenderingContext2D;
 
@@ -291,6 +292,7 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
         if (files.length === 0) {
             return;
         }
+        this.imageName = files[0].name;
         const home = this.props.home as HomeStore;
         home.onClickOpenButton(URL.createObjectURL(files[0]));
     }
@@ -302,7 +304,13 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
         if (type === this.actions[0].name) {        // Add Image
             home.toggleModalOpen();
         } else if (type === this.actions[1].name) { // Save Image
-            /** TODO */
+            let name: string = '';
+            if (this.imageName) {
+                name = this.imageName.replace(/\.(png|svg|jpg|jpeg|gif|bmp|tiff)/, '') + '.msi';
+            } else {
+                name = 'image,msi';
+            }
+            images.saveFiles(name, seamCarver!);
         } else if (type === this.actions[2].name) { // Delete Image
             images.deleteAll();
         }
