@@ -3,7 +3,8 @@ import * as React from 'react';
 import { HomeStore } from 'src/stores/HomeStore';
 import CanvasContainer from './ImageCanvas';
 import { AppStore, WindowMode } from 'src/stores/AppStore';
-import ImageCanvasStore, { ImagesStore } from 'src/stores/ImageCanvasStore';
+import { ImagesStore } from 'src/stores/ImageCanvasStore';
+// import { ImagesStore } from 'src/stores/ImageCanvasStore';
 import { seamCarver } from './SplitContainer';
 
 interface IHomeProps {
@@ -20,21 +21,41 @@ export default class Home extends React.Component<IHomeProps> {
         const app = this.props.app as AppStore;
         const images = this.props.images as ImagesStore;
 
+        let imageArray = images.images.slice();
+        imageArray.sort((a, b) => {
+            if (a.canvasWidth === b.canvasWidth) {
+                return a.canvasHeight < b.canvasHeight ? 1 : 0;
+            }
+            return a.canvasWidth < b.canvasWidth ? 1 : 0;
+        })
+        let canvasArray: any[] = [];
+        let originX = 16;
+        for (let image of imageArray) {
+            const width = Math.max(image.canvasWidth, 346);
+            canvasArray.push(<CanvasContainer
+                key={image.id}
+                image={image}
+                seamCarver={seamCarver!}
+                originX={originX}
+            />)
+            originX += width + 16;
+        }
+
         return (
             <div style={{
                 backgroundColor: '#fff',
                 textAlign: 'center',
-                overflow: 'hidden',
+                overflow: 'scroll',
                 width: this.getEditorWidth(app.windowMode),
+                height: '100vh'
             }}>
-
-                {images.images.map((image: ImageCanvasStore) => (
-                    <CanvasContainer
-                        key={image.id}
-                        image={image}
-                        seamCarver={seamCarver!}
-                    />
-                ))}
+                <div style={{
+                    width: originX,
+                    height: '100vh',
+                    position: 'relative'
+                }}>
+                    {canvasArray}
+                </div>
             </div>
         );
     }

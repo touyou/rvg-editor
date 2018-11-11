@@ -11,6 +11,7 @@ import Vec2 from 'src/lib/math/Vec2';
 interface IImageProps {
     image: ImageCanvasStore;
     seamCarver: SeamCarver;
+    originX: number;
 }
 
 @observer
@@ -48,10 +49,11 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
 
         return (
             <Paper style={{
+                position: 'absolute',
+                top: 16,
+                left: this.props.originX,
                 display: 'flex',
-                float: 'left',
                 flexDirection: 'column',
-                margin: '8px',
             }}>
                 <canvas
                     style={{
