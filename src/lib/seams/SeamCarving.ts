@@ -1,4 +1,4 @@
-import { min } from './Functions';
+import { min } from '../warping/Functions';
 import * as linear from '../math/Matrix';
 
 // const linear = require('../warping/Matrix');
