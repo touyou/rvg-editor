@@ -20,6 +20,19 @@ class MultiSizeImage extends HTMLElement {
     this._metainfo = null;
     this._fileUrl = null;
 
+    const scriptPathFetch = function () {
+      if (document.currentScript) {
+        return document.currentScript;
+      } else {
+        let scripts = document.getElementsByTagName('script');
+        script = scripts[scripts.length - 1];
+        if (script.src) {
+          return script.src;
+        }
+      }
+    }
+    this._scriptPath = scriptPathFetch().src.split('/').slice(0, -1).join('/');
+
     const shadow = this.attachShadow({
       mode: 'open'
     });
@@ -71,12 +84,10 @@ class MultiSizeImage extends HTMLElement {
     if (oldValue === newValue) {
       return;
     }
-    console.log("attribute");
     this._updateSrc();
   }
 
   connectedCallback() {
-    console.log("connect");
     this._updateSrc();
   }
 
@@ -89,7 +100,6 @@ class MultiSizeImage extends HTMLElement {
   }
 
   _onresize() {
-    console.log("resize");
     if (this._timer > 0) {
       clearTimeout(this._timer);
     }
@@ -134,8 +144,8 @@ class MultiSizeImage extends HTMLElement {
 
     const that = this;
     zip.workerScripts = {
-      deflater: ['./worker_pako.js'],
-      inflater: ['./worker_pako.js'],
+      deflater: [this._scriptPath + '/worker_pako.js'],
+      inflater: [this._scriptPath + '/worker_pako.js'],
     };
     zip.createReader(new zip.HttpReader(this._msiSrc), function (reader) {
       reader.getEntries(function (entries) {
@@ -164,7 +174,6 @@ class MultiSizeImage extends HTMLElement {
               that._resizer = new MultiResizer(tmpCtx.getImageData(0, 0, that._image.naturalWidth, that._image.naturalHeight), that._metainfo);
               that._drawImage();
             }
-            console.log('clear?');
             clearInterval(unzipTimer);
           }
         }, 100);
