@@ -1,6 +1,29 @@
-import {
-  Vec2
-} from "../math/Vec2";
+class Vec2 {
+  constructor(x, y) {}
+
+  get width() {
+    return this.x;
+  }
+  get height() {
+    return this.y;
+  }
+
+  static add(v1, v2) {
+    return new Vec2(v1.x + v2.x, v1.y + v2.y);
+  }
+
+  static sub(v1, v2) {
+    return new Vec2(v1.x - v2.x, v1.y - v2.y);
+  }
+
+  static mul(v1, v2) {
+    return new Vec2(v1.x * v2.x, v1.y * v2.y);
+  }
+
+  static div(v1, v2) {
+    return new Vec2(v1.x / v2.x, v1.y / v2.y);
+  }
+}
 
 export class MultiResizer {
   /**
@@ -24,14 +47,13 @@ export class MultiResizer {
    * @param {number} width
    * @param {number} height
    */
-  seamImageData = (width, height) => {
+  seamImageData(width, height) {
     const newImage = new ImageData(width, height);
 
     const seamFactHorizontal = this.binarySearch(width, this.metainfo.widthKeys);
     const seamFactVertical = this.binarySearch(height, this.metainfo.heightKeys);
 
     const widthDiff = this.image.width - seamFactHorizontal;
-    console.log(widthDiff);
 
     if (widthDiff >= 0) {
       for (let y = 0; y < this.image.height; y++) {
@@ -75,19 +97,19 @@ export class MultiResizer {
     return newImage;
   }
 
-  originX = (width) => {
+  originX(width) {
     return this.binarySearch(width, this.metainfo.originXKeys);
   }
 
-  originY = (height) => {
+  originY(height) {
     return this.binarySearch(height, this.metainfo.originYKeys);
   }
 
-  scaleX = (width) => {
+  scaleX(width) {
     return this.binarySearch(width, this.metainfo.scaleXKeys);
   }
 
-  scaleY = (height) => {
+  scaleY(height) {
     return this.binarySearch(height, this.metainfo.scaleYKeys);
   }
 
@@ -95,7 +117,7 @@ export class MultiResizer {
    * @param {number} value
    * @param {any[][]} keyFrames
    */
-  binarySearch = (value, keyFrames) => {
+  binarySearch(value, keyFrames) {
     let left = -1;
     let right = keyFrames.length;
     while (right - left > 1) {
@@ -106,12 +128,7 @@ export class MultiResizer {
         left = mid;
       }
     }
-    console.log({
-      left: left,
-      right: right,
-      value: value,
-      keyFrames: keyFrames
-    })
+
     if (keyFrames.length === 1) {
       return keyFrames[0][1];
     } else if (right === keyFrames.length) {

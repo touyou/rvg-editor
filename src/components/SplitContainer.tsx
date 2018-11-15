@@ -360,7 +360,7 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
             if (this.imageName) {
                 name = this.imageName.replace(/\.(png|svg|jpg|jpeg|gif|bmp|tiff)/, '') + '.msi';
             } else {
-                name = 'image,msi';
+                name = 'image.msi';
             }
             images.saveFiles(name, seamCarver!);
         } else if (type === this.actions[2].name) { // Delete Image
