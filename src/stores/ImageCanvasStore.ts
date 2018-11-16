@@ -186,6 +186,11 @@ export default class ImageCanvasStore {
     completion();
   }
 
+  public onChangeSeamHeight(value: number, completion: Function) {
+    this.seamHeight = value;
+    completion();
+  }
+
   public onClickResetButton() {
     this.seamWidth = this.originalWidth;
     this.seamHeight = this.originalHeight;

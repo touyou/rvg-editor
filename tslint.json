@@ -19,6 +19,10 @@
     }
   },
   "linterOptions": {
-    "exclude": ["config/**/*.js", "node_modules/**/*.ts"]
+    "exclude": [
+      "config/**/*.js", "node_modules/**/*.ts",
+      "public/**/*.js", "src/lib/multi-resizer/zip_js_original/*.js",
+      "src/lib/multi-resizer/worker_pako.js", "src/lib/multi-resizer/zip.js"
+    ]
   }
 }

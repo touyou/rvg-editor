@@ -36,6 +36,7 @@ export default class Home extends React.Component<IHomeProps> {
                 key={image.id}
                 image={image}
                 seamCarver={seamCarver!}
+                // seam={seam!}
                 originX={originX}
             />)
             originX += width + 16;

@@ -386,3 +386,167 @@ export default class SeamCarver {
     console.log(this.hSeams[0]);
   }
 }
+
+export class SeamCarverTemp {
+  seamEnergy: number;
+
+  constructor(public image: ImageData) {
+  }
+
+  /**
+   * Find optimal seam map by energy
+   * @param energy 
+   */
+  findOptimalSeam(energy: number[][]) {
+    const min = (x: number, y: number): number => {
+      return x < y ? x : y;
+    }
+
+    // DPで計算する部分
+    let M = energy.slice();
+    const height = energy.length;
+    const width = energy[0].length;
+    for (let y = 0; y < height; y++) {
+      M[y][width] = Number.MAX_VALUE;
+    }
+    for (let y = 1; y < height; y++) {
+      for (let x = 1; x < width; x++) {
+        const vl = M[y - 1][x - 1];
+        const vm = M[y - 1][x];
+        const vr = M[y - 1][x + 1];
+        M[y][x] += min(vl, min(vm, vr));
+      }
+    }
+
+    // 最小seamを見つける
+    let val = Number.MAX_VALUE;
+    let indexX = -1;
+    for (let x = 0; x < width + 1; x++) {
+      if (val > M[height - 1][x]) {
+        val = M[height - 1][x];
+        indexX = x;
+      }
+    }
+
+    let seamEnergy = val;
+    let optSeamMask: number[][] = [];
+    for (let y = height - 1; y >= 1; y--) {
+      optSeamMask[y] = [];
+      for (let x = 0; x < width; x++) {
+        optSeamMask[y][x] = 0;
+      }
+      optSeamMask[y][indexX] = 1;
+      const vl = M[y - 1][indexX - 1];
+      const vm = M[y - 1][indexX];
+      const vr = M[y - 1][indexX + 1];
+
+      seamEnergy += seamEnergy + min(vl, min(vm, vr));
+      indexX += (vl < vm ? (vl < vr ? -1 : 1) : (vm < vr ? 0 : 1));
+    }
+
+    for (let x = 0; x < width; x++) {
+      optSeamMask[0][x] = 0;
+    }
+    optSeamMask[0][indexX] = 1;
+
+    this.seamEnergy = seamEnergy;
+    return optSeamMask;
+  }
+
+  /**
+   * Convolution Filter
+   * ref: https://www.html5rocks.com/en/tutorials/canvas/imagefilters/
+   * @param pixels 
+   * @param weights 
+   * @param opaque 
+   */
+  convolute(pixels: ImageData, weights: number[], opaque: boolean = false) {
+    const side = Math.round(Math.sqrt(weights.length));
+    const halfSide = Math.floor(side / 2);
+    const src = pixels.data;
+    const w = pixels.width;
+    const h = pixels.height;
+    let output = new ImageData(w, h);
+    let dst = output.data;
+    const alphaFac = opaque ? 1 : 0;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const sy = y;
+        const sx = x;
+        const dstOff = (y * w + x) * 4;
+        let r = 0;
+        let g = 0;
+        let b = 0;
+        let a = 0;
+        for (let cy = 0; cy < side; cy++) {
+          for (let cx = 0; cx < side; cx++) {
+            const scy = sy + cy - halfSide;
+            const scx = sx + cx - halfSide;
+            if (scy >= 0 && scy < h && scx >= 0 && scx < w) {
+              const srcOff = (scy * w + scx) * 4;
+              const wt = weights[cy * side + cx];
+              r += src[srcOff] * wt;
+              g += src[srcOff + 1] * wt;
+              b += src[srcOff + 2] * wt;
+              a += src[srcOff + 3] * wt;
+            }
+          }
+        }
+        dst[dstOff] = r;
+        dst[dstOff + 1] = g;
+        dst[dstOff + 2] = b;
+        dst[dstOff + 3] = a * alphaFac * (255 - a);
+      }
+    }
+    return output;
+  }
+
+  /**
+   * Calculate Energy Map by Sobel filter
+   * @param pixels 
+   */
+  sobelEnergy(pixels: ImageData) {
+    const b = (x: number, y: number): number => {
+      if (x < 0 || y < 0 || x >= pixels.width || y >= pixels.height) {
+        return 0;
+      }
+      const offset = y * pixels.width + x;
+      return pixels.data[offset] + pixels.data[offset + 1] + pixels.data[offset + 2];
+    }
+    const dot = (a: number[], b: number[]): number => {
+      if (a.length !== b.length) {
+        return 0;
+      }
+      let sum = 0;
+      for (let i = 0, len = a.length; i < len; i++) {
+        sum += a[i] * b[i];
+      }
+      return sum;
+    }
+    const xMap = [
+      -1, 0, 1,
+      -2, 0, 2,
+      -1, 0, 1
+    ];
+    const yMap = [
+      -1, -2, -1,
+      0, 0, 0,
+      1, 2, 1
+    ];
+    let energyMap: number[][] = [];
+    for (let y = 0, height = pixels.height; y < height; y++) {
+      energyMap[y] = [];
+      for (let x = 0, width = pixels.width; x < width; x++) {
+        const bMap = [
+          b(x - 1, y - 1), b(x, y - 1), b(x + 1, y - 1),
+          b(x - 1, y), b(x, y), b(x + 1, y),
+          b(x - 1, y + 1), b(x, y + 1), b(x + 1, y + 1)
+        ];
+        const xenergy = dot(xMap, bMap);
+        const yenergy = dot(yMap, bMap);
+        energyMap[y][x] = Math.sqrt(xenergy * xenergy + yenergy * yenergy);
+      }
+    }
+    return energyMap;
+  }
+}

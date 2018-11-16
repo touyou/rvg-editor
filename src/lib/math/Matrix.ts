@@ -348,6 +348,7 @@ export class Matrix {
     let i = this.rows - 1;
     let j = 0;
     while (-1 < i) {
+      j = this.cols - 1;
       while (-1 < j) {
         if (max < this.elements[i][j]) {
           max = this.elements[i][j];
@@ -412,10 +413,10 @@ export class Matrix {
         this.elements[i] = [];
         while (-1 < j) {
           this.elements[i][j] = elements[i][j];
+          j = (j - 1) | 0;
         }
-        j = (j - 1) | 0;
+        i = (i - 1) | 0;
       }
-      i = (i - 1) | 0;
     }
   }
 
@@ -796,12 +797,19 @@ export class ColorMatrix {
       while (-1 < i) {
         j = elements[i].length - 1;
         this.elements[i] = [];
+        if (i === 0) {
+          console.log(this.elements[0]);
+        }
         while (-1 < j) {
           this.elements[i][j] = elements[i][j];
+          j = (j - 1) | 0;
         }
-        j = (j - 1) | 0;
+        if (i === 0) {
+          console.log(j);
+          console.log(this.elements[0]);
+        }
+        i = (i - 1) | 0;
       }
-      i = (i - 1) | 0;
     }
   }
 
@@ -943,6 +951,7 @@ export class Vector {
     n -= 1;
     while (-1 < n) {
       product += this.elements[n] * vector.elements[n];
+      n = (n - 1) | 0;
     }
     return product;
   }
@@ -972,6 +981,7 @@ export class Vector {
     let i = this.size - 1;
     while (-1 < i) {
       sum += this.elements[i];
+      i = (i - 1) | 0;
     }
     return sum / this.size;
   }

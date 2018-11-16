@@ -7,10 +7,12 @@ import { Paper, Button, FormControlLabel, Switch, TextField } from '@material-ui
 import { observer } from 'mobx-react';
 import ImageCanvasStore from 'src/stores/ImageCanvasStore';
 import Vec2 from 'src/lib/math/Vec2';
+// import SeamCarving from 'src/lib/seams/SeamCarving';
 
 interface IImageProps {
     image: ImageCanvasStore;
     seamCarver: SeamCarver;
+    // seam: SeamCarving;
     originX: number;
 }
 
@@ -35,8 +37,10 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
 
         if (image.isSeamRemove) {
             this.newImage = this.props.seamCarver.resize(image.seamWidth, image.seamHeight);
+            // this.newImage = this.props.seam.seamCarving([image.seamWidth, image.seamHeight], this.props.seam.convertImage());
         } else {
             this.newImage = this.props.seamCarver.resize(image.originalWidth, image.originalHeight);
+            // this.newImage = this.props.seam.seamCarving([image.originalWidth, image.originalHeight], this.props.seam.convertImage());
         }
         this.imageCanvas.width = this.newImage.width;
         this.imageCanvas.height = this.newImage.height;
@@ -72,7 +76,8 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
                     <TextField label="height" value={image.canvasHeight} onChange={this.onChangeCanvasHeight} margin="dense" />
                 </div>
                 <div style={{ color: '#424242' }}>
-                    <ActionSlider min={217} max={1000} step={1} value={image.seamWidth} title="seam width :" changeValue={this.onChangeSeamWidth} />
+                    <ActionSlider min={268} max={1000} step={1} value={image.seamWidth} title="seam width :" changeValue={this.onChangeSeamWidth} />
+                    <ActionSlider min={268} max={1000} step={1} value={image.seamHeight} title="seam height :" changeValue={this.onChangeSeamHeight} />
                     <ActionSlider min={0.01} max={5} step={0.01} value={image.scale.x} title="width scale :" changeValue={this.onChangeScaleX} />
                     <ActionSlider min={0.01} max={5} step={0.01} value={image.scale.y} title="height scale :" changeValue={this.onChangeScaleY} />
                 </div>
@@ -147,16 +152,32 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
 
     public onChangeSeamWidth = (value: any) => {
         const newWidth = Number(value);
-        if (newWidth < 217) {
+        if (newWidth < 268) {
             return;
         }
         const image = this.props.image;
         this.newImage = this.props.seamCarver.resize(newWidth, image.seamHeight);
+        // this.newImage = this.props.seam.seamCarving([newWidth, image.seamHeight], this.props.seam.convertImage());
         this.imageCanvas.width = newWidth;
         this.imageCtx.putImageData(this.newImage, 0, 0);
         image.onChangeSeamWidth(newWidth, () => {
             this.drawImage(image.canvasWidth, image.canvasHeight, image.originPoint, image.scale);
         });
+    }
+
+    public onChangeSeamHeight = (value: any) => {
+        const newHeight = Number(value);
+        if (newHeight < 268) {
+            return;
+        }
+        // const image = this.props.image;
+        // this.newImage = this.props.seamCarver.resize(newWidth, image.seamHeight);
+        // this.newImage = this.props.seam.seamCarving([image.seamWidth, newHeight], this.props.seam.convertImage());
+        // this.imageCanvas.width = newHeight;
+        // this.imageCtx.putImageData(this.newImage, 0, 0);
+        // image.onChangeSeamHeight(newHeight, () => {
+        //     this.drawImage(image.canvasWidth, image.canvasHeight, image.originPoint, image.scale);
+        // });
     }
 
     public onChangeScaleX = (value: any) => {
@@ -178,6 +199,7 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
         this.ctx.clearRect(0, 0, image.canvasWidth, image.canvasHeight);
         this.imageCtx.clearRect(0, 0, image.seamWidth, image.seamHeight);
         this.newImage = this.props.seamCarver.resize(image.originalWidth, image.originalHeight);
+        // this.newImage = this.props.seam.seamCarving([image.originalWidth, image.originalHeight], this.props.seam.convertImage());
         this.imageCtx.putImageData(this.newImage, 0, 0);
         this.ctx.drawImage(this.imageCanvas, 0, 0);
         image.onClickResetButton();

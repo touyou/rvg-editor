@@ -1,15 +1,15 @@
 import { min } from '../warping/Functions';
 import * as linear from '../math/Matrix';
 
-// const linear = require('../warping/Matrix');
-
 export default class SeamCarving {
 
     constructor(public image: ImageData) {
     }
 
     public convertImage() {
+        console.log('matrix gene start');
         let matrix = linear.ColorMatrix.zeros(this.image.height, this.image.width);
+        console.log('matrix generate');
         let y = this.image.height - 1;
         let x = 0;
         while (-1 < y) {
@@ -18,7 +18,9 @@ export default class SeamCarving {
                 matrix.elements[y][x][0] = this.image.data[(y * this.image.width + x) * 4];
                 matrix.elements[y][x][1] = this.image.data[(y * this.image.width + x) * 4 + 1];
                 matrix.elements[y][x][2] = this.image.data[(y * this.image.width + x) * 4 + 2];
+                x = (x - 1) | 0;
             }
+            y = (y - 1) | 0;
         }
         return matrix;
     }
@@ -52,11 +54,12 @@ export default class SeamCarving {
         }
         const [T, transBitMask] = this.findTransportMatrix(sizeReduction[0], sizeReduction[1], image);
         console.log(T);
+        console.log(transBitMask);
         return this.addOrDeleteSeams(transBitMask, sizeReduction, image, this.reduceImageByMask);
     }
 
     private seamCarvingEnlarge(sizeEnlarge: number[], image: linear.ColorMatrix) {
-        if (sizeEnlarge[0] == 0 && sizeEnlarge[1] == 1) {
+        if (sizeEnlarge[0] == 0 && sizeEnlarge[1] == 0) {
             return image;
         }
         const [T, transBitMask] = this.findTransportMatrix(sizeEnlarge[0], sizeEnlarge[1], image);
@@ -67,7 +70,6 @@ export default class SeamCarving {
     private findTransportMatrix(widthDiff: number, heightDiff: number, image: linear.ColorMatrix) {
         let T = linear.Matrix.zeros(heightDiff, widthDiff);
         let transBitMask = linear.Matrix.ones(heightDiff, widthDiff).multiply(-1);
-
         // check border area
         let imageNoRow = image;
         for (let i = 1; i < heightDiff; i++) {
@@ -77,7 +79,6 @@ export default class SeamCarving {
             transBitMask.elements[i][0] = 0;
             T.elements[i][0] = T.elements[i - 1][0] + (seamEnergyRow as number);
         }
-
         let imageNoColumn = image;
         for (let j = 1; j < widthDiff; j++) {
             const energy = this.energyRGB(imageNoColumn);
@@ -142,12 +143,12 @@ export default class SeamCarving {
             if (transBitMask.at(y, x) == 0) {
                 const [optSeamMask, seamEnergyRow] = this.findOptSeam(energy.transpose());
                 console.log(seamEnergyRow);
-                image = operation(image, optSeamMask, false);
+                image = operation(image, optSeamMask, false, this);
                 y = y - 1;
             } else {
                 const [optSeamMask, seamEnergyColumn] = this.findOptSeam(energy);
                 console.log(seamEnergyColumn);
-                image = operation(image, optSeamMask, true);
+                image = operation(image, optSeamMask, true, this);
                 x = x - 1;
             }
         }
@@ -214,11 +215,11 @@ export default class SeamCarving {
         return [optSeamMask, seamEnergy];
     }
 
-    private reduceImageByMask(image: linear.ColorMatrix, seamMask: number[], isVertical: boolean) {
+    private reduceImageByMask(image: linear.ColorMatrix, seamMask: number[], isVertical: boolean, that: SeamCarving = this) {
         if (isVertical) {
-            return this.reduceImageByMaskVertical(image, seamMask);
+            return that.reduceImageByMaskVertical(image, seamMask);
         } else {
-            return this.reduceImageByMaskHorizontal(image, seamMask);
+            return that.reduceImageByMaskHorizontal(image, seamMask);
         }
     }
 
