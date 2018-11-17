@@ -388,9 +388,516 @@ export default class SeamCarver {
 }
 
 export class SeamCarverTemp {
-  seamEnergy: number;
+  _seamEnergy: number;
+  imageData: ImageDataWrapper;
+  consistentVerticalMap: number[][];
+  consistentHorizontalMap: number[][];
 
   constructor(public image: ImageData) {
+    this.imageData = new ImageDataWrapper(image);
+  }
+
+  constructConsistentMap() {
+    const heatMap = this.sobelEnergy(this.imageData);
+    const width = this.imageData.width;
+    const height = this.imageData.height;
+    const inf = Number.MAX_VALUE;
+    const minRow = (value: number[][], y: number, x: number, length: number) => {
+      const vl = x - 1 >= 0 ? value[y][x - 1] : inf;
+      const vm = value[y][x];
+      const vr = x + 1 < length ? value[y][x + 1] : inf;
+      return vl < vm ? (vl < vr ? vl : vr) : (vm < vr ? vm : vr);
+    }
+    const minCol = (value: number[][], y: number, x: number, length: number) => {
+      const vl = y - 1 >= 0 ? value[y - 1][x] : inf;
+      const vm = value[y][x];
+      const vr = y + 1 < length ? value[y + 1][x] : inf;
+      return vl < vm ? (vl < vr ? vl : vr) : (vm < vr ? vm : vr);
+    }
+
+    // First compute best 1-edge path for all pairs of rows
+    let pairList: number[][] = [];
+    for (let y = 0; y < height - 1; y += 1) {
+      pairList[y] = [];
+
+      /// Hungarian algorithm
+      /// -------------------
+      let hungaryMap: number[][] = [];
+      for (let i = 0; i < width; i += 1) {
+        pairList[y][i] = 0;
+        hungaryMap[i] = [];
+        for (let j = 0; j < width; j += 1) {
+          hungaryMap[i][j] = Math.abs(i - j) <= 1 ? heatMap[y][i] + heatMap[y + 1][j] : inf;
+        }
+      }
+
+      // step1
+      for (let i = 0; i < width; i += 1) {
+        const minVal = minRow(hungaryMap, i, i, width);
+        for (let j = Math.max(0, i - 1); j < Math.min(i + 1, width); j += 1) {
+          hungaryMap[i][j] -= minVal;
+        }
+      }
+      for (let i = 0; i < width; i += 1) {
+        const minVal = minCol(hungaryMap, i, i, width);
+        for (let j = Math.max(0, i - 1); j < Math.min(i + 1, width); j += 1) {
+          hungaryMap[j][i] -= minVal;
+        }
+      }
+
+      console.time('hungarian');
+      while (true) {
+        // step2
+        let zeroCoordinate: number[][] = [];
+        for (let i = 0; i < width; i += 1) {
+          for (let j = Math.max(0, i - 1); j < Math.min(i + 1, width); j += 1) {
+            if (hungaryMap[i][j] === 0) {
+              zeroCoordinate.push([i, j]);
+            }
+          }
+        }
+        let checkRow: number[] = [];
+        let checkCol: number[] = [];
+        for (const elem of zeroCoordinate) {
+          let flag = false;
+          for (let i = 0, len = checkRow.length; i < len; i++) {
+            if (checkRow[i] === elem[0]) {
+              flag = true;
+              break;
+            }
+          }
+          for (let i = 0, len = checkCol.length; !flag && i < len; i++) {
+            if (checkCol[i] === elem[1]) {
+              flag = true;
+              break;
+            }
+          }
+          if (!flag) {
+            checkRow.push(elem[0]);
+            checkCol.push(elem[1]);
+          }
+        }
+        if (checkRow.length === width) {
+          for (let i = 0, len = checkRow.length; i < len; i++) {
+            pairList[y][checkRow[i]] = checkCol[i];
+          }
+          break;
+        }
+
+        // step3
+        let rowCount: number[] = new Array<number>(width);
+        let colCount: number[] = new Array<number>(width);
+        let lineR: number[] = [];
+        let lineC: number[] = [];
+        while (zeroCoordinate.length > 0) {
+          let maxZero = 0;
+          let mode = 0;
+          let ind = 0;
+          for (const elem of zeroCoordinate) {
+            if (rowCount[elem[0]]) {
+              rowCount[elem[0]] += 1;
+            } else {
+              rowCount[elem[0]] = 1;
+            }
+            if (colCount[elem[1]]) {
+              colCount[elem[1]] += 1;
+            } else {
+              colCount[elem[1]] = 1;
+            }
+            if (maxZero < rowCount[elem[0]]) {
+              maxZero = rowCount[elem[0]];
+              mode = 0;
+              ind = elem[0];
+            }
+            if (maxZero < colCount[elem[1]]) {
+              maxZero = colCount[elem[1]];
+              mode = 1;
+              ind = elem[1];
+            }
+          }
+          if (mode === 0) {
+            lineR.push(ind);
+            zeroCoordinate = zeroCoordinate.filter((value: number[]) => {
+              return value[0] !== ind;
+            });
+          } else {
+            lineC.push(ind);
+            zeroCoordinate = zeroCoordinate.filter((value: number[]) => {
+              return value[1] !== ind;
+            });
+          }
+          rowCount = new Array<number>(width);
+          colCount = new Array<number>(width);
+        }
+
+        // step4
+        let minVal = Number.MAX_VALUE;
+        for (let i = 0; i < width; i += 1) {
+          let flag = false;
+          for (let k = 0, len = lineR.length; k < len; k += 1) {
+            if (lineR[k] === i) {
+              flag = true;
+              break;
+            }
+          }
+          if (flag) {
+            continue;
+          }
+          for (let j = Math.max(0, i - 1); j < Math.min(i + 1, width); j += 1) {
+            for (let k = 0, len = lineC.length; k < len; k += 1) {
+              if (lineC[k] === j) {
+                flag = true;
+                break;
+              }
+            }
+            if (flag) {
+              flag = false;
+              continue;
+            }
+            if (minVal > hungaryMap[i][j]) {
+              minVal = hungaryMap[i][j];
+            }
+          }
+        }
+        for (let i = 0; i < width; i += 1) {
+          let flagR = false;
+          for (let k = 0, len = lineR.length; k < len; k += 1) {
+            if (lineR[k] === i) {
+              flagR = true;
+              break;
+            }
+          }
+          for (let j = Math.max(0, i - 1); j < Math.min(i + 1, width); j += 1) {
+            let flagC = false;
+            for (let k = 0, len = lineC.length; k < len; k += 1) {
+              if (lineC[k] === j && flagR) {
+                hungaryMap[i][j] += minVal;
+                flagC = true;
+                break;
+              }
+            }
+            if (!flagC && !flagR) {
+              hungaryMap[i][j] -= minVal;
+            }
+          }
+        }
+      }
+      console.timeEnd('hungarian');
+    }
+
+    // pairList is 1-edge information
+    // use this can calculate vertical seam map
+    console.time('vertical');
+    this.calculateVerticalSeamMap(pairList, heatMap);
+    console.timeEnd('vertical');
+
+    // Second compute best 1-edge path for all pairs of cols
+    // hungaryMap, if pairList has diagonal pair, it should be inf
+    let pairColList: number[][] = [];
+    for (let x = 0; x < width - 1; x += 1) {
+      pairColList[x] = [];
+
+      /// Hungarian algorithm
+      /// -------------------
+      let hungaryMap: number[][] = [];
+      for (let i = 0; i < height; i += 1) {
+        hungaryMap[i] = [];
+        pairColList[x][i] = 0;
+        for (let j = 0; j < height; j += 1) {
+          hungaryMap[i][j] = Math.abs(i - j) <= 1 ? heatMap[i][x] + heatMap[j][x + 1] : inf;
+          if (pairList[i][x] === x + 1 || pairList[j][x + 1] === x) {
+            hungaryMap[i][j] = inf;
+          }
+        }
+      }
+
+      // step1
+      for (let i = 0; i < height; i += 1) {
+        const minVal = minRow(hungaryMap, i, i, height);
+        for (let j = Math.max(0, i - 1); j < Math.min(i + 1, height); j += 1) {
+          hungaryMap[i][j] -= minVal;
+        }
+      }
+      for (let i = 0; i < height; i += 1) {
+        const minVal = minCol(hungaryMap, i, i, height);
+        for (let j = Math.max(0, i - 1); j < Math.min(i + 1, height); j += 1) {
+          hungaryMap[j][i] -= minVal;
+        }
+      }
+
+      console.time('hungarian');
+      while (true) {
+        // step2
+        let zeroCoordinate: number[][] = [];
+        for (let i = 0; i < height; i += 1) {
+          for (let j = Math.max(0, i - 1); j < Math.min(i + 1, height); j += 1) {
+            if (hungaryMap[i][j] === 0) {
+              zeroCoordinate.push([i, j]);
+            }
+          }
+        }
+        let checkRow: number[] = [];
+        let checkCol: number[] = [];
+        for (const elem of zeroCoordinate) {
+          let flag = false;
+          for (let i = 0, len = checkRow.length; i < len; i++) {
+            if (checkRow[i] === elem[0]) {
+              flag = true;
+              break;
+            }
+          }
+          for (let i = 0, len = checkCol.length; !flag && i < len; i++) {
+            if (checkCol[i] === elem[1]) {
+              flag = true;
+              break;
+            }
+          }
+          if (!flag) {
+            checkRow.push(elem[0]);
+            checkCol.push(elem[1]);
+          }
+        }
+        if (checkRow.length === width) {
+          for (let i = 0, len = checkRow.length; i < len; i++) {
+            pairColList[x][checkRow[i]] = checkCol[i];
+          }
+          break;
+        }
+
+        // step3
+        let rowCount: number[] = new Array<number>(height);
+        let colCount: number[] = new Array<number>(height);
+        let lineR: number[] = [];
+        let lineC: number[] = [];
+        while (zeroCoordinate.length > 0) {
+          let maxZero = 0;
+          let mode = 0;
+          let ind = 0;
+          for (const elem of zeroCoordinate) {
+            if (rowCount[elem[0]]) {
+              rowCount[elem[0]] += 1;
+            } else {
+              rowCount[elem[0]] = 1;
+            }
+            if (colCount[elem[1]]) {
+              colCount[elem[1]] += 1;
+            } else {
+              colCount[elem[1]] = 1;
+            }
+            if (maxZero < rowCount[elem[0]]) {
+              maxZero = rowCount[elem[0]];
+              mode = 0;
+              ind = elem[0];
+            }
+            if (maxZero < colCount[elem[1]]) {
+              maxZero = colCount[elem[1]];
+              mode = 1;
+              ind = elem[1];
+            }
+          }
+          if (mode === 0) {
+            lineR.push(ind);
+            zeroCoordinate = zeroCoordinate.filter((value: number[]) => {
+              return value[0] !== ind;
+            });
+          } else {
+            lineC.push(ind);
+            zeroCoordinate = zeroCoordinate.filter((value: number[]) => {
+              return value[1] !== ind;
+            });
+          }
+          rowCount = new Array<number>(height);
+          colCount = new Array<number>(height);
+        }
+
+        // step4
+        let minVal = Number.MAX_VALUE;
+        for (let i = 0; i < height; i += 1) {
+          let flag = false;
+          for (let k = 0, len = lineR.length; k < len; k += 1) {
+            if (lineR[k] === i) {
+              flag = true;
+              break;
+            }
+          }
+          if (flag) {
+            continue;
+          }
+          for (let j = Math.max(0, i - 1); j < Math.min(i + 1, height); j += 1) {
+            for (let k = 0, len = lineC.length; k < len; k += 1) {
+              if (lineC[k] === j) {
+                flag = true;
+                break;
+              }
+            }
+            if (flag) {
+              flag = false;
+              continue;
+            }
+            if (minVal > hungaryMap[i][j]) {
+              minVal = hungaryMap[i][j];
+            }
+          }
+        }
+        for (let i = 0; i < height; i += 1) {
+          let flagR = false;
+          for (let k = 0, len = lineR.length; k < len; k += 1) {
+            if (lineR[k] === i) {
+              flagR = true;
+              break;
+            }
+          }
+          for (let j = Math.max(0, i - 1); j < Math.min(i + 1, height); j += 1) {
+            let flagC = false;
+            for (let k = 0, len = lineC.length; k < len; k += 1) {
+              if (lineC[k] === j && flagR) {
+                hungaryMap[i][j] += minVal;
+                flagC = true;
+                break;
+              }
+            }
+            if (!flagC && !flagR) {
+              hungaryMap[i][j] -= minVal;
+            }
+          }
+        }
+      }
+      console.timeEnd('hungarian');
+    }
+
+    // pairColList is 1-edge information
+    // use this can calculate horizontal seam map
+    this.calculateHorizontalSeamMap(pairColList, heatMap);
+  }
+
+
+  /**
+   * Calculate Vertical Consistency Seam Map
+   * @param pairList 
+   * @param heatMap 
+   */
+  calculateVerticalSeamMap(pairList: number[][], heatMap: number[][]) {
+    const M = heatMap.slice();
+    const width = this.imageData.width;
+    const height = this.imageData.height;
+    let backtrack = pairList.slice();
+    let addr: number[] = []
+
+    // Building M map by DP and prepair backtrack
+    for (let y = 1; y < height; y++) {
+      this.consistentVerticalMap[y] = [];
+      for (let x = 0; x < width; x++) {
+        this.consistentVerticalMap[y][x] = 0;
+        addr[x] = x;
+        M[y][pairList[y - 1][x]] += M[y - 1][x];
+        backtrack[y][pairList[y - 1][x]] = x;
+      }
+    }
+
+    // Quicksort last row
+    const quickSort = (arr: number[], left: number, right: number) => {
+      let pivot = 0;
+      let partitionIndex = 0;
+      if (left < right) {
+        pivot = right;
+        partitionIndex = partition(arr, pivot, left, right);
+        quickSort(arr, left, partitionIndex - 1);
+        quickSort(arr, partitionIndex + 1, right);
+      }
+    }
+    const partition = (arr: number[], pivot: number, left: number, right: number) => {
+      const pivotValue = arr[pivot];
+      let partitionIndex = left;
+
+      for (let i = left; i < right; i++) {
+        if (arr[i] < pivotValue) {
+          swap(arr, i, partitionIndex);
+          partitionIndex += 1;
+        }
+      }
+      swap(arr, right, partitionIndex);
+      return partitionIndex;
+    }
+    const swap = (arr: number[], i: number, j: number) => {
+      const temp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = temp;
+      const temp2 = addr[i];
+      addr[i] = addr[j];
+      addr[j] = temp2;
+    }
+    quickSort(M[height - 1], 0, width - 1);
+
+    // Backtrack and consist consistentVerticalMap
+    for (let x = 0; x < width; x++) {
+      this.consistentVerticalMap[height - 1][addr[x]] = x + 1;
+      for (let y = height - 1; y >= 1; y--) {
+        this.consistentVerticalMap[y - 1][backtrack[y][x]] = this.consistentVerticalMap[y][x];
+      }
+    }
+  }
+
+  calculateHorizontalSeamMap(pairList: number[][], heatMap: number[][]) {
+    const M = heatMap.slice();
+    const width = this.imageData.width;
+    const height = this.imageData.height;
+    let backtrack = pairList.slice();
+    let addr: number[] = []
+
+    // Building M map by DP and prepair backtrack
+    for (let x = 1; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        addr[y] = y;
+        M[pairList[x - 1][y]][x] += M[y][x - 1];
+        backtrack[pairList[x - 1][y]][x] = y;
+      }
+    }
+
+    // Quicksort last row
+    const quickSort = (arr: number[], left: number, right: number) => {
+      let pivot = 0;
+      let partitionIndex = 0;
+      if (left < right) {
+        pivot = right;
+        partitionIndex = partition(arr, pivot, left, right);
+        quickSort(arr, left, partitionIndex - 1);
+        quickSort(arr, partitionIndex + 1, right);
+      }
+    }
+    const partition = (arr: number[], pivot: number, left: number, right: number) => {
+      const pivotValue = arr[pivot];
+      let partitionIndex = left;
+
+      for (let i = left; i < right; i++) {
+        if (arr[i] < pivotValue) {
+          swap(arr, i, partitionIndex);
+          partitionIndex += 1;
+        }
+      }
+      swap(arr, right, partitionIndex);
+      return partitionIndex;
+    }
+    const swap = (arr: number[], i: number, j: number) => {
+      const temp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = temp;
+      const temp2 = addr[i];
+      addr[i] = addr[j];
+      addr[j] = temp2;
+    }
+    let lastCol: number[] = [];
+    for (let y = 0; y < height; y++) {
+      lastCol[y] = M[y][width - 1];
+    }
+    quickSort(lastCol, 0, height - 1);
+
+    // Backtrack and consist consistentHorizontalMap
+    for (let y = 0; y < height; y++) {
+      this.consistentHorizontalMap[addr[y]][width - 1] = y + 1;
+      for (let x = width - 1; x >= 1; x--) {
+        this.consistentHorizontalMap[backtrack[y][x]][x - 1] = this.consistentHorizontalMap[y][x];
+      }
+    }
   }
 
   /**
@@ -402,32 +909,30 @@ export class SeamCarverTemp {
       return x < y ? x : y;
     }
 
-    // DPで計算する部分
+    // Find M - minimum energy for all possible seams for each (x,y)
     let M = energy.slice();
     const height = energy.length;
     const width = energy[0].length;
     for (let y = 0; y < height; y++) {
-      M[y][width] = Number.MAX_VALUE;
-    }
-    for (let y = 1; y < height; y++) {
-      for (let x = 1; x < width; x++) {
-        const vl = M[y - 1][x - 1];
+      for (let x = 0; x < width; x++) {
+        const vl = x - 1 > 0 ? M[y - 1][x - 1] : Number.MAX_VALUE;
         const vm = M[y - 1][x];
-        const vr = M[y - 1][x + 1];
+        const vr = x + 1 < width ? M[y - 1][x + 1] : Number.MAX_VALUE;
         M[y][x] += min(vl, min(vm, vr));
       }
     }
 
-    // 最小seamを見つける
+    // Find the minimum value in the last row of M
     let val = Number.MAX_VALUE;
     let indexX = -1;
-    for (let x = 0; x < width + 1; x++) {
+    for (let x = 0; x < width; x++) {
       if (val > M[height - 1][x]) {
         val = M[height - 1][x];
         indexX = x;
       }
     }
 
+    // Traverse back choosing pixels with minimum energy.
     let seamEnergy = val;
     let optSeamMask: number[][] = [];
     for (let y = height - 1; y >= 1; y--) {
@@ -449,69 +954,57 @@ export class SeamCarverTemp {
     }
     optSeamMask[0][indexX] = 1;
 
-    this.seamEnergy = seamEnergy;
+    this._seamEnergy = seamEnergy;
     return optSeamMask;
   }
 
   /**
-   * Convolution Filter
-   * ref: https://www.html5rocks.com/en/tutorials/canvas/imagefilters/
-   * @param pixels 
-   * @param weights 
-   * @param opaque 
+   * Add or Delete Seam by operation
+   * @param transBitMask 
+   * @param sizeReduction 
+   * @param image 
+   * @param operation 
    */
-  convolute(pixels: ImageData, weights: number[], opaque: boolean = false) {
-    const side = Math.round(Math.sqrt(weights.length));
-    const halfSide = Math.floor(side / 2);
-    const src = pixels.data;
-    const w = pixels.width;
-    const h = pixels.height;
-    let output = new ImageData(w, h);
-    let dst = output.data;
-    const alphaFac = opaque ? 1 : 0;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const sy = y;
-        const sx = x;
-        const dstOff = (y * w + x) * 4;
-        let r = 0;
-        let g = 0;
-        let b = 0;
-        let a = 0;
-        for (let cy = 0; cy < side; cy++) {
-          for (let cx = 0; cx < side; cx++) {
-            const scy = sy + cy - halfSide;
-            const scx = sx + cx - halfSide;
-            if (scy >= 0 && scy < h && scx >= 0 && scx < w) {
-              const srcOff = (scy * w + scx) * 4;
-              const wt = weights[cy * side + cx];
-              r += src[srcOff] * wt;
-              g += src[srcOff + 1] * wt;
-              b += src[srcOff + 2] * wt;
-              a += src[srcOff + 3] * wt;
-            }
-          }
-        }
-        dst[dstOff] = r;
-        dst[dstOff + 1] = g;
-        dst[dstOff + 2] = b;
-        dst[dstOff + 3] = a * alphaFac * (255 - a);
+  addOrDeleteSeams(transBitMask: number[][], sizeReduction: number[], image: ImageDataWrapper, operation: Function) {
+    let y = transBitMask.length - 1;
+    let x = transBitMask[0].length - 1;
+
+    for (let it = 0; it < sizeReduction[0] + sizeReduction[1]; it++) {
+      const energy = this.sobelEnergy(image);
+      if (transBitMask[y][x] === 0) {
+        const optSeamMask = this.findOptimalSeam(energy);
+        image = operation(image, optSeamMask, false);
+        y = y - 1;
+      } else {
+        const optSeamMask = this.findOptimalSeam(energy);
+        image = operation(image, optSeamMask, true);
+        x = x - 1;
       }
     }
-    return output;
+  }
+
+  /**
+   * Reduce Image by mask
+   * @param image 
+   * @param seamMask 
+   * @param isVertical 
+   */
+  reduceImageByMask(image: ImageDataWrapper, seamMask: number[][], isVertical: boolean) {
+    image.deleteSeam(seamMask, isVertical);
+    return image;
   }
 
   /**
    * Calculate Energy Map by Sobel filter
    * @param pixels 
    */
-  sobelEnergy(pixels: ImageData) {
+  sobelEnergy(pixels: ImageDataWrapper) {
     const b = (x: number, y: number): number => {
       if (x < 0 || y < 0 || x >= pixels.width || y >= pixels.height) {
         return 0;
       }
-      const offset = y * pixels.width + x;
-      return pixels.data[offset] + pixels.data[offset + 1] + pixels.data[offset + 2];
+      const data = pixels.editedData[y][x];
+      return data[0] + data[1] + data[2];
     }
     const dot = (a: number[], b: number[]): number => {
       if (a.length !== b.length) {
@@ -548,5 +1041,81 @@ export class SeamCarverTemp {
       }
     }
     return energyMap;
+  }
+}
+
+class ImageDataWrapper {
+  originalData: ImageData;
+  editedData: number[][][];
+  verticalMap: number[][];
+  horizontalMap: number[][];
+  count: number;
+
+  get width() { return this.originalData.width; }
+  get height() { return this.originalData.height; }
+  // get width() { return this.editedData[0].length; }
+  // get height() { return this.editedData.length; }
+
+  constructor(image: ImageData) {
+    this.originalData = image;
+    this.count = 0;
+
+    // initialize map
+    this.verticalMap = [];
+    this.horizontalMap = [];
+    this.editedData = [];
+    for (let y = 0, height = this.height; y < height; y++) {
+      this.verticalMap[y] = [];
+      this.horizontalMap[y] = [];
+      this.editedData[y] = [];
+      for (let x = 0, width = this.width; x < width; x++) {
+        this.verticalMap[y][x] = 0;
+        this.horizontalMap[y][x] = 0;
+        this.editedData[y][x] = this.getPixel(x, y);
+      }
+    }
+  }
+
+  /**
+   * Get pixel data from original image data
+   * @param x 
+   * @param y 
+   */
+  getPixel(x: number, y: number): number[] {
+    const offset = y * this.originalData.width + x;
+    const data = this.originalData.data;
+    return [data[offset], data[offset + 1], data[offset + 2], data[offset + 3]];
+  }
+
+  /**
+   * Construct editedData and Map
+   * @param seamMap 
+   * @param isVerticalSeam 
+   */
+  deleteSeam(seamMap: number[][], isVerticalSeam: boolean) {
+    this.count += 1;
+    const newData: number[][][] = [];
+    if (isVerticalSeam) {
+      for (let y = 0, height = seamMap.length; y < height; y++) {
+        let x0 = 0;
+        for (let x = 0, width = seamMap[0].length; x < width; x++) {
+          if (seamMap[y][x] === 0) {
+            newData[y][x0] = this.editedData[y][x];
+            x0 += 1;
+          }
+        }
+      }
+    } else {
+      for (let x = 0, width = seamMap[0].length; x < width; x++) {
+        let y0 = 0;
+        for (let y = 0, height = seamMap.length; y < height; y++) {
+          if (seamMap[y][x] === 0) {
+            newData[y0][x] = this.editedData[y][x];
+            y0 += 1;
+          }
+        }
+      }
+    }
+    this.editedData = newData.slice();
   }
 }

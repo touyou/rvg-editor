@@ -14,10 +14,9 @@ import { SpeedDial, SpeedDialIcon, SpeedDialAction } from '@material-ui/lab';
 import { HomeStore } from 'src/stores/HomeStore';
 import ImageCanvasStore, { ImagesStore } from 'src/stores/ImageCanvasStore';
 import { MultiResizer } from '../lib/multi-resizer/MultiResizer';
-import SeamCarver from 'src/lib/seams/SeamCarver';
+import SeamCarver, { SeamCarverTemp } from 'src/lib/seams/SeamCarver';
 import * as UUID from 'uuid/v4';
 import Resizable, { NumberSize } from 're-resizable';
-// import SeamCarving from 'src/lib/seams/SeamCarving';
 
 interface ISplitProps {
     app?: AppStore;
@@ -388,14 +387,10 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                 this.imageCanvas.width = image.naturalWidth;
                 this.imageCanvas.height = image.naturalHeight;
                 this.imageCtx.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
-                // seam = new SeamCarving(this.tmpContext.getImageData(0, 0, image.naturalWidth, image.naturalHeight));
-                // console.log('start');
-                // console.time('convert');
-                // const imageMatrix = seam.convertImage();
-                // console.timeEnd('convert');
-                // console.time('seam-carve-2px-each');
-                // console.log(seam.seamCarving([1, 1], imageMatrix));
-                // console.timeEnd('seam-carve-2px-each');
+                console.time('test');
+                const seamCarverTemp = new SeamCarverTemp(this.tmpContext.getImageData(0, 0, image.naturalWidth, image.naturalHeight));
+                seamCarverTemp.constructConsistentMap();
+                console.timeEnd('test');
                 seamCarver = new SeamCarver(this.tmpContext.getImageData(0, 0, image.naturalWidth, image.naturalHeight));
                 home.onClickAddButton(image, () => {
                     images.addImage(new ImageCanvasStore(home.isSeamRemove, home, UUID()));

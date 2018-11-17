@@ -306,4 +306,52 @@ export default class SeamCarving {
     private energyGrey(I: linear.Matrix): linear.Matrix {
         return I.prewitt();
     }
+
+    /**
+   * Convolution Filter
+   * ref: https://www.html5rocks.com/en/tutorials/canvas/imagefilters/
+   * @param pixels 
+   * @param weights 
+   * @param opaque 
+   */
+    convolute(pixels: ImageData, weights: number[], opaque: boolean = false) {
+        const side = Math.round(Math.sqrt(weights.length));
+        const halfSide = Math.floor(side / 2);
+        const src = pixels.data;
+        const w = pixels.width;
+        const h = pixels.height;
+        let output = new ImageData(w, h);
+        let dst = output.data;
+        const alphaFac = opaque ? 1 : 0;
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const sy = y;
+                const sx = x;
+                const dstOff = (y * w + x) * 4;
+                let r = 0;
+                let g = 0;
+                let b = 0;
+                let a = 0;
+                for (let cy = 0; cy < side; cy++) {
+                    for (let cx = 0; cx < side; cx++) {
+                        const scy = sy + cy - halfSide;
+                        const scx = sx + cx - halfSide;
+                        if (scy >= 0 && scy < h && scx >= 0 && scx < w) {
+                            const srcOff = (scy * w + scx) * 4;
+                            const wt = weights[cy * side + cx];
+                            r += src[srcOff] * wt;
+                            g += src[srcOff + 1] * wt;
+                            b += src[srcOff + 2] * wt;
+                            a += src[srcOff + 3] * wt;
+                        }
+                    }
+                }
+                dst[dstOff] = r;
+                dst[dstOff + 1] = g;
+                dst[dstOff + 2] = b;
+                dst[dstOff + 3] = a * alphaFac * (255 - a);
+            }
+        }
+        return output;
+    }
 }
