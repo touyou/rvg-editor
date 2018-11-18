@@ -387,6 +387,8 @@ export default class SeamCarver {
   }
 }
 
+const inf = Number.MAX_VALUE;
+
 export class SeamCarverTemp {
   _seamEnergy: number;
   imageData: ImageDataWrapper;
@@ -401,7 +403,6 @@ export class SeamCarverTemp {
     const heatMap = this.sobelEnergy(this.imageData);
     const width = this.imageData.width;
     const height = this.imageData.height;
-    const inf = Number.MAX_VALUE;
     const minRow = (value: number[][], y: number, x: number, length: number) => {
       const vl = x - 1 >= 0 ? value[y][x - 1] : inf;
       const vm = value[y][x];
@@ -417,172 +418,45 @@ export class SeamCarverTemp {
 
     // First compute best 1-edge path for all pairs of rows
     let pairList: number[][] = [];
+    let hungaryMap: number[][] = [];
+    for (let i = 0; i < width; i += 1) {
+      hungaryMap[i] = [];
+      for (let j = 0; j < width; j += 1) {
+        hungaryMap[i][j] = inf;
+      }
+    }
     for (let y = 0; y < height - 1; y += 1) {
       pairList[y] = [];
 
       /// Hungarian algorithm
       /// -------------------
-      let hungaryMap: number[][] = [];
       for (let i = 0; i < width; i += 1) {
         pairList[y][i] = 0;
-        hungaryMap[i] = [];
-        for (let j = 0; j < width; j += 1) {
-          hungaryMap[i][j] = Math.abs(i - j) <= 1 ? heatMap[y][i] + heatMap[y + 1][j] : inf;
+        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, width - 1); j += 1) {
+          hungaryMap[i][j] = heatMap[y][i] + heatMap[y + 1][j];
         }
       }
 
       // step1
       for (let i = 0; i < width; i += 1) {
         const minVal = minRow(hungaryMap, i, i, width);
-        for (let j = Math.max(0, i - 1); j < Math.min(i + 1, width); j += 1) {
+        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, width - 1); j += 1) {
           hungaryMap[i][j] -= minVal;
         }
       }
       for (let i = 0; i < width; i += 1) {
         const minVal = minCol(hungaryMap, i, i, width);
-        for (let j = Math.max(0, i - 1); j < Math.min(i + 1, width); j += 1) {
+        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, width - 1); j += 1) {
           hungaryMap[j][i] -= minVal;
         }
       }
 
-      console.time('hungarian');
-      while (true) {
-        // step2
-        let zeroCoordinate: number[][] = [];
-        for (let i = 0; i < width; i += 1) {
-          for (let j = Math.max(0, i - 1); j < Math.min(i + 1, width); j += 1) {
-            if (hungaryMap[i][j] === 0) {
-              zeroCoordinate.push([i, j]);
-            }
-          }
-        }
-        let checkRow: number[] = [];
-        let checkCol: number[] = [];
-        for (const elem of zeroCoordinate) {
-          let flag = false;
-          for (let i = 0, len = checkRow.length; i < len; i++) {
-            if (checkRow[i] === elem[0]) {
-              flag = true;
-              break;
-            }
-          }
-          for (let i = 0, len = checkCol.length; !flag && i < len; i++) {
-            if (checkCol[i] === elem[1]) {
-              flag = true;
-              break;
-            }
-          }
-          if (!flag) {
-            checkRow.push(elem[0]);
-            checkCol.push(elem[1]);
-          }
-        }
-        if (checkRow.length === width) {
-          for (let i = 0, len = checkRow.length; i < len; i++) {
-            pairList[y][checkRow[i]] = checkCol[i];
-          }
-          break;
-        }
-
-        // step3
-        let rowCount: number[] = new Array<number>(width);
-        let colCount: number[] = new Array<number>(width);
-        let lineR: number[] = [];
-        let lineC: number[] = [];
-        while (zeroCoordinate.length > 0) {
-          let maxZero = 0;
-          let mode = 0;
-          let ind = 0;
-          for (const elem of zeroCoordinate) {
-            if (rowCount[elem[0]]) {
-              rowCount[elem[0]] += 1;
-            } else {
-              rowCount[elem[0]] = 1;
-            }
-            if (colCount[elem[1]]) {
-              colCount[elem[1]] += 1;
-            } else {
-              colCount[elem[1]] = 1;
-            }
-            if (maxZero < rowCount[elem[0]]) {
-              maxZero = rowCount[elem[0]];
-              mode = 0;
-              ind = elem[0];
-            }
-            if (maxZero < colCount[elem[1]]) {
-              maxZero = colCount[elem[1]];
-              mode = 1;
-              ind = elem[1];
-            }
-          }
-          if (mode === 0) {
-            lineR.push(ind);
-            zeroCoordinate = zeroCoordinate.filter((value: number[]) => {
-              return value[0] !== ind;
-            });
-          } else {
-            lineC.push(ind);
-            zeroCoordinate = zeroCoordinate.filter((value: number[]) => {
-              return value[1] !== ind;
-            });
-          }
-          rowCount = new Array<number>(width);
-          colCount = new Array<number>(width);
-        }
-
-        // step4
-        let minVal = Number.MAX_VALUE;
-        for (let i = 0; i < width; i += 1) {
-          let flag = false;
-          for (let k = 0, len = lineR.length; k < len; k += 1) {
-            if (lineR[k] === i) {
-              flag = true;
-              break;
-            }
-          }
-          if (flag) {
-            continue;
-          }
-          for (let j = Math.max(0, i - 1); j < Math.min(i + 1, width); j += 1) {
-            for (let k = 0, len = lineC.length; k < len; k += 1) {
-              if (lineC[k] === j) {
-                flag = true;
-                break;
-              }
-            }
-            if (flag) {
-              flag = false;
-              continue;
-            }
-            if (minVal > hungaryMap[i][j]) {
-              minVal = hungaryMap[i][j];
-            }
-          }
-        }
-        for (let i = 0; i < width; i += 1) {
-          let flagR = false;
-          for (let k = 0, len = lineR.length; k < len; k += 1) {
-            if (lineR[k] === i) {
-              flagR = true;
-              break;
-            }
-          }
-          for (let j = Math.max(0, i - 1); j < Math.min(i + 1, width); j += 1) {
-            let flagC = false;
-            for (let k = 0, len = lineC.length; k < len; k += 1) {
-              if (lineC[k] === j && flagR) {
-                hungaryMap[i][j] += minVal;
-                flagC = true;
-                break;
-              }
-            }
-            if (!flagC && !flagR) {
-              hungaryMap[i][j] -= minVal;
-            }
-          }
-        }
+      console.time('hungarian y');
+      const [checkRow, checkCol] = this.hungarianAlgorithm(hungaryMap, width);
+      console.timeEnd('hungarian y');
+      for (let i = 0, len = checkRow.length; i < len; i++) {
+        pairList[y][checkRow[i]] = checkCol[i];
       }
-      console.timeEnd('hungarian');
     }
 
     // pairList is 1-edge information
@@ -594,17 +468,22 @@ export class SeamCarverTemp {
     // Second compute best 1-edge path for all pairs of cols
     // hungaryMap, if pairList has diagonal pair, it should be inf
     let pairColList: number[][] = [];
+    hungaryMap = [];
+    for (let i = 0; i < height; i += 1) {
+      hungaryMap[i] = [];
+      for (let j = 0; j < height; j += 1) {
+        hungaryMap[i][j] = inf;
+      }
+    }
     for (let x = 0; x < width - 1; x += 1) {
       pairColList[x] = [];
 
       /// Hungarian algorithm
       /// -------------------
-      let hungaryMap: number[][] = [];
       for (let i = 0; i < height; i += 1) {
-        hungaryMap[i] = [];
         pairColList[x][i] = 0;
-        for (let j = 0; j < height; j += 1) {
-          hungaryMap[i][j] = Math.abs(i - j) <= 1 ? heatMap[i][x] + heatMap[j][x + 1] : inf;
+        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, height - 1); j += 1) {
+          hungaryMap[i][j] = heatMap[i][x] + heatMap[j][x + 1];
           if (pairList[i][x] === x + 1 || pairList[j][x + 1] === x) {
             hungaryMap[i][j] = inf;
           }
@@ -614,155 +493,23 @@ export class SeamCarverTemp {
       // step1
       for (let i = 0; i < height; i += 1) {
         const minVal = minRow(hungaryMap, i, i, height);
-        for (let j = Math.max(0, i - 1); j < Math.min(i + 1, height); j += 1) {
+        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, height - 1); j += 1) {
           hungaryMap[i][j] -= minVal;
         }
       }
       for (let i = 0; i < height; i += 1) {
         const minVal = minCol(hungaryMap, i, i, height);
-        for (let j = Math.max(0, i - 1); j < Math.min(i + 1, height); j += 1) {
+        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, height - 1); j += 1) {
           hungaryMap[j][i] -= minVal;
         }
       }
 
-      console.time('hungarian');
-      while (true) {
-        // step2
-        let zeroCoordinate: number[][] = [];
-        for (let i = 0; i < height; i += 1) {
-          for (let j = Math.max(0, i - 1); j < Math.min(i + 1, height); j += 1) {
-            if (hungaryMap[i][j] === 0) {
-              zeroCoordinate.push([i, j]);
-            }
-          }
-        }
-        let checkRow: number[] = [];
-        let checkCol: number[] = [];
-        for (const elem of zeroCoordinate) {
-          let flag = false;
-          for (let i = 0, len = checkRow.length; i < len; i++) {
-            if (checkRow[i] === elem[0]) {
-              flag = true;
-              break;
-            }
-          }
-          for (let i = 0, len = checkCol.length; !flag && i < len; i++) {
-            if (checkCol[i] === elem[1]) {
-              flag = true;
-              break;
-            }
-          }
-          if (!flag) {
-            checkRow.push(elem[0]);
-            checkCol.push(elem[1]);
-          }
-        }
-        if (checkRow.length === width) {
-          for (let i = 0, len = checkRow.length; i < len; i++) {
-            pairColList[x][checkRow[i]] = checkCol[i];
-          }
-          break;
-        }
-
-        // step3
-        let rowCount: number[] = new Array<number>(height);
-        let colCount: number[] = new Array<number>(height);
-        let lineR: number[] = [];
-        let lineC: number[] = [];
-        while (zeroCoordinate.length > 0) {
-          let maxZero = 0;
-          let mode = 0;
-          let ind = 0;
-          for (const elem of zeroCoordinate) {
-            if (rowCount[elem[0]]) {
-              rowCount[elem[0]] += 1;
-            } else {
-              rowCount[elem[0]] = 1;
-            }
-            if (colCount[elem[1]]) {
-              colCount[elem[1]] += 1;
-            } else {
-              colCount[elem[1]] = 1;
-            }
-            if (maxZero < rowCount[elem[0]]) {
-              maxZero = rowCount[elem[0]];
-              mode = 0;
-              ind = elem[0];
-            }
-            if (maxZero < colCount[elem[1]]) {
-              maxZero = colCount[elem[1]];
-              mode = 1;
-              ind = elem[1];
-            }
-          }
-          if (mode === 0) {
-            lineR.push(ind);
-            zeroCoordinate = zeroCoordinate.filter((value: number[]) => {
-              return value[0] !== ind;
-            });
-          } else {
-            lineC.push(ind);
-            zeroCoordinate = zeroCoordinate.filter((value: number[]) => {
-              return value[1] !== ind;
-            });
-          }
-          rowCount = new Array<number>(height);
-          colCount = new Array<number>(height);
-        }
-
-        // step4
-        let minVal = Number.MAX_VALUE;
-        for (let i = 0; i < height; i += 1) {
-          let flag = false;
-          for (let k = 0, len = lineR.length; k < len; k += 1) {
-            if (lineR[k] === i) {
-              flag = true;
-              break;
-            }
-          }
-          if (flag) {
-            continue;
-          }
-          for (let j = Math.max(0, i - 1); j < Math.min(i + 1, height); j += 1) {
-            for (let k = 0, len = lineC.length; k < len; k += 1) {
-              if (lineC[k] === j) {
-                flag = true;
-                break;
-              }
-            }
-            if (flag) {
-              flag = false;
-              continue;
-            }
-            if (minVal > hungaryMap[i][j]) {
-              minVal = hungaryMap[i][j];
-            }
-          }
-        }
-        for (let i = 0; i < height; i += 1) {
-          let flagR = false;
-          for (let k = 0, len = lineR.length; k < len; k += 1) {
-            if (lineR[k] === i) {
-              flagR = true;
-              break;
-            }
-          }
-          for (let j = Math.max(0, i - 1); j < Math.min(i + 1, height); j += 1) {
-            let flagC = false;
-            for (let k = 0, len = lineC.length; k < len; k += 1) {
-              if (lineC[k] === j && flagR) {
-                hungaryMap[i][j] += minVal;
-                flagC = true;
-                break;
-              }
-            }
-            if (!flagC && !flagR) {
-              hungaryMap[i][j] -= minVal;
-            }
-          }
-        }
+      console.time('hungarian x');
+      const [checkRow, checkCol] = this.hungarianAlgorithm(hungaryMap, height);
+      for (let i = 0, len = checkRow.length; i < len; i++) {
+        pairColList[x][checkRow[i]] = checkCol[i];
       }
-      console.timeEnd('hungarian');
+      console.timeEnd('hungarian x');
     }
 
     // pairColList is 1-edge information
@@ -770,6 +517,150 @@ export class SeamCarverTemp {
     this.calculateHorizontalSeamMap(pairColList, heatMap);
   }
 
+  /**
+   * Hungarian Algorithm step2 to step4 loop.
+   * @param hungaryMap 
+   * @param length 
+   */
+  hungarianAlgorithm(hungaryMap: number[][], length: number) {
+    let zeroCoord: number[][] = [];
+    let checkRow: number[] = [];
+    let checkCol: number[] = [];
+    let rowCount: number[] = [];
+    let colCount: number[] = [];
+    let lineR: number[] = [];
+    let lineC: number[] = [];
+    while (true) {
+      // step2
+      for (let i = 0; i < length; i++) {
+        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, length - 1); j += 1) {
+          if (hungaryMap[i][j] === 0) {
+            zeroCoord.push([i, j]);
+          }
+        }
+      }
+      checkRow = [];
+      checkCol = [];
+      for (const coord of zeroCoord) {
+        let flag = false;
+        for (let i = 0, len = checkRow.length; i < len; i++) {
+          if (checkRow[i] === coord[0]) {
+            flag = true;
+            break;
+          }
+        }
+        if (flag) continue;
+        for (let i = 0, len = checkCol.length; i < len; i++) {
+          if (checkCol[i] === coord[1]) {
+            flag = true;
+            break;
+          }
+        }
+        if (!flag) {
+          checkRow.push(coord[0]);
+          checkCol.push(coord[1]);
+        }
+      }
+      if (checkRow.length === length) {
+        return [checkRow, checkCol];
+      }
+
+      // step3
+      rowCount = new Array<number>(length);
+      colCount = new Array<number>(length);
+      lineR = [];
+      lineC = [];
+      while (zeroCoord.length > 0) {
+        let maxZero = 0;
+        let mode = 0;
+        let index = 0;
+        for (const coord of zeroCoord) {
+          if (rowCount[coord[0]]) rowCount[coord[0]] += 1;
+          else rowCount[coord[0]] = 1;
+          if (colCount[coord[1]]) colCount[coord[1]] += 1;
+          else colCount[coord[1]] = 1;
+
+          if (maxZero < rowCount[coord[0]]) {
+            maxZero = rowCount[coord[0]];
+            mode = 0;
+            index = coord[0];
+          }
+          if (maxZero < colCount[coord[1]]) {
+            maxZero = colCount[coord[1]];
+            mode = 1;
+            index = coord[1];
+          }
+        }
+        if (mode === 0) {
+          lineR.push(index);
+          zeroCoord = zeroCoord.filter((value: number[]) => {
+            return value[0] !== index;
+          });
+        } else {
+          lineC.push(index);
+          zeroCoord = zeroCoord.filter((value: number[]) => {
+            return value[1] !== index;
+          });
+        }
+        rowCount = new Array<number>(length);
+        colCount = new Array<number>(length);
+      }
+
+      // step4
+      let minVal = Number.MAX_VALUE;
+      /// Find minimul number of non-lined numbers
+      for (let i = 0; i < length; i++) {
+        let flag = false;
+        for (let k = 0, len = lineR.length; k < len; k += 1) {
+          if (lineR[k] === i) {
+            flag = true;
+            break;
+          }
+        }
+        if (flag) continue;
+        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, length - 1); j += 1) {
+          for (let k = 0, len = lineC.length; k < len; k += 1) {
+            if (lineC[k] === j) {
+              flag = true;
+              break;
+            }
+          }
+          if (flag) {
+            flag = false;
+            continue;
+          }
+          if (minVal > hungaryMap[i][j]) {
+            minVal = hungaryMap[i][j];
+          }
+        }
+      }
+      /// Calc cross or non-lined numbers
+      for (let i = 0; i < length; i += 1) {
+        let flagR = false;
+        for (let k = 0, len = lineR.length; k < len; k += 1) {
+          if (lineR[k] === i) {
+            flagR = true;
+            break;
+          }
+        }
+        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, length - 1); j += 1) {
+          if (hungaryMap[i][j] === inf) continue;
+          let flagC = false;
+          for (let k = 0, len = lineC.length; k < len; k += 1) {
+            if (lineC[k] === j) {
+              flagC = true;
+              break;
+            }
+          }
+          if (!flagC && !flagR) {
+            hungaryMap[i][j] -= minVal;
+          } else if (flagC && flagR) {
+            hungaryMap[i][j] += minVal;
+          }
+        }
+      }
+    }
+  }
 
   /**
    * Calculate Vertical Consistency Seam Map
