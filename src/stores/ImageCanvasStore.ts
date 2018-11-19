@@ -12,7 +12,8 @@ export class ImagesStore {
 
   public getResizer(seamCarver: SeamCarver) {
     const imageData = seamCarver.image;
-    const seamMap = seamCarver.getSeamMap();
+    const verticalSeamMap = seamCarver.consistentVerticalMap;
+    const horizontalSeamMap = seamCarver.consistentHorizontalMap;
     let images = this.images.slice();
     images.sort((a, b) => { return a.canvasWidth < b.canvasWidth ? 1 : 0 });
     let originXKeys: number[][] = [];
@@ -39,14 +40,16 @@ export class ImagesStore {
       heightKeys: heightKeys,
       scaleXKeys: scaleXKeys,
       scaleYKeys: scaleYKeys,
-      seamMap: seamMap
+      verticalSeamMap: verticalSeamMap,
+      horizontalSeamMap: horizontalSeamMap
     };
     return new MultiResizer(imageData, metainfo);
   }
 
   public saveFiles(path: string, seamCarver: SeamCarver) {
     const imageData = seamCarver.image;
-    const seamMap = seamCarver.getSeamMap();
+    const verticalSeamMap = seamCarver.consistentVerticalMap;
+    const horizontalSeamMap = seamCarver.consistentHorizontalMap;
     let images = this.images.slice();
     images.sort((a, b) => { return a.canvasWidth < b.canvasWidth ? 1 : 0 });
     let originXKeys: number[][] = [];
@@ -73,7 +76,8 @@ export class ImagesStore {
       heightKeys: heightKeys,
       scaleXKeys: scaleXKeys,
       scaleYKeys: scaleYKeys,
-      seamMap: seamMap
+      verticalSeamMap: verticalSeamMap,
+      horizontalSeamMap: horizontalSeamMap
     };
     const jsonText = JSON.stringify(metainfo);
     const zip = new JSZip();
@@ -134,7 +138,7 @@ export default class ImageCanvasStore {
     this.originalHeight = home.originalImage!.naturalHeight;
     this.seamWidth = isSeamRemove ? this.canvasWidth : this.originalWidth;
     this.canvasHeight = this.originalHeight;
-    this.seamHeight = this.originalHeight;
+    this.seamHeight = isSeamRemove ? this.canvasHeight : this.originalHeight;
     this.id = id;
   }
 

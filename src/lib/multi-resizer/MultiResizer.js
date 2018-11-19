@@ -40,6 +40,8 @@ export class MultiResizer {
      * metainfo.seamMap Array<Array<number>>
      */
     this.metainfo = metainfo;
+    this.consistentHorizontalMap = metainfo.horizontalSeamMap;
+    this.consistentVerticalMap = metainfo.verticalSeamMap;
   }
 
   /**
@@ -48,53 +50,99 @@ export class MultiResizer {
    * @param {number} height
    */
   seamImageData(width, height) {
-    const newImage = new ImageData(width, height);
+    const seamFactHorizontal = Math.floor(this.binarySearch(width, this.metainfo.widthKeys));
+    const seamFactVertical = Math.floor(this.binarySearch(height, this.metainfo.heightKeys));
 
-    const seamFactHorizontal = this.binarySearch(width, this.metainfo.widthKeys);
-    const seamFactVertical = this.binarySearch(height, this.metainfo.heightKeys);
-
-    const widthDiff = this.image.width - seamFactHorizontal;
-
-    if (widthDiff >= 0) {
-      for (let y = 0; y < this.image.height; y++) {
+    let horizontalMap = [];
+    let image = this.image;
+    let newImage = new Uint8ClampedArray(seamFactHorizontal * image.height * 4);
+    let resizedImage = new Uint8ClampedArray(seamFactHorizontal * seamFactVertical * 4);
+    // First compute vertical
+    if (image.width >= seamFactHorizontal) {
+      const widthDiff = image.width - seamFactHorizontal;
+      for (let y = 0; y < image.height; y++) {
+        horizontalMap[y] = [];
         let x0 = 0;
-        for (let x = 0; x < this.image.width; x++) {
-          if (this.metainfo.seamMap[y][x] >= widthDiff) {
-            const newBase = (y * width + x0) * 4;
-            const oldBase = (y * this.image.width + x) * 4;
-            newImage.data[newBase] = this.image.data[oldBase];
-            newImage.data[newBase + 1] = this.image.data[oldBase + 1];
-            newImage.data[newBase + 2] = this.image.data[oldBase + 2];
-            newImage.data[newBase + 3] = this.image.data[oldBase + 3];
-            x0++;
+        for (let x = 0; x < image.width; x++) {
+          horizontalMap[y][x0] = this.consistentHorizontalMap[y][x];
+          const base0 = (y * seamFactHorizontal + x0) * 4;
+          const base = (y * image.width + x) * 4;
+          newImage[base0] = image.data[base];
+          newImage[base0 + 1] = image.data[base + 1];
+          newImage[base0 + 2] = image.data[base + 2];
+          newImage[base0 + 3] = image.data[base + 3];
+          if (this.consistentVerticalMap[y][x] > widthDiff) {
+            x0 += 1;
           }
         }
       }
     } else {
-      for (let y = 0; y < this.image.height; y++) {
+      const widthDiff = seamFactHorizontal - image.width;
+      for (let y = 0; y < image.height; y++) {
+        horizontalMap[y] = [];
         let x0 = 0;
-        for (let x = 0; x < this.image.width; x++) {
-          if (this.metainfo.seamMap[y][x] <= -widthDiff) {
-            const newBase = (y * width + x0) * 4;
-            const oldBase = (y * this.image.width + x) * 4;
-            newImage.data[newBase] = this.image.data[oldBase];
-            newImage.data[newBase + 1] = this.image.data[oldBase + 1];
-            newImage.data[newBase + 2] = this.image.data[oldBase + 2];
-            newImage.data[newBase + 3] = this.image.data[oldBase + 3];
-            x0++;
+        for (let x = 0; x < image.width; x++) {
+          const base = (y * image.width + x) * 4;
+          if (this.consistentVerticalMap[y][x] <= widthDiff) {
+            horizontalMap[y][x0] = this.consistentHorizontalMap[y][x];
+            const base0 = (y * seamFactHorizontal + x0) * 4;
+            newImage[base0] = image.data[base];
+            newImage[base0 + 1] = image.data[base + 1];
+            newImage[base0 + 2] = image.data[base + 2];
+            newImage[base0 + 3] = image.data[base + 3];
+            x0 += 1;
           }
-          const newBase = (y * width + x0) * 4;
-          const oldBase = (y * this.image.width + x) * 4;
-          newImage.data[newBase] = this.image.data[oldBase];
-          newImage.data[newBase + 1] = this.image.data[oldBase + 1];
-          newImage.data[newBase + 2] = this.image.data[oldBase + 2];
-          newImage.data[newBase + 3] = this.image.data[oldBase + 3];
-          x0++;
+          horizontalMap[y][x0] = this.consistentHorizontalMap[y][x];
+          const base0 = (y * seamFactHorizontal + x0) * 4;
+          newImage[base0] = image.data[base];
+          newImage[base0 + 1] = image.data[base + 1];
+          newImage[base0 + 2] = image.data[base + 2];
+          newImage[base0 + 3] = image.data[base + 3];
+          x0 += 1;
         }
       }
     }
-    console.log(newImage);
-    return newImage;
+    // Second
+    if (image.height >= seamFactVertical) {
+      const heightDiff = image.height - seamFactVertical;
+      for (let x = 0; x < seamFactHorizontal; x++) {
+        let y0 = 0;
+        for (let y = 0; y < image.height; y++) {
+          const base0 = (y0 * seamFactHorizontal + x) * 4;
+          const base = (y * seamFactHorizontal + x) * 4;
+          resizedImage[base0] = newImage[base];
+          resizedImage[base0 + 1] = newImage[base + 1];
+          resizedImage[base0 + 2] = newImage[base + 2];
+          resizedImage[base0 + 3] = newImage[base + 3];
+          if (horizontalMap[y][x] > heightDiff) {
+            y0 += 1;
+          }
+        }
+      }
+    } else {
+      const heightDiff = seamFactVertical - image.height;
+      for (let x = 0; x < seamFactHorizontal; x++) {
+        let y0 = 0;
+        for (let y = 0; y < image.height; y++) {
+          const base = (y * seamFactHorizontal + x) * 4;
+          if (horizontalMap[y][x] <= heightDiff) {
+            const base0 = (y0 * seamFactHorizontal + x) * 4;
+            resizedImage[base0] = newImage[base];
+            resizedImage[base0 + 1] = newImage[base + 1];
+            resizedImage[base0 + 2] = newImage[base + 2];
+            resizedImage[base0 + 3] = newImage[base + 3];
+            y0 += 1;
+          }
+          const base0 = (y0 * seamFactHorizontal + x) * 4;
+          resizedImage[base0] = newImage[base];
+          resizedImage[base0 + 1] = newImage[base + 1];
+          resizedImage[base0 + 2] = newImage[base + 2];
+          resizedImage[base0 + 3] = newImage[base + 3];
+          y0 += 1;
+        }
+      }
+    }
+    return new ImageData(resizedImage, seamFactHorizontal, seamFactVertical);
   }
 
   originX(width) {

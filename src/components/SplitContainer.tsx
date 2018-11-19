@@ -14,7 +14,7 @@ import { SpeedDial, SpeedDialIcon, SpeedDialAction } from '@material-ui/lab';
 import { HomeStore } from 'src/stores/HomeStore';
 import ImageCanvasStore, { ImagesStore } from 'src/stores/ImageCanvasStore';
 import { MultiResizer } from '../lib/multi-resizer/MultiResizer';
-import SeamCarver, { SeamCarverTemp } from 'src/lib/seams/SeamCarver';
+import SeamCarver from 'src/lib/seams/SeamCarver';
 import * as UUID from 'uuid/v4';
 import Resizable, { NumberSize } from 're-resizable';
 
@@ -25,7 +25,6 @@ interface ISplitProps {
 }
 
 export let seamCarver: SeamCarver | null = null;
-// export let seam: SeamCarving | null = null;
 
 @inject('app', 'home', 'images')
 @observer
@@ -387,10 +386,6 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                 this.imageCanvas.width = image.naturalWidth;
                 this.imageCanvas.height = image.naturalHeight;
                 this.imageCtx.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
-                console.time('test');
-                const seamCarverTemp = new SeamCarverTemp(this.tmpContext.getImageData(0, 0, image.naturalWidth, image.naturalHeight));
-                seamCarverTemp.constructConsistentMap();
-                console.timeEnd('test');
                 seamCarver = new SeamCarver(this.tmpContext.getImageData(0, 0, image.naturalWidth, image.naturalHeight));
                 home.onClickAddButton(image, () => {
                     images.addImage(new ImageCanvasStore(home.isSeamRemove, home, UUID()));

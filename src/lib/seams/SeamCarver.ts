@@ -1,671 +1,238 @@
 /**
  * Seam Carving Impelementation
- * /// <reference path="http://nparashuram.com/seamcarving/"/>
  */
 
-import Color from '../Color';
 import { Decimal } from 'decimal.js';
 
+const inf = new Decimal(Infinity);
+const minf = new Decimal(-Infinity);
+
 export default class SeamCarver {
-  private newImage: Uint8ClampedArray;
-  private heatMap: Float32Array[];
-  // private maxHeat: number;
-  private seams: number[][];
-  private hSeams: number[][];
-  private seamMap: number[][];
-
-  /**
-   * constructor
-   * @param {ImageData} image
-   */
-  constructor(public image: ImageData) {
-    console.log('Seam Carver Initialized');
-    this.newImage = new Uint8ClampedArray(image.width * image.height * 4);
-    this.initHeatMap();
-    this.initSeam();
-  }
-
-  public getSeamMap = () => {
-    if (this.seamMap) {
-      return this.seamMap
-    }
-    this.seamMap = [];
-    for (let y = 0; y < this.image.height; y++) {
-      this.seamMap[y] = [];
-      for (let x = 0; x < this.image.width; x++) {
-        this.seamMap[y][x] = 0;
-        for (let i = 0; i < this.seams.length; i++) {
-          if (this.seams[i][y] === x) {
-            this.seamMap[y][x] = i + 1;
-          }
-        }
-      }
-    }
-    return this.seamMap;
-  }
-
-  public copyImage = () => {
-    for (let x = 0; x < this.image.width; x++) {
-      for (let y = 0; y < this.image.height; y++) {
-        this.putPixel(x, y, this.getPixel(x, y));
-      }
-    }
-  }
-
-  public resize = (width: number, height: number): ImageData => {
-    let image = this.image;
-    if (image.width >= width) {
-      const widthDiff = image.width - width;
-      this.newImage = new Uint8ClampedArray(image.width * image.height * 4);
-      for (let y = 0; y < image.height; y++) {
-        let x1 = 0;
-        for (let x = 0; x < image.width; x++) {
-          this.putPixel(x, y, this.getPixel(x, y));
-          let isSkippable = false;
-          for (let i = 0; i < widthDiff; i++) {
-            if (this.seams[i][y] === x) {
-              isSkippable = true;
-              break;
-            }
-          }
-          if (!isSkippable) {
-            this.putPixel(x1, y, this.getPixel(x, y));
-            x1++;
-          }
-        }
-      }
-      for (let x = width; x < image.width; x++) {
-        for (let y = 0; y < image.height; y++) {
-          this.putPixel(x, y, 0xFFFFFF);
-        }
-      }
-      return new ImageData(this.newImage!, image.width, image.height);
-    } else {
-      let widthDiff = width - image.width;
-      if (widthDiff > this.seams.length) {
-        widthDiff = this.seams.length;
-      }
-      this.newImage = new Uint8ClampedArray(width * image.height * 4);
-      for (let y = 0; y < image.height; y++) {
-        let x1 = 0;
-        for (let x = 0; x < image.width; x++) {
-          this.putPixel(x1, y, this.getPixel(x, y), width);
-          let isDuplicatable = false;
-          for (let i = 0; i < widthDiff; i++) {
-            if (this.seams[i][y] === x) {
-              isDuplicatable = true;
-              break;
-            }
-          }
-          if (isDuplicatable) {
-            x1++;
-            this.putPixel(x1, y, this.getPixel(x, y), width);
-          }
-          x1++;
-        }
-      }
-      return new ImageData(this.newImage!, width, image.height);
-    }
-    // if (image.width >= width && image.height >= height) {
-    //   const widthDiff = image.width - width;
-    //   const heightDiff = image.height - height;
-    //   this.newImage = new Uint8ClampedArray(image.width * image.height * 4);
-    //   let y1 = 0;
-    //   for (let y = 0; y < image.height; y++) {
-    //     let x1 = 0;
-    //     for (let x = 0; x < image.width; x++) {
-    //       this.putPixel(x, y, this.getPixel(x, y));
-    //       let isSkippable = false;
-    //       for (let i = 0; i < widthDiff; i++) {
-    //         if (this.seams[i][y] === x) {
-    //           isSkippable = true;
-    //           break;
-    //         }
-    //       }
-    //       for (let i = 0; i < heightDiff; i++) {
-    //         if (this.hSeams[i][x] === y) {
-    //           isSkippable = true;
-    //           break;
-    //         }
-    //       }
-    //       if (!isSkippable) {
-    //         this.putPixel(x1, y1, this.getPixel(x, y));
-    //         x1++;
-    //         y1++;
-    //       }
-    //     }
-    //   }
-    //   for (let x = width; x < image.width; x++) {
-    //     for (let y = height; y < image.height; y++) {
-    //       this.putPixel(x, y, 0xFFFFFF);
-    //     }
-    //   }
-
-    //   return new ImageData(this.newImage!, image.width, image.height);
-    // } else if (image.width < width && image.height < height) {
-    //   let widthDiff = width - image.width;
-    //   let heightDiff = height - image.height;
-    //   if (widthDiff > this.seams.length) {
-    //     widthDiff = this.seams.length;
-    //   }
-    //   if (heightDiff > this.hSeams.length) {
-    //     heightDiff = this.hSeams.length;
-    //   }
-    //   this.newImage = new Uint8ClampedArray(width * height * 4);
-    //   let y1 = 0;
-    //   for (let y = 0; y < image.height; y++) {
-    //     let x1 = 0;
-    //     for (let x = 0; x < image.width; x++) {
-    //       this.putPixel(x1, y1, this.getPixel(x, y), width);
-    //       let isDuplicatable = false;
-    //       for (let i = 0; i < widthDiff; i++) {
-    //         if (this.seams[i][y] === x) {
-    //           isDuplicatable = true;
-    //           break;
-    //         }
-    //       }
-    //       for (let i = 0; i < heightDiff; i++) {
-    //         if (this.hSeams[i][x] === y) {
-    //           isDuplicatable = true;
-    //           break;
-    //         }
-    //       }
-    //       if (isDuplicatable) {
-    //         x1++;
-    //         y1++;
-    //         this.putPixel(x1, y1, this.getPixel(x, y), width);
-    //       }
-    //       x1++;
-    //       y1++;
-    //     }
-    //   }
-    //   return new ImageData(this.newImage!, width, height);
-    // } else if (image.width >= width && image.height < height) {
-    //   const widthDiff = image.width - width;
-    //   let heightDiff = height - image.height;
-    //   if (heightDiff > this.hSeams.length) {
-    //     heightDiff = this.hSeams.length;
-    //   }
-    //   this.newImage = new Uint8ClampedArray(image.width * height * 4);
-    //   let y1 = 0;
-    //   for (let y = 0; y < image.height; y++) {
-    //     let x1 = 0;
-    //     for (let x = 0; x < image.height; x++) {
-    //       this.putPixel(x, y1, this.getPixel(x, y));
-    //       let isSkippable = false;
-    //       let isDuplicatable = false;
-    //       for (let i = 0; i < widthDiff; i++) {
-    //         if (this.seams[i][y] === x) {
-    //           isSkippable = true;
-    //           break;
-    //         }
-    //       }
-    //       for (let i = 0; i < heightDiff; i++) {
-    //         if (this.hSeams[i][x] === y) {
-    //           isDuplicatable = true;
-    //           break;
-    //         }
-    //       }
-    //       if (!isSkippable && isDuplicatable) {
-    //         y1++;
-    //         this.putPixel(x1, y1, this.getPixel(x, y));
-    //         x1++;
-    //         y1++;
-    //       }
-    //     }
-    //   }
-    // }
-    // return new ImageData(width, height);
-  }
-
-  /**
-   * get individual pixel
-   * @param {number} x
-   * @param {number} y
-   */
-  private getPixel = (x: number, y: number): Color => {
-    const base = (y * this.image.width + x) * 4;
-    return new Color(
-      this.image.data[base + 0],
-      this.image.data[base + 1],
-      this.image.data[base + 2],
-      this.image.data[base + 3],
-    );
-  }
-  private putPixel = (x: number, y: number, color: Color | number, newWidth?: number) => {
-    let rgba = color;
-    if (typeof color === 'number') {
-      rgba = new Color(
-        (color & 0xFF0000) >> 16,
-        (color & 0x00FF00) >> 8,
-        (color & 0x0000FF),
-        255,
-      );
-    }
-
-    // console.log(rgba);
-    if (newWidth !== undefined) {
-      const base = (y * newWidth! + x) * 4;
-      this.newImage![base + 0] = (rgba as Color).red;
-      this.newImage![base + 1] = (rgba as Color).green;
-      this.newImage![base + 2] = (rgba as Color).blue;
-      this.newImage![base + 3] = (rgba as Color).alpha;
-    } else {
-      const base = (y * this.image.width + x) * 4;
-      this.newImage![base + 0] = (rgba as Color).red;
-      this.newImage![base + 1] = (rgba as Color).green;
-      this.newImage![base + 2] = (rgba as Color).blue;
-      this.newImage![base + 3] = (rgba as Color).alpha;
-    }
-  }
-
-  private initHeatMap = () => {
-    console.time('calculate heatmap');
-    const b = (x: number, y: number): number => {
-      if (x < 0 || y < 0 || x >= this.image.width || y >= this.image.height) {
-        return 0;
-      }
-      const pixel = this.getPixel(x, y);
-      return pixel.red + pixel.green + pixel.blue;
-    };
-    const heatMap = new Array<Float32Array>();
-    let max = 0;
-    for (let x = 0; x < this.image.width; x++) {
-      heatMap[x] = new Float32Array(this.image.height);
-      for (let y = 0; y < this.image.height; y++) {
-        const xenergy = b(x - 1, y - 1) + 2 * b(x - 1, y) + b(x - 1, y + 1) - b(x + 1, y - 1) - 2 * b(x + 1, y) - b(x + 1, y + 1);
-        const yenergy = b(x - 1, y - 1) + 2 * b(x, y - 1) + b(x + 1, y - 1) - b(x - 1, y + 1) - 2 * b(x, y + 1) - b(x + 1, y + 1);
-        heatMap[x][y] = Math.sqrt(xenergy * xenergy + yenergy * yenergy);
-        max = (max > heatMap[x][y] ? max : heatMap[x][y]);
-      }
-    }
-    console.timeEnd('calculate heatmap');
-
-    this.heatMap = heatMap;
-    // this.maxHeat = max;
-  }
-
-  private initSeam = () => {
-    console.time('seams calculate')
-    const yseam: number[][] = [];
-    const xseam: number[][] = [];
-    const ylen = this.image.height - 1;
-    const xlen = this.image.width - 1;
-    let yHeat = this.heatMap;
-    // initialize the last row of the seam
-    for (let x = 0; x < this.image.width; x++) {
-      yseam[x] = [];
-      yseam[x][ylen] = x;
-    }
-
-    // sort the last row of the seam
-    for (let i = 0; i < yseam.length; i++) {
-      for (let j = i + 1; j < yseam.length; j++) {
-        if (this.heatMap[yseam[i][ylen]][ylen] > this.heatMap[yseam[j][ylen]][ylen]) {
-          const tmp = yseam[j];
-          yseam[j] = yseam[i];
-          yseam[i] = tmp;
-        }
-      }
-    }
-
-    // get the other rows of the seam
-    for (const yline of yseam) {
-      for (let y = ylen - 1; y >= 0; y--) {
-        const x1 = yline[y + 1];
-        let x0 = x1 - 1;
-        // Move along till the adjacent pixel is not a part of another seam
-        while (x0 >= 0) {
-          if (!isNaN(yHeat[x0][y])) {
-            break;
-          }
-          x0--;
-        }
-
-        let x2 = x1 + 1;
-        while (x2 < this.image.width) {
-          if (!isNaN(yHeat[x2][y])) {
-            break;
-          }
-          x2++;
-        }
-
-        const hx0 = this.heatMap[x0] ? this.heatMap[x0][y] : Number.MAX_VALUE;
-        const hx1 = this.heatMap[x1][y] || Number.MAX_VALUE;
-        const hx2 = this.heatMap[x2] ? this.heatMap[x2][y] : Number.MAX_VALUE;
-
-        yline[y] = hx0 < hx1 ? (hx0 < hx2 ? x0 : x2) : (hx1 < hx2 ? x1 : x2);
-        yHeat[yline[y]][y] = NaN;
-      }
-    }
-
-    for (let y = 0; y < this.image.height; y++) {
-      xseam[y] = [];
-      xseam[y][xlen] = y;
-    }
-
-    for (let i = 0; i < xseam.length; i++) {
-      for (let j = 0; j < xseam.length; j++) {
-        if (this.heatMap[xlen][xseam[i][xlen]] > this.heatMap[xlen][xseam[j][xlen]]) {
-          const tmp = xseam[j];
-          xseam[j] = xseam[i];
-          xseam[i] = tmp;
-        }
-      }
-    }
-
-    for (const xline of xseam) {
-      for (let x = xlen - 1; x >= 0; x--) {
-        const y1 = xline[x + 1];
-        let y0 = y1 - 1;
-        while (y0 >= 0) {
-          if (!isNaN(this.heatMap[x][y0])) {
-            break;
-          }
-          y0--;
-        }
-        let y2 = y1 + 1;
-        while (y2 < this.image.height) {
-          if (!isNaN(this.heatMap[x][y2])) {
-            break;
-          }
-          y2++;
-        }
-
-        const hy0 = y0 >= 0 ? this.heatMap[x][y0] : Number.MAX_VALUE;
-        const hy1 = this.heatMap[x][y1] || Number.MAX_VALUE;
-        const hy2 = y2 < this.image.height ? this.heatMap[x][y2] : Number.MAX_VALUE;
-
-        xline[x] = hy0 < hy1 ? (hy0 < hy2 ? y0 : y2) : (hy1 < hy2 ? y1 : y2);
-        this.heatMap[x][xline[x]] = NaN;
-      }
-    }
-
-    console.timeEnd('seams calculate');
-    this.seams = yseam;
-    this.hSeams = xseam;
-    console.log(this.hSeams[0]);
-  }
-}
-
-const inf = new Decimal(NaN);
-
-export class SeamCarverTemp {
-  _seamEnergy: number;
   imageData: ImageDataWrapper;
   consistentVerticalMap: number[][];
   consistentHorizontalMap: number[][];
 
   constructor(public image: ImageData) {
     this.imageData = new ImageDataWrapper(image);
+    this.consistentHorizontalMap = [];
+    this.consistentVerticalMap = [];
+    for (let y = 0; y < this.imageData.height; y++) {
+      this.consistentHorizontalMap[y] = [];
+      this.consistentVerticalMap[y] = [];
+      for (let x = 0; x < this.imageData.width; x++) {
+        this.consistentHorizontalMap[y][x] = 0;
+        this.consistentVerticalMap[y][x] = 0;
+      }
+    }
+
+    this.constructConsistentMap();
   }
 
   constructConsistentMap() {
     const heatMap = this.sobelEnergy(this.imageData);
-    const width = this.imageData.width;
     const height = this.imageData.height;
-    const minRow = (value: Decimal[][], y: number, x: number, length: number) => {
-      const vl = x - 1 >= 0 ? value[y][x - 1] : inf;
-      const vm = value[y][x];
-      const vr = x + 1 < length ? value[y][x + 1] : inf;
-      return vl.lessThan(vm) ? (vl.lessThan(vr) ? vl : vr) : (vm.lessThan(vr) ? vm : vr);
-    }
-    const minCol = (value: Decimal[][], y: number, x: number, length: number) => {
-      const vl = y - 1 >= 0 ? value[y - 1][x] : inf;
-      const vm = value[y][x];
-      const vr = y + 1 < length ? value[y + 1][x] : inf;
-      return vl.lessThan(vm) ? (vl.lessThan(vr) ? vl : vr) : (vm.lessThan(vr) ? vm : vr);
-    }
-
-    // First compute best 1-edge path for all pairs of rows
-    let pairList: number[][] = [];
-    let hungaryMap: Decimal[][] = [];
-    for (let i = 0; i < width; i += 1) {
-      hungaryMap[i] = [];
-      for (let j = 0; j < width; j += 1) {
-        hungaryMap[i][j] = inf;
+    const width = this.imageData.width;
+    console.time('consistent');
+    const mMap = this.calculateVerticalSeamMap(heatMap);
+    // traverse
+    let trHeat: Decimal[][] = [];
+    for (let x = 0; x < width; x++) {
+      trHeat[x] = [];
+      for (let y = 0; y < height; y++) {
+        trHeat[x][y] = heatMap[y][x];
       }
     }
-    for (let y = 0; y < height - 1; y += 1) {
-      pairList[y] = [];
-
-      /// Hungarian algorithm
-      /// -------------------
-      for (let i = 0; i < width; i += 1) {
-        pairList[y][i] = 0;
-        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, width - 1); j += 1) {
-          hungaryMap[i][j] = heatMap[y][i].add(heatMap[y + 1][j]);
-        }
-      }
-
-      // step1
-      for (let i = 0; i < width; i += 1) {
-        const minVal = minRow(hungaryMap, i, i, width);
-        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, width - 1); j += 1) {
-          hungaryMap[i][j] = hungaryMap[i][j].sub(minVal);
-        }
-      }
-      for (let i = 0; i < width; i += 1) {
-        const minVal = minCol(hungaryMap, i, i, width);
-        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, width - 1); j += 1) {
-          hungaryMap[j][i] = hungaryMap[j][i].sub(minVal);
-        }
-      }
-
-      console.time('hungarian y');
-      const [checkRow, checkCol] = this.hungarianAlgorithm(hungaryMap, width);
-      console.timeEnd('hungarian y');
-      for (let i = 0, len = checkRow.length; i < len; i++) {
-        pairList[y][checkRow[i]] = checkCol[i];
-      }
-    }
-
-    // pairList is 1-edge information
-    // use this can calculate vertical seam map
-    console.time('vertical');
-    this.calculateVerticalSeamMap(pairList, heatMap);
-    console.timeEnd('vertical');
-
-    // Second compute best 1-edge path for all pairs of cols
-    // hungaryMap, if pairList has diagonal pair, it should be inf
-    let pairColList: number[][] = [];
-    hungaryMap = [];
-    for (let i = 0; i < height; i += 1) {
-      hungaryMap[i] = [];
-      for (let j = 0; j < height; j += 1) {
-        hungaryMap[i][j] = inf;
-      }
-    }
-    for (let x = 0; x < width - 1; x += 1) {
-      pairColList[x] = [];
-
-      /// Hungarian algorithm
-      /// -------------------
-      for (let i = 0; i < height; i += 1) {
-        pairColList[x][i] = 0;
-        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, height - 1); j += 1) {
-          hungaryMap[i][j] = heatMap[i][x].add(heatMap[j][x + 1]);
-          if (pairList[i][x] === x + 1 || pairList[j][x + 1] === x) {
-            hungaryMap[i][j] = inf;
-          }
-        }
-      }
-
-      // step1
-      for (let i = 0; i < height; i += 1) {
-        const minVal = minRow(hungaryMap, i, i, height);
-        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, height - 1); j += 1) {
-          hungaryMap[i][j] = hungaryMap[i][j].sub(minVal);
-        }
-      }
-      for (let i = 0; i < height; i += 1) {
-        const minVal = minCol(hungaryMap, i, i, height);
-        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, height - 1); j += 1) {
-          hungaryMap[j][i] = hungaryMap[j][i].sub(minVal);
-        }
-      }
-
-      console.time('hungarian x');
-      const [checkRow, checkCol] = this.hungarianAlgorithm(hungaryMap, height);
-      for (let i = 0, len = checkRow.length; i < len; i++) {
-        pairColList[x][checkRow[i]] = checkCol[i];
-      }
-      console.timeEnd('hungarian x');
-    }
-
-    // pairColList is 1-edge information
-    // use this can calculate horizontal seam map
-    this.calculateHorizontalSeamMap(pairColList, heatMap);
+    this.calculateHorizontalSeamMap(trHeat, mMap);
+    console.timeEnd('consistent');
   }
 
-  /**
-   * Hungarian Algorithm step2 to step4 loop.
-   * @param hungaryMap 
-   * @param length 
-   */
-  hungarianAlgorithm(hungaryMap: Decimal[][], length: number) {
-    let zeroCoord: number[][] = [];
-    let checkRow: number[] = [];
-    let checkCol: number[] = [];
-    let rowCount: number[] = [];
-    let colCount: number[] = [];
-    let lineR: number[] = [];
-    let lineC: number[] = [];
-
-    const isContain = (value: number, array: number[]) => {
-      for (let i = 0, length = array.length; i < length; i++) {
-        if (array[i] === value) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    while (true) {
-      // step2
-      for (let i = 0; i < length; i++) {
-        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, length - 1); j += 1) {
-          if (hungaryMap[i][j].greaterThan(-1e-10)
-            && hungaryMap[i][j].lessThan(1e-10)) {
-            zeroCoord.push([i, j]);
+  resize(width: number, height: number) {
+    let horizontalMap: number[][] = [];
+    let image = this.image;
+    let newImage = new Uint8ClampedArray(width * image.height * 4);
+    let resizedImage = new Uint8ClampedArray(width * height * 4);
+    // First compute vertical
+    console.log(this.image);
+    if (image.width >= width) {
+      const widthDiff = image.width - width;
+      for (let y = 0; y < image.height; y++) {
+        horizontalMap[y] = [];
+        let x0 = 0;
+        for (let x = 0; x < image.width; x++) {
+          horizontalMap[y][x0] = this.consistentHorizontalMap[y][x];
+          const base0 = (y * width + x0) * 4;
+          const base = (y * image.width + x) * 4;
+          newImage[base0] = image.data[base];
+          newImage[base0 + 1] = image.data[base + 1];
+          newImage[base0 + 2] = image.data[base + 2];
+          newImage[base0 + 3] = image.data[base + 3];
+          if (this.consistentVerticalMap[y][x] > widthDiff) {
+            x0 += 1;
           }
         }
       }
-      checkRow = [];
-      checkCol = [];
-      for (const coord of zeroCoord) {
-        let flag = false;
-        for (let i = 0, len = checkRow.length; i < len; i++) {
-          if (checkRow[i] === coord[0]) {
-            flag = true;
-            break;
+    } else {
+      const widthDiff = width - image.width;
+      for (let y = 0; y < image.height; y++) {
+        horizontalMap[y] = [];
+        let x0 = 0;
+        for (let x = 0; x < image.width; x++) {
+          const base = (y * image.width + x) * 4;
+          if (this.consistentVerticalMap[y][x] <= widthDiff) {
+            horizontalMap[y][x0] = this.consistentHorizontalMap[y][x];
+            const base0 = (y * width + x0) * 4;
+            newImage[base0] = image.data[base];
+            newImage[base0 + 1] = image.data[base + 1];
+            newImage[base0 + 2] = image.data[base + 2];
+            newImage[base0 + 3] = image.data[base + 3];
+            x0 += 1;
           }
-        }
-        if (flag) continue;
-        for (let i = 0, len = checkCol.length; i < len; i++) {
-          if (checkCol[i] === coord[1]) {
-            flag = true;
-            break;
-          }
-        }
-        if (!flag) {
-          checkRow.push(coord[0]);
-          checkCol.push(coord[1]);
-        }
-      }
-      if (checkRow.length === length) {
-        return [checkRow, checkCol];
-      }
-
-      // step3
-      rowCount = new Array<number>(length);
-      colCount = new Array<number>(length);
-      lineR = [];
-      lineC = [];
-      while (zeroCoord.length > 0) {
-        let maxZero = 0;
-        let mode = 0;
-        let index = 0;
-        for (const coord of zeroCoord) {
-          if (rowCount[coord[0]]) rowCount[coord[0]] += 1;
-          else rowCount[coord[0]] = 1;
-          if (colCount[coord[1]]) colCount[coord[1]] += 1;
-          else colCount[coord[1]] = 1;
-
-          if (maxZero < rowCount[coord[0]]) {
-            maxZero = rowCount[coord[0]];
-            mode = 0;
-            index = coord[0];
-          }
-          if (maxZero < colCount[coord[1]]) {
-            maxZero = colCount[coord[1]];
-            mode = 1;
-            index = coord[1];
-          }
-        }
-        if (mode === 0) {
-          lineR.push(index);
-          zeroCoord = zeroCoord.filter((value: number[]) => {
-            return value[0] !== index;
-          });
-        } else {
-          lineC.push(index);
-          zeroCoord = zeroCoord.filter((value: number[]) => {
-            return value[1] !== index;
-          });
-        }
-        rowCount = new Array<number>(length);
-        colCount = new Array<number>(length);
-      }
-
-      // step4
-      let minVal = inf;
-      /// Find minimul number of non-lined numbers
-      for (let i = 0; i < length; i++) {
-        if (isContain(i, lineR)) continue;
-        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, length - 1); j += 1) {
-          if (isContain(j, lineC)) continue;
-          if (minVal.greaterThan(hungaryMap[i][j])) {
-            minVal = hungaryMap[i][j];
-          }
-        }
-      }
-      /// Calc cross or non-lined numbers
-      for (let i = 0; i < length; i += 1) {
-        let flagR = isContain(i, lineR);
-        for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, length - 1); j += 1) {
-          let flagC = isContain(j, lineC);
-          if (!flagC && !flagR) {
-            hungaryMap[i][j] = hungaryMap[i][j].sub(minVal);
-          } else if (flagC && flagR) {
-            hungaryMap[i][j] = hungaryMap[i][j].add(minVal);
-          }
+          horizontalMap[y][x0] = this.consistentHorizontalMap[y][x];
+          const base0 = (y * width + x0) * 4;
+          newImage[base0] = image.data[base];
+          newImage[base0 + 1] = image.data[base + 1];
+          newImage[base0 + 2] = image.data[base + 2];
+          newImage[base0 + 3] = image.data[base + 3];
+          x0 += 1;
         }
       }
     }
+    // Second
+    if (image.height >= height) {
+      const heightDiff = image.height - height;
+      for (let x = 0; x < width; x++) {
+        let y0 = 0;
+        for (let y = 0; y < image.height; y++) {
+          if (horizontalMap[y][x] > heightDiff) {
+            y0 += 1;
+          }
+          const base0 = (y0 * width + x) * 4;
+          const base = (y * width + x) * 4;
+          resizedImage[base0] = newImage[base];
+          resizedImage[base0 + 1] = newImage[base + 1];
+          resizedImage[base0 + 2] = newImage[base + 2];
+          resizedImage[base0 + 3] = newImage[base + 3];
+        }
+      }
+    } else {
+      const heightDiff = height - image.height;
+      for (let x = 0; x < width; x++) {
+        let y0 = 0;
+        for (let y = 0; y < image.height; y++) {
+          const base = (y * width + x) * 4;
+          if (horizontalMap[y][x] <= heightDiff) {
+            const base0 = (y0 * width + x) * 4;
+            resizedImage[base0] = newImage[base];
+            resizedImage[base0 + 1] = newImage[base + 1];
+            resizedImage[base0 + 2] = newImage[base + 2];
+            resizedImage[base0 + 3] = newImage[base + 3];
+            y0 += 1;
+          }
+          const base0 = (y0 * width + x) * 4;
+          resizedImage[base0] = newImage[base];
+          resizedImage[base0 + 1] = newImage[base + 1];
+          resizedImage[base0 + 2] = newImage[base + 2];
+          resizedImage[base0 + 3] = newImage[base + 3];
+          y0 += 1;
+        }
+      }
+    }
+    return new ImageData(resizedImage, width, height);
   }
 
   /**
    * Calculate Vertical Consistency Seam Map
-   * @param pairList 
    * @param heatMap 
    */
-  calculateVerticalSeamMap(pairList: number[][], heatMap: Decimal[][]) {
-    const M = heatMap.slice();
+  calculateVerticalSeamMap(heatMap: Decimal[][]) {
     const width = this.imageData.width;
     const height = this.imageData.height;
-    let backtrack = pairList.slice();
-    let addr: number[] = []
 
-    // Building M map by DP and prepair backtrack
-    for (let y = 1; y < height; y++) {
-      this.consistentVerticalMap[y] = [];
-      for (let x = 0; x < width; x++) {
-        this.consistentVerticalMap[y][x] = 0;
-        addr[x] = x;
-        M[y][pairList[y - 1][x]] = M[y][pairList[y - 1][x]].add(M[y - 1][x]);
-        backtrack[y][pairList[y - 1][x]] = x;
+    // For calculating weights by the method of Real-time content-aware image resizing(2009)
+    let A: Decimal[][] = [];
+    let M: Decimal[][] = [];
+    let mMap: number[][] = []; // for backtrack
+
+    for (let j = 0; j <= height; j++) {
+      M[j] = new Array<Decimal>(width);
+    }
+
+    // Calculate M by dynamic programming
+    for (let i = 0; i < width; i++) {
+      M[height][i] = new Decimal(0);
+    }
+    for (let j = height - 1; j >= 0; j--) {
+      for (let i = 0; i < width; i++) {
+        const vl = i - 1 >= 0 ? M[j + 1][i - 1] : inf;
+        const vm = M[j + 1][i];
+        const vr = i + 1 < width ? M[j + 1][i + 1] : inf;
+        M[j][i] = heatMap[j][i].add(Decimal.min(vl, vm, vr));
       }
+    }
+
+    // Set A[0] is energy
+    A[0] = heatMap[0].slice();
+
+    // Frist compute best 1-edge path for all pairs of rows
+    let weight: Decimal[][] = [];
+    for (let i = 0; i <= width; i++) {
+      weight[i] = [];
+      for (let j = 0; j <= width; j++) {
+        weight[i][j] = minf;
+      }
+    }
+    for (let k = 0; k < height - 1; k++) {
+      A[k + 1] = new Array(width);
+      mMap[k] = new Array(width);
+      // compute weight
+      for (let i = 1; i <= width; i++) {
+        for (let j = Math.max(i - 1, 1); j <= Math.min(i + 1, width); j++) {
+          weight[i][j] = A[k][i - 1].mul(M[k + 1][j - 1]);
+        }
+      }
+
+      // calculate F(m)
+      let f: Decimal[] = [];
+      f[0] = new Decimal(0);
+      const getF = (i: number) => {
+        if (i === -1) {
+          return new Decimal(0);
+        }
+        return f[i];
+      }
+      for (let i = 1; i <= width; i++) {
+        let f1 = getF(i - 1).add(weight[i][i]);
+        let f2 = getF(i - 2).add(weight[i - 1][i]).add(weight[i][i - 1]);
+        f[i] = Decimal.max(f1, f2);
+      }
+      // Solve the optimal matching and update A
+      let x = width;
+      while (x > 1) {
+        let f1 = getF(x - 1).add(weight[x][x]);
+        let f2 = getF(x - 2).add(weight[x - 1][x]).add(weight[x][x - 1]);
+        if (f1.greaterThan(f2)) {
+          // m(i,k) = i
+          mMap[k][x - 1] = x - 1;
+          A[k + 1][x - 1] = heatMap[k + 1][x - 1].add(A[k][x - 1]);
+          x -= 1;
+        } else {
+          // m(i,k) = i-1, m(i-1,k) = i
+          mMap[k][x - 1] = x - 2;
+          mMap[k][x - 2] = x - 1;
+          A[k + 1][x - 1] = heatMap[k + 1][x - 1].add(A[k][x - 2]);
+          A[k + 1][x - 2] = heatMap[k + 1][x - 2].add(A[k][x - 1]);
+          x -= 2;
+        }
+      }
+      if (x === 1) {
+        mMap[k][0] = 0;
+        A[k + 1][0] = heatMap[k + 1][0].add(A[k][0]);
+      }
+    }
+
+    let addr: number[] = [];
+    for (let x = 0; x < width; x++) {
+      addr[x] = x;
     }
 
     // Quicksort last row
@@ -700,31 +267,119 @@ export class SeamCarverTemp {
       addr[i] = addr[j];
       addr[j] = temp2;
     }
-    quickSort(M[height - 1], 0, width - 1);
+    quickSort(A[height - 1], 0, width - 1);
 
     // Backtrack and consist consistentVerticalMap
     for (let x = 0; x < width; x++) {
       this.consistentVerticalMap[height - 1][addr[x]] = x + 1;
-      for (let y = height - 1; y >= 1; y--) {
-        this.consistentVerticalMap[y - 1][backtrack[y][x]] = this.consistentVerticalMap[y][x];
+    }
+    for (let y = height - 1; y >= 1; y--) {
+      for (let x = 0; x < width; x++) {
+        this.consistentVerticalMap[y - 1][mMap[y - 1][x]] = this.consistentVerticalMap[y][x];
       }
     }
+    return mMap;
   }
 
-  calculateHorizontalSeamMap(pairList: number[][], heatMap: Decimal[][]) {
-    const M = heatMap.slice();
+  /**
+   * Calculate Vertical Consistency Seam Map
+   * @param heatMap 
+   * @param vMap 
+   */
+  calculateHorizontalSeamMap(heatMap: Decimal[][], vMap: number[][]) {
     const width = this.imageData.width;
     const height = this.imageData.height;
-    let backtrack = pairList.slice();
-    let addr: number[] = []
 
-    // Building M map by DP and prepair backtrack
-    for (let x = 1; x < width; x++) {
-      for (let y = 0; y < height; y++) {
-        addr[y] = y;
-        M[pairList[x - 1][y]][x] = M[pairList[x - 1][y]][x].add(M[y][x - 1]);
-        backtrack[pairList[x - 1][y]][x] = y;
+    // For calculating weights by the method of Real-time content-aware image resizing(2009)
+    let A: Decimal[][] = [];
+    let M: Decimal[][] = [];
+    let mMap: number[][] = []; // for backtrack
+
+    for (let j = 0; j <= width; j++) {
+      M[j] = new Array<Decimal>(height);
+    }
+
+    // Calculate M by dynamic programming
+    for (let i = 0; i < height; i++) {
+      M[width][i] = new Decimal(0);
+    }
+    for (let j = width - 1; j >= 0; j--) {
+      for (let i = 0; i < height; i++) {
+        const vl = i - 1 >= 0 ? M[j + 1][i - 1] : inf;
+        const vm = M[j + 1][i];
+        const vr = i + 1 < height ? M[j + 1][i + 1] : inf;
+        M[j][i] = heatMap[j][i].add(Decimal.min(vl, vm, vr));
       }
+    }
+
+    // Set A[0] is energy
+    A[0] = heatMap[0].slice();
+
+    // Frist compute best 1-edge path for all pairs of cols
+    let weight: Decimal[][] = [];
+    for (let i = 0; i <= height; i++) {
+      weight[i] = [];
+      for (let j = 0; j <= height; j++) {
+        weight[i][j] = minf;
+      }
+    }
+    for (let k = 0; k < width - 1; k++) {
+      A[k + 1] = new Array(height);
+      mMap[k] = new Array(height);
+      // compute weight
+      for (let i = 1; i <= height; i++) {
+        for (let j = Math.max(i - 1, 1); j <= Math.min(i + 1, height); j++) {
+          weight[i][j] = A[k][i - 1].mul(M[k + 1][j - 1]);
+        }
+      }
+
+      // calculate F(m)
+      let f: Decimal[] = [];
+      f[0] = new Decimal(0);
+      const getF = (i: number) => {
+        if (i === -1) {
+          return new Decimal(0);
+        }
+        return f[i];
+      }
+      for (let i = 1; i <= height; i++) {
+        let f1 = getF(i - 1).add(weight[i][i]);
+        let f2 = getF(i - 2).add(weight[i - 1][i]).add(weight[i][i - 1]);
+        f[i] = Decimal.max(f1, f2);
+      }
+      // Solve the optimal matching and update A
+      let y = height;
+      while (y > 1) {
+        if (vMap[y - 2][k] !== k) {
+          mMap[k][y - 1] = y - 1;
+          A[k + 1][y - 1] = heatMap[k + 1][y - 1].add(A[k][y - 1]);
+          y -= 1;
+        }
+        let f1 = getF(y - 1).add(weight[y][y]);
+        let f2 = getF(y - 2).add(weight[y - 1][y]).add(weight[y][y - 1]);
+        if (f1.greaterThan(f2)) {
+          // m(i,k) = i
+          mMap[k][y - 1] = y - 1;
+          A[k + 1][y - 1] = heatMap[k + 1][y - 1].add(A[k][y - 1]);
+          y -= 1;
+        } else {
+          // m(i,k) = i-1, m(i-1,k) = i
+          mMap[k][y - 1] = y - 2;
+          mMap[k][y - 2] = y - 1;
+          A[k + 1][y - 1] = heatMap[k + 1][y - 1].add(A[k][y - 2]);
+          A[k + 1][y - 2] = heatMap[k + 1][y - 2].add(A[k][y - 1]);
+          y -= 2;
+        }
+      }
+      if (y === 1) {
+        mMap[k][0] = 0;
+        A[k + 1][0] = heatMap[k + 1][0].add(A[k][0]);
+      }
+    }
+
+    let addr: number[] = [];
+    for (let y = 0; y < height; y++) {
+      addr[y] = y;
     }
 
     // Quicksort last row
@@ -759,17 +414,15 @@ export class SeamCarverTemp {
       addr[i] = addr[j];
       addr[j] = temp2;
     }
-    let lastCol: Decimal[] = [];
-    for (let y = 0; y < height; y++) {
-      lastCol[y] = M[y][width - 1];
-    }
-    quickSort(lastCol, 0, height - 1);
+    quickSort(A[width - 1], 0, height - 1);
 
-    // Backtrack and consist consistentHorizontalMap
+    // Backtrack and consist consistentVerticalMap
     for (let y = 0; y < height; y++) {
       this.consistentHorizontalMap[addr[y]][width - 1] = y + 1;
-      for (let x = width - 1; x >= 1; x--) {
-        this.consistentHorizontalMap[backtrack[y][x]][x - 1] = this.consistentHorizontalMap[y][x];
+    }
+    for (let x = width - 1; x >= 1; x--) {
+      for (let y = 0; y < height; y++) {
+        this.consistentHorizontalMap[mMap[x - 1][y]][x - 1] = this.consistentHorizontalMap[y][x];
       }
     }
   }
@@ -869,36 +522,4 @@ class ImageDataWrapper {
       new Decimal(data[offset + 2]), new Decimal(data[offset + 3])
     ];
   }
-
-  // /**
-  //  * Construct editedData and Map
-  //  * @param seamMap 
-  //  * @param isVerticalSeam 
-  //  */
-  // deleteSeam(seamMap: number[][], isVerticalSeam: boolean) {
-  //   this.count += 1;
-  //   const newData: number[][][] = [];
-  //   if (isVerticalSeam) {
-  //     for (let y = 0, height = seamMap.length; y < height; y++) {
-  //       let x0 = 0;
-  //       for (let x = 0, width = seamMap[0].length; x < width; x++) {
-  //         if (seamMap[y][x] === 0) {
-  //           newData[y][x0] = this.editedData[y][x];
-  //           x0 += 1;
-  //         }
-  //       }
-  //     }
-  //   } else {
-  //     for (let x = 0, width = seamMap[0].length; x < width; x++) {
-  //       let y0 = 0;
-  //       for (let y = 0, height = seamMap.length; y < height; y++) {
-  //         if (seamMap[y][x] === 0) {
-  //           newData[y0][x] = this.editedData[y][x];
-  //           y0 += 1;
-  //         }
-  //       }
-  //     }
-  //   }
-  //   this.editedData = newData.slice();
-  // }
 }

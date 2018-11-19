@@ -12,7 +12,6 @@ import Vec2 from 'src/lib/math/Vec2';
 interface IImageProps {
     image: ImageCanvasStore;
     seamCarver: SeamCarver;
-    // seam: SeamCarving;
     originX: number;
 }
 
@@ -25,7 +24,6 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
     ctx: CanvasRenderingContext2D;
     imageCtx: CanvasRenderingContext2D;
     imageMatrix: linear.ColorMatrix;
-    // seamCarving: SeamCarving;
 
     componentDidMount() {
         this.canvas = this.refs.canvas as HTMLCanvasElement;
@@ -37,13 +35,12 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
 
         if (image.isSeamRemove) {
             this.newImage = this.props.seamCarver.resize(image.seamWidth, image.seamHeight);
-            // this.newImage = this.props.seam.seamCarving([image.seamWidth, image.seamHeight], this.props.seam.convertImage());
         } else {
             this.newImage = this.props.seamCarver.resize(image.originalWidth, image.originalHeight);
-            // this.newImage = this.props.seam.seamCarving([image.originalWidth, image.originalHeight], this.props.seam.convertImage());
         }
         this.imageCanvas.width = this.newImage.width;
         this.imageCanvas.height = this.newImage.height;
+        console.log(this.newImage);
         this.imageCtx.putImageData(this.newImage, 0, 0);
         this.drawImage(image.canvasWidth, image.canvasHeight, image.originPoint, image.scale);
     }
@@ -157,7 +154,6 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
         }
         const image = this.props.image;
         this.newImage = this.props.seamCarver.resize(newWidth, image.seamHeight);
-        // this.newImage = this.props.seam.seamCarving([newWidth, image.seamHeight], this.props.seam.convertImage());
         this.imageCanvas.width = newWidth;
         this.imageCtx.putImageData(this.newImage, 0, 0);
         image.onChangeSeamWidth(newWidth, () => {
@@ -170,14 +166,13 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
         if (newHeight < 268) {
             return;
         }
-        // const image = this.props.image;
-        // this.newImage = this.props.seamCarver.resize(newWidth, image.seamHeight);
-        // this.newImage = this.props.seam.seamCarving([image.seamWidth, newHeight], this.props.seam.convertImage());
-        // this.imageCanvas.width = newHeight;
-        // this.imageCtx.putImageData(this.newImage, 0, 0);
-        // image.onChangeSeamHeight(newHeight, () => {
-        //     this.drawImage(image.canvasWidth, image.canvasHeight, image.originPoint, image.scale);
-        // });
+        const image = this.props.image;
+        this.newImage = this.props.seamCarver.resize(image.seamWidth, newHeight);
+        this.imageCanvas.height = newHeight;
+        this.imageCtx.putImageData(this.newImage, 0, 0);
+        image.onChangeSeamHeight(newHeight, () => {
+            this.drawImage(image.canvasWidth, image.canvasHeight, image.originPoint, image.scale);
+        });
     }
 
     public onChangeScaleX = (value: any) => {
@@ -199,7 +194,6 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
         this.ctx.clearRect(0, 0, image.canvasWidth, image.canvasHeight);
         this.imageCtx.clearRect(0, 0, image.seamWidth, image.seamHeight);
         this.newImage = this.props.seamCarver.resize(image.originalWidth, image.originalHeight);
-        // this.newImage = this.props.seam.seamCarving([image.originalWidth, image.originalHeight], this.props.seam.convertImage());
         this.imageCtx.putImageData(this.newImage, 0, 0);
         this.ctx.drawImage(this.imageCanvas, 0, 0);
         image.onClickResetButton();
