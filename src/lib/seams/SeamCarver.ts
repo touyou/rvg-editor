@@ -4,6 +4,7 @@
  */
 
 import Color from '../Color';
+import { Decimal } from 'decimal.js';
 
 export default class SeamCarver {
   private newImage: Uint8ClampedArray;
@@ -403,13 +404,13 @@ export class SeamCarverTemp {
     const heatMap = this.sobelEnergy(this.imageData);
     const width = this.imageData.width;
     const height = this.imageData.height;
-    const minRow = (value: number[][], y: number, x: number, length: number) => {
+    const minRow = (value: Decimal[][], y: number, x: number, length: number) => {
       const vl = x - 1 >= 0 ? value[y][x - 1] : inf;
       const vm = value[y][x];
       const vr = x + 1 < length ? value[y][x + 1] : inf;
       return vl < vm ? (vl < vr ? vl : vr) : (vm < vr ? vm : vr);
     }
-    const minCol = (value: number[][], y: number, x: number, length: number) => {
+    const minCol = (value: Decimal[][], y: number, x: number, length: number) => {
       const vl = y - 1 >= 0 ? value[y - 1][x] : inf;
       const vm = value[y][x];
       const vr = y + 1 < length ? value[y + 1][x] : inf;
@@ -418,11 +419,11 @@ export class SeamCarverTemp {
 
     // First compute best 1-edge path for all pairs of rows
     let pairList: number[][] = [];
-    let hungaryMap: number[][] = [];
+    let hungaryMap: Decimal[][] = [];
     for (let i = 0; i < width; i += 1) {
       hungaryMap[i] = [];
       for (let j = 0; j < width; j += 1) {
-        hungaryMap[i][j] = inf;
+        hungaryMap[i][j] = new Decimal(Infinity);
       }
     }
     for (let y = 0; y < height - 1; y += 1) {
@@ -530,6 +531,16 @@ export class SeamCarverTemp {
     let colCount: number[] = [];
     let lineR: number[] = [];
     let lineC: number[] = [];
+
+    const isContain = (value: number, array: number[]) => {
+      for (let i = 0, length = array.length; i < length; i++) {
+        if (array[i] === value) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     while (true) {
       // step2
       for (let i = 0; i < length; i++) {
@@ -610,48 +621,21 @@ export class SeamCarverTemp {
       let minVal = Number.MAX_VALUE;
       /// Find minimul number of non-lined numbers
       for (let i = 0; i < length; i++) {
-        let flag = false;
-        for (let k = 0, len = lineR.length; k < len; k += 1) {
-          if (lineR[k] === i) {
-            flag = true;
-            break;
-          }
-        }
-        if (flag) continue;
+        if (isContain(i, lineR)) continue;
         for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, length - 1); j += 1) {
-          for (let k = 0, len = lineC.length; k < len; k += 1) {
-            if (lineC[k] === j) {
-              flag = true;
-              break;
-            }
-          }
-          if (flag) {
-            flag = false;
-            continue;
-          }
+          if (isContain(j, lineC)) continue;
           if (minVal > hungaryMap[i][j]) {
             minVal = hungaryMap[i][j];
           }
         }
       }
+      console.log(minVal);
       /// Calc cross or non-lined numbers
       for (let i = 0; i < length; i += 1) {
-        let flagR = false;
-        for (let k = 0, len = lineR.length; k < len; k += 1) {
-          if (lineR[k] === i) {
-            flagR = true;
-            break;
-          }
-        }
+        let flagR = isContain(i, lineR);
         for (let j = Math.max(0, i - 1); j <= Math.min(i + 1, length - 1); j += 1) {
-          if (hungaryMap[i][j] === inf) continue;
-          let flagC = false;
-          for (let k = 0, len = lineC.length; k < len; k += 1) {
-            if (lineC[k] === j) {
-              flagC = true;
-              break;
-            }
-          }
+          // if (hungaryMap[i][j] === inf) continue;
+          let flagC = isContain(j, lineC);
           if (!flagC && !flagR) {
             hungaryMap[i][j] -= minVal;
           } else if (flagC && flagR) {
@@ -791,99 +775,99 @@ export class SeamCarverTemp {
     }
   }
 
-  /**
-   * Find optimal seam map by energy
-   * @param energy 
-   */
-  findOptimalSeam(energy: number[][]) {
-    const min = (x: number, y: number): number => {
-      return x < y ? x : y;
-    }
+  // /**
+  //  * Find optimal seam map by energy
+  //  * @param energy 
+  //  */
+  // findOptimalSeam(energy: number[][]) {
+  //   const min = (x: number, y: number): number => {
+  //     return x < y ? x : y;
+  //   }
 
-    // Find M - minimum energy for all possible seams for each (x,y)
-    let M = energy.slice();
-    const height = energy.length;
-    const width = energy[0].length;
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const vl = x - 1 > 0 ? M[y - 1][x - 1] : Number.MAX_VALUE;
-        const vm = M[y - 1][x];
-        const vr = x + 1 < width ? M[y - 1][x + 1] : Number.MAX_VALUE;
-        M[y][x] += min(vl, min(vm, vr));
-      }
-    }
+  //   // Find M - minimum energy for all possible seams for each (x,y)
+  //   let M = energy.slice();
+  //   const height = energy.length;
+  //   const width = energy[0].length;
+  //   for (let y = 0; y < height; y++) {
+  //     for (let x = 0; x < width; x++) {
+  //       const vl = x - 1 > 0 ? M[y - 1][x - 1] : Number.MAX_VALUE;
+  //       const vm = M[y - 1][x];
+  //       const vr = x + 1 < width ? M[y - 1][x + 1] : Number.MAX_VALUE;
+  //       M[y][x] += min(vl, min(vm, vr));
+  //     }
+  //   }
 
-    // Find the minimum value in the last row of M
-    let val = Number.MAX_VALUE;
-    let indexX = -1;
-    for (let x = 0; x < width; x++) {
-      if (val > M[height - 1][x]) {
-        val = M[height - 1][x];
-        indexX = x;
-      }
-    }
+  //   // Find the minimum value in the last row of M
+  //   let val = Number.MAX_VALUE;
+  //   let indexX = -1;
+  //   for (let x = 0; x < width; x++) {
+  //     if (val > M[height - 1][x]) {
+  //       val = M[height - 1][x];
+  //       indexX = x;
+  //     }
+  //   }
 
-    // Traverse back choosing pixels with minimum energy.
-    let seamEnergy = val;
-    let optSeamMask: number[][] = [];
-    for (let y = height - 1; y >= 1; y--) {
-      optSeamMask[y] = [];
-      for (let x = 0; x < width; x++) {
-        optSeamMask[y][x] = 0;
-      }
-      optSeamMask[y][indexX] = 1;
-      const vl = M[y - 1][indexX - 1];
-      const vm = M[y - 1][indexX];
-      const vr = M[y - 1][indexX + 1];
+  //   // Traverse back choosing pixels with minimum energy.
+  //   let seamEnergy = val;
+  //   let optSeamMask: number[][] = [];
+  //   for (let y = height - 1; y >= 1; y--) {
+  //     optSeamMask[y] = [];
+  //     for (let x = 0; x < width; x++) {
+  //       optSeamMask[y][x] = 0;
+  //     }
+  //     optSeamMask[y][indexX] = 1;
+  //     const vl = M[y - 1][indexX - 1];
+  //     const vm = M[y - 1][indexX];
+  //     const vr = M[y - 1][indexX + 1];
 
-      seamEnergy += seamEnergy + min(vl, min(vm, vr));
-      indexX += (vl < vm ? (vl < vr ? -1 : 1) : (vm < vr ? 0 : 1));
-    }
+  //     seamEnergy += seamEnergy + min(vl, min(vm, vr));
+  //     indexX += (vl < vm ? (vl < vr ? -1 : 1) : (vm < vr ? 0 : 1));
+  //   }
 
-    for (let x = 0; x < width; x++) {
-      optSeamMask[0][x] = 0;
-    }
-    optSeamMask[0][indexX] = 1;
+  //   for (let x = 0; x < width; x++) {
+  //     optSeamMask[0][x] = 0;
+  //   }
+  //   optSeamMask[0][indexX] = 1;
 
-    this._seamEnergy = seamEnergy;
-    return optSeamMask;
-  }
+  //   this._seamEnergy = seamEnergy;
+  //   return optSeamMask;
+  // }
 
-  /**
-   * Add or Delete Seam by operation
-   * @param transBitMask 
-   * @param sizeReduction 
-   * @param image 
-   * @param operation 
-   */
-  addOrDeleteSeams(transBitMask: number[][], sizeReduction: number[], image: ImageDataWrapper, operation: Function) {
-    let y = transBitMask.length - 1;
-    let x = transBitMask[0].length - 1;
+  // /**
+  //  * Add or Delete Seam by operation
+  //  * @param transBitMask 
+  //  * @param sizeReduction 
+  //  * @param image 
+  //  * @param operation 
+  //  */
+  // addOrDeleteSeams(transBitMask: number[][], sizeReduction: number[], image: ImageDataWrapper, operation: Function) {
+  //   let y = transBitMask.length - 1;
+  //   let x = transBitMask[0].length - 1;
 
-    for (let it = 0; it < sizeReduction[0] + sizeReduction[1]; it++) {
-      const energy = this.sobelEnergy(image);
-      if (transBitMask[y][x] === 0) {
-        const optSeamMask = this.findOptimalSeam(energy);
-        image = operation(image, optSeamMask, false);
-        y = y - 1;
-      } else {
-        const optSeamMask = this.findOptimalSeam(energy);
-        image = operation(image, optSeamMask, true);
-        x = x - 1;
-      }
-    }
-  }
+  //   for (let it = 0; it < sizeReduction[0] + sizeReduction[1]; it++) {
+  //     const energy = this.sobelEnergy(image);
+  //     if (transBitMask[y][x] === 0) {
+  //       const optSeamMask = this.findOptimalSeam(energy);
+  //       image = operation(image, optSeamMask, false);
+  //       y = y - 1;
+  //     } else {
+  //       const optSeamMask = this.findOptimalSeam(energy);
+  //       image = operation(image, optSeamMask, true);
+  //       x = x - 1;
+  //     }
+  //   }
+  // }
 
-  /**
-   * Reduce Image by mask
-   * @param image 
-   * @param seamMask 
-   * @param isVertical 
-   */
-  reduceImageByMask(image: ImageDataWrapper, seamMask: number[][], isVertical: boolean) {
-    image.deleteSeam(seamMask, isVertical);
-    return image;
-  }
+  // /**
+  //  * Reduce Image by mask
+  //  * @param image 
+  //  * @param seamMask 
+  //  * @param isVertical 
+  //  */
+  // reduceImageByMask(image: ImageDataWrapper, seamMask: number[][], isVertical: boolean) {
+  //   image.deleteSeam(seamMask, isVertical);
+  //   return image;
+  // }
 
   /**
    * Calculate Energy Map by Sobel filter
@@ -937,7 +921,7 @@ export class SeamCarverTemp {
 
 class ImageDataWrapper {
   originalData: ImageData;
-  editedData: number[][][];
+  editedData: Decimal[][][];
   verticalMap: number[][];
   horizontalMap: number[][];
   count: number;
@@ -972,10 +956,10 @@ class ImageDataWrapper {
    * @param x 
    * @param y 
    */
-  getPixel(x: number, y: number): number[] {
+  getPixel(x: number, y: number): Decimal[] {
     const offset = y * this.originalData.width + x;
     const data = this.originalData.data;
-    return [data[offset], data[offset + 1], data[offset + 2], data[offset + 3]];
+    return [new Decimal(data[offset]), new Decimal(data[offset + 1]), new Decimal(data[offset + 2]), new Decimal(data[offset + 3])];
   }
 
   /**
