@@ -1,16 +1,16 @@
 import * as React from 'react';
 import SeamCarver from '../lib/seams/SeamCarver';
-// import SeamCarving from '../utils/warping/SeamCarving';
 import ActionSlider from './ActionSlider';
 import * as linear from '../lib/math/Matrix';
 import { Paper, Button, FormControlLabel, Switch, TextField } from '@material-ui/core';
 import { observer } from 'mobx-react';
 import ImageCanvasStore from 'src/stores/ImageCanvasStore';
 import Vec2 from 'src/lib/math/Vec2';
-// import SeamCarving from 'src/lib/seams/SeamCarving';
+import { PreviewStore } from 'src/stores/PreviewStore';
 
 interface IImageProps {
     image: ImageCanvasStore;
+    preview: PreviewStore;
     seamCarver: SeamCarver;
     originX: number;
 }
@@ -40,7 +40,6 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
         }
         this.imageCanvas.width = this.newImage.width;
         this.imageCanvas.height = this.newImage.height;
-        console.log(this.newImage);
         this.imageCtx.putImageData(this.newImage, 0, 0);
         this.drawImage(image.canvasWidth, image.canvasHeight, image.originPoint, image.scale);
     }
@@ -73,8 +72,8 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
                     <TextField label="height" value={image.canvasHeight} onChange={this.onChangeCanvasHeight} margin="dense" />
                 </div>
                 <div style={{ color: '#424242' }}>
-                    <ActionSlider min={268} max={1000} step={1} value={image.seamWidth} title="seam width :" changeValue={this.onChangeSeamWidth} />
-                    <ActionSlider min={268} max={1000} step={1} value={image.seamHeight} title="seam height :" changeValue={this.onChangeSeamHeight} />
+                    <ActionSlider min={1} max={image.originalWidth * 2} step={1} value={image.seamWidth} title="seam width :" changeValue={this.onChangeSeamWidth} />
+                    <ActionSlider min={1} max={image.originalHeight * 2} step={1} value={image.seamHeight} title="seam height :" changeValue={this.onChangeSeamHeight} />
                     <ActionSlider min={0.01} max={5} step={0.01} value={image.scale.x} title="width scale :" changeValue={this.onChangeScaleX} />
                     <ActionSlider min={0.01} max={5} step={0.01} value={image.scale.y} title="height scale :" changeValue={this.onChangeScaleY} />
                 </div>
@@ -106,7 +105,6 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
     }
 
     public onMouseDown = (event: any) => {
-        console.log('hello');
         const image = this.props.image;
         image.onMouseDownCanvas(new Vec2(event.clientX, event.clientY));
     }
@@ -122,7 +120,11 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
 
     public onMouseUp = (event: any) => {
         const image = this.props.image;
+        const preview = this.props.preview;
         image.onMouseUp();
+        if (preview.drawImage) {
+            preview.drawImage();
+        }
     }
 
     public onChangeCanvasWidth = (event: any) => {
@@ -149,7 +151,7 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
 
     public onChangeSeamWidth = (value: any) => {
         const newWidth = Number(value);
-        if (newWidth < 268) {
+        if (newWidth < 1) {
             return;
         }
         const image = this.props.image;
@@ -163,7 +165,7 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
 
     public onChangeSeamHeight = (value: any) => {
         const newHeight = Number(value);
-        if (newHeight < 268) {
+        if (newHeight < 1) {
             return;
         }
         const image = this.props.image;
@@ -197,6 +199,10 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
         this.imageCtx.putImageData(this.newImage, 0, 0);
         this.ctx.drawImage(this.imageCanvas, 0, 0);
         image.onClickResetButton();
+        const preview = this.props.preview;
+        if (preview.drawImage) {
+            preview.drawImage();
+        }
     }
 
     private drawImage = (width: number, height: number, origin: Vec2, scale: Vec2) => {
@@ -209,5 +215,10 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
         this.ctx.lineWidth = 4;
         this.ctx.strokeStyle = 'rgba(120,120,255,0.4)';
         this.ctx.strokeRect(0, 0, width, height);
+
+        const preview = this.props.preview;
+        if (preview.drawImage) {
+            preview.drawImage();
+        }
     }
 }

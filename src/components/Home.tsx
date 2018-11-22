@@ -6,20 +6,23 @@ import { AppStore, WindowMode } from 'src/stores/AppStore';
 import { ImagesStore } from 'src/stores/ImageCanvasStore';
 // import { ImagesStore } from 'src/stores/ImageCanvasStore';
 import { seamCarver } from './SplitContainer';
+import { PreviewStore } from 'src/stores/PreviewStore';
 
 interface IHomeProps {
     home?: HomeStore;
     app?: AppStore;
     images?: ImagesStore;
+    preview?: PreviewStore;
 }
 
-@inject('home', 'app', 'images')
+@inject('home', 'app', 'images', 'preview')
 @observer
 export default class Home extends React.Component<IHomeProps> {
 
     public render() {
         const app = this.props.app as AppStore;
         const images = this.props.images as ImagesStore;
+        const preview = this.props.preview as PreviewStore;
 
         let imageArray = images.images.slice();
         imageArray.sort((a, b) => {
@@ -35,8 +38,8 @@ export default class Home extends React.Component<IHomeProps> {
             canvasArray.push(<CanvasContainer
                 key={image.id}
                 image={image}
+                preview={preview}
                 seamCarver={seamCarver!}
-                // seam={seam!}
                 originX={originX}
             />)
             originX += width + 16;

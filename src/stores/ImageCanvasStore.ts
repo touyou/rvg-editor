@@ -134,10 +134,10 @@ export default class ImageCanvasStore {
 
   constructor(public isSeamRemove: boolean, home: HomeStore, id: string) {
     this.canvasWidth = home.addWidth;
+    this.canvasHeight = home.addHeight;
     this.originalWidth = home.originalImage!.naturalWidth;
     this.originalHeight = home.originalImage!.naturalHeight;
     this.seamWidth = isSeamRemove ? this.canvasWidth : this.originalWidth;
-    this.canvasHeight = this.originalHeight;
     this.seamHeight = isSeamRemove ? this.canvasHeight : this.originalHeight;
     this.id = id;
   }
@@ -182,7 +182,7 @@ export default class ImageCanvasStore {
     const diff = this.scale.y - value;
     const newScale = new Vec2(this.isRatioLocked ? this.scale.x - diff : this.scale.x, value);
     this.scale = newScale;
-    completion();
+    completion(newScale);
   }
 
   public onChangeSeamWidth(value: number, completion: Function) {

@@ -52,7 +52,6 @@ export default class SeamCarver {
     let newImage = new Uint8ClampedArray(width * image.height * 4);
     let resizedImage = new Uint8ClampedArray(width * height * 4);
     // First compute vertical
-    console.log(this.image);
     if (image.width >= width) {
       const widthDiff = image.width - width;
       for (let y = 0; y < image.height; y++) {
