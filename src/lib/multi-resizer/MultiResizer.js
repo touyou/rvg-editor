@@ -177,36 +177,40 @@ export class MultiResizer {
       }
     }
 
+    // console.log({
+    //   right: right,
+    //   left: left,
+    //   keyFrame: keyFrames,
+    //   value: value
+    // })
+
     if (keyFrames.length === 1) {
+      /// 一個しか無い
       return keyFrames[0][1];
     } else if (right === keyFrames.length) {
+      /// 右端
       const source = keyFrames[right - 2][1];
       const target = keyFrames[right - 1][1];
       const ts = keyFrames[right - 1][0] - keyFrames[right - 2][0];
       const vt = value - keyFrames[right - 1][0];
-      if (ts === 0) {
-        return target;
-      }
+      console.log(target + (target - source) / ts * vt);
       return target + (target - source) / ts * vt;
     } else if (keyFrames[right][0] === value) {
+      /// そのものがあった
       return keyFrames[right][1];
     } else if (right === 0) {
       const source = keyFrames[right + 1][1];
       const target = keyFrames[right][1];
       const ts = keyFrames[right][0] - keyFrames[right + 1][0];
       const vt = value - keyFrames[right][0];
-      if (ts === 0) {
-        return target;
-      }
+      console.log(target + (target - source) / ts * vt);
       return target + (target - source) / ts * vt;
     } else {
       const lVal = keyFrames[right - 1][1];
       const rVal = keyFrames[right][1];
       const lr = keyFrames[right][0] - keyFrames[right - 1][0];
-      const lv = keyFrames[right][0] - value;
-      if (lr === 0) {
-        return lVal;
-      }
+      const lv = value - keyFrames[right - 1][0];
+      console.log(lVal + (rVal - lVal) / lr * lv);
       return lVal + (rVal - lVal) / lr * lv;
     }
   }

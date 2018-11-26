@@ -61,4 +61,8 @@ export class HomeStore {
     public onClickOpenButton(value: string) {
         this.fileName = value;
     }
+
+    public removeImage() {
+        this.originalImage = null;
+    }
 }

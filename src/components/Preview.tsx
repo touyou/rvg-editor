@@ -3,19 +3,20 @@ import { AppStore, WindowMode } from 'src/stores/AppStore';
 import Resizable, { NumberSize } from 're-resizable';
 import { MultiResizer } from 'src/lib/multi-resizer/MultiResizer';
 import { seamCarver } from './SplitContainer';
-import { ImagesStore } from 'src/stores/ImageCanvasStore';
 import { PreviewStore } from 'src/stores/PreviewStore';
 import { inject, observer } from 'mobx-react';
+import { KeyFrameStore } from 'src/stores/ImageCanvasStore';
+import { autorun } from 'mobx';
 
 interface IPreviewProps {
   app?: AppStore;
-  images?: ImagesStore;
+  keyFrames?: KeyFrameStore;
   preview?: PreviewStore;
 }
 
 export let resizer: MultiResizer | null = null;
 
-@inject('app', 'images', 'preview')
+@inject('app', 'keyFrames', 'preview')
 @observer
 export default class PreviewContainer extends React.Component<IPreviewProps, any> {
   canvas: HTMLCanvasElement;
@@ -99,6 +100,10 @@ export default class PreviewContainer extends React.Component<IPreviewProps, any
     this.drawImage();
   }
 
+  updateStore = autorun(() => {
+    this.drawImage();
+  });
+
   public getPreviewWidth = (state: WindowMode) => {
     switch (state) {
       case WindowMode.PREVIEW:
@@ -116,12 +121,17 @@ export default class PreviewContainer extends React.Component<IPreviewProps, any
     const canvasHeight = preview.canvasHeight;
 
     if (!seamCarver || canvasWidth <= 0 || canvasHeight <= 0) {
+      console.log('seamCarver null')
       return;
     }
 
-    const images = this.props.images as ImagesStore;
-    resizer = images.getResizer(seamCarver);
+    const keyFrames = this.props.keyFrames as KeyFrameStore
+    resizer = keyFrames.resizer;
 
+    if (!resizer) {
+      console.log('resizer null');
+      return;
+    }
     const originX = resizer.originX(canvasWidth);
     const originY = resizer.originY(canvasHeight);
     const scaleX = resizer.scaleX(canvasWidth);

@@ -3,46 +3,47 @@ import * as React from 'react';
 import { HomeStore } from 'src/stores/HomeStore';
 import CanvasContainer from './ImageCanvas';
 import { AppStore, WindowMode } from 'src/stores/AppStore';
-import { ImagesStore } from 'src/stores/ImageCanvasStore';
-// import { ImagesStore } from 'src/stores/ImageCanvasStore';
-import { seamCarver } from './SplitContainer';
+import { KeyFrameStore } from 'src/stores/ImageCanvasStore';
 import { PreviewStore } from 'src/stores/PreviewStore';
 
 interface IHomeProps {
     home?: HomeStore;
     app?: AppStore;
-    images?: ImagesStore;
     preview?: PreviewStore;
+    keyFrames?: KeyFrameStore;
 }
 
-@inject('home', 'app', 'images', 'preview')
+@inject('home', 'app', 'keyFrames', 'preview')
 @observer
 export default class Home extends React.Component<IHomeProps> {
 
     public render() {
         const app = this.props.app as AppStore;
-        const images = this.props.images as ImagesStore;
         const preview = this.props.preview as PreviewStore;
+        const keyFrames = this.props.keyFrames as KeyFrameStore;
 
-        let imageArray = images.images.slice();
-        imageArray.sort((a, b) => {
-            if (a.canvasWidth === b.canvasWidth) {
-                return a.canvasHeight < b.canvasHeight ? 1 : 0;
-            }
-            return a.canvasWidth < b.canvasWidth ? 1 : 0;
-        })
+        const xKeyFrames = keyFrames.sortedXKeyFrames;
+        const yKeyFrames = keyFrames.sortedYKeyFrames;
         let canvasArray: any[] = [];
+        let originY = 16;
         let originX = 16;
-        for (let image of imageArray) {
-            const width = Math.max(image.canvasWidth, 346);
-            canvasArray.push(<CanvasContainer
-                key={image.id}
-                image={image}
-                preview={preview}
-                seamCarver={seamCarver!}
-                originX={originX}
-            />)
-            originX += width + 16;
+        for (let i = 0; i < yKeyFrames.length; i++) {
+            originX = 16;
+            for (let j = 0; j < xKeyFrames.length; j++) {
+                const id = yKeyFrames[i].id + '_' + xKeyFrames[j].id;
+                const xKey = xKeyFrames[j];
+                const yKey = yKeyFrames[i];
+                canvasArray.push(<CanvasContainer
+                    key={id}
+                    xKey={xKey}
+                    yKey={yKey}
+                    preview={preview}
+                    originX={originX}
+                    originY={originY}
+                />);
+                originX += Math.max(xKeyFrames[j].value, 346) + 16;
+            }
+            originY += yKeyFrames[i].value + 365 + 16;
         }
 
         return (
@@ -55,7 +56,7 @@ export default class Home extends React.Component<IHomeProps> {
             }}>
                 <div style={{
                     width: originX,
-                    height: '100vh',
+                    height: originY,
                     position: 'relative'
                 }}>
                     {canvasArray}

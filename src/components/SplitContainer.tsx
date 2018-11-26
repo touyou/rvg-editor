@@ -12,22 +12,21 @@ import Home from './Home';
 import { AppStore, WindowMode } from 'src/stores/AppStore';
 import { SpeedDial, SpeedDialIcon, SpeedDialAction } from '@material-ui/lab';
 import { HomeStore } from 'src/stores/HomeStore';
-import ImageCanvasStore, { ImagesStore } from 'src/stores/ImageCanvasStore';
+import { KeyFrameStore } from 'src/stores/ImageCanvasStore';
 import SeamCarver from 'src/lib/seams/SeamCarver';
-import * as UUID from 'uuid/v4';
 import PreviewContainer from './Preview';
 import { PreviewStore } from 'src/stores/PreviewStore';
 
 interface ISplitProps {
     app?: AppStore;
     home?: HomeStore;
-    images?: ImagesStore;
+    keyFrames?: KeyFrameStore;
     preview?: PreviewStore;
 }
 
 export let seamCarver: SeamCarver | null = null;
 
-@inject('app', 'home', 'images', 'preview')
+@inject('app', 'home', 'keyFrames', 'preview')
 @observer
 export default class SplitContainer extends React.Component<ISplitProps, any> {
     private actions = [
@@ -113,8 +112,8 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                             </Typography>
                         </div>
                         <div style={{ margin: '1em' }}>
-                            <TextField label="width" value={home.addWidth} onChange={this.onChangeWidth} margin="normal" />
-                            <TextField label="height" value={home.addHeight} onChange={this.onChangeHeight} margin="normal" />
+                            <TextField style={{ display: home.originalImage ? 'block' : 'none' }} label="width" value={home.addWidth} onChange={this.onChangeWidth} margin="normal" />
+                            <TextField style={{ display: home.originalImage ? 'block' : 'none' }} label="height" value={home.addHeight} onChange={this.onChangeHeight} margin="normal" />
                             <FormControlLabel
                                 control={
                                     <Switch
@@ -218,7 +217,7 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
 
     public onClickDialAction = (type: string) => {
         const home = this.props.home as HomeStore;
-        const images = this.props.images as ImagesStore;
+        const keyFrames = this.props.keyFrames as KeyFrameStore;
 
         if (type === this.actions[0].name) {        // Add Image
             home.toggleModalOpen();
@@ -230,10 +229,12 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                 name = 'image.msi';
             }
             if (seamCarver) {
-                images.saveFiles(name, seamCarver);
+                keyFrames.saveFiles(name);
             }
         } else if (type === this.actions[2].name) { // Delete Image
-            images.deleteAll();
+            keyFrames.deleteAll();
+            seamCarver = null;
+            home.removeImage();
             const preview = this.props.preview as PreviewStore;
             if (preview.drawImage) {
                 preview.drawImage();
@@ -244,8 +245,8 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
     public onClickAddButton = () => {
         const home = this.props.home as HomeStore;
         const preview = this.props.preview as PreviewStore;
+        const keyFrames = this.props.keyFrames as KeyFrameStore;
         const { fileName, originalImage } = home;
-        const images = this.props.images as ImagesStore;
         if (!fileName) {
             return;
         }
@@ -258,15 +259,51 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                 this.tmpCanvas.height = image.naturalHeight;
                 this.tmpContext.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
                 seamCarver = new SeamCarver(this.tmpContext.getImageData(0, 0, image.naturalWidth, image.naturalHeight));
+                keyFrames.setSeamCarver(seamCarver);
                 home.onClickAddButton(image, () => {
-                    images.addImage(new ImageCanvasStore(home.isSeamRemove, home, UUID()));
+                    // 読み込み時には3点を予め読み込む
+                    keyFrames.addFrame(
+                        image.naturalWidth, image.naturalWidth, image.naturalWidth, true
+                    );
+                    keyFrames.addFrame(
+                        image.naturalWidth / 2, image.naturalWidth,
+                        home.isSeamRemove ? image.naturalWidth / 2 : image.naturalWidth,
+                        true
+                    );
+                    keyFrames.addFrame(
+                        image.naturalWidth * 2, image.naturalWidth,
+                        home.isSeamRemove ? image.naturalWidth * 2 : image.naturalWidth,
+                        true
+                    );
+                    keyFrames.addFrame(
+                        image.naturalHeight, image.naturalHeight, image.naturalHeight, false
+                    );
+                    keyFrames.addFrame(
+                        image.naturalHeight / 2, image.naturalHeight,
+                        home.isSeamRemove ? image.naturalHeight / 2 : image.naturalHeight,
+                        false
+                    );
+                    keyFrames.addFrame(
+                        image.naturalHeight * 2, image.naturalHeight,
+                        home.isSeamRemove ? image.naturalHeight * 2 : image.naturalHeight,
+                        false
+                    );
                     preview.setSize(image.naturalWidth, image.naturalHeight);
                 });
                 home.toggleLoading();
             }
         } else {
             home.onClickAddButton(null, () => {
-                images.addImage(new ImageCanvasStore(home.isSeamRemove, home, UUID()));
+                keyFrames.addFrame(
+                    home.addWidth, home.originalImage!.naturalWidth,
+                    home.isSeamRemove ? home.addWidth : home.originalImage!.naturalWidth,
+                    true
+                );
+                keyFrames.addFrame(
+                    home.addHeight, home.originalImage!.naturalHeight,
+                    home.isSeamRemove ? home.addHeight : home.originalImage!.naturalHeight,
+                    false
+                );
                 if (preview.drawImage) {
                     preview.drawImage();
                 }
