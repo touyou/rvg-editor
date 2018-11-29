@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
-import { AppBar, Toolbar, Typography, IconButton, Button, Modal, Paper, TextField, FormControlLabel, Switch, CircularProgress } from '@material-ui/core';
+import { AppBar, Toolbar, Typography, IconButton, Button, Modal, Paper, TextField, FormControlLabel, Switch, CircularProgress, Menu, MenuItem } from '@material-ui/core';
 import CropRotateIcon from '@material-ui/icons/CropRotate';
 import ImageIcon from '@material-ui/icons/Image';
 import CompareIcon from '@material-ui/icons/Compare';
@@ -8,6 +8,7 @@ import AddIcon from '@material-ui/icons/Add';
 import SaveIcon from '@material-ui/icons/Save';
 import DeleteIcon from '@material-ui/icons/Delete';
 import PhotoCamera from '@material-ui/icons/PhotoCamera';
+import MoreIcon from '@material-ui/icons/MoreVert';
 import Home from './Home';
 import { AppStore, WindowMode } from 'src/stores/AppStore';
 import { SpeedDial, SpeedDialIcon, SpeedDialAction } from '@material-ui/lab';
@@ -16,6 +17,8 @@ import { KeyFrameStore } from 'src/stores/ImageCanvasStore';
 import SeamCarver from 'src/lib/seams/SeamCarver';
 import PreviewContainer from './Preview';
 import { PreviewStore } from 'src/stores/PreviewStore';
+import { Rnd } from 'react-rnd';
+import ParameterModal from './ParameterModal';
 
 interface ISplitProps {
     app?: AppStore;
@@ -34,6 +37,10 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
         { icon: <SaveIcon />, name: 'Save Image' },
         { icon: <DeleteIcon />, name: 'Delete All' },
     ]
+
+    state = {
+        anchorEl: null,
+    };
 
     imageName: string;
     private tmpCanvas: HTMLCanvasElement;
@@ -85,6 +92,21 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                             <IconButton color="inherit" onClick={app.selectSplitMode}>
                                 <CompareIcon />
                             </IconButton>
+                            <IconButton color="inherit" onClick={this.handleMenu}>
+                                <MoreIcon />
+                            </IconButton>
+                            <Menu
+                                anchorEl={this.state.anchorEl}
+                                anchorOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                open={Boolean(this.state.anchorEl)}
+                                onClose={this.handleClose}
+                            >
+                                <MenuItem onClick={this.handleClose}>テストを終了する</MenuItem>
+                                <MenuItem onClick={this.handleClose}>説明ページを開く</MenuItem>
+                            </Menu>
                         </div>
                     </Toolbar>
                 </AppBar>
@@ -94,6 +116,26 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                     <Home />
                     <PreviewContainer />
                 </div>
+                <Rnd
+                    default={{
+                        x: 16,
+                        y: 100,
+                        width: 'auto',
+                        height: 'auto'
+                    }}
+                    style={{
+                        zIndex: 500,
+                    }}
+                    enableResizing={{
+                        top: false, right: false, bottom: false, left: false,
+                        topRight: false, bottomRight: false, bottomLeft: false, topLeft: false
+                    }}
+                    dragHandleClassName="handle"
+                >
+                    <ParameterModal
+                        xKey={home.selectedXKey}
+                        yKey={home.selectedYKey}></ParameterModal>
+                </Rnd>
                 <Modal
                     open={home.isModalOpen}
                     onClose={home.toggleModalOpen}
@@ -107,13 +149,13 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                         transform: 'translate(50%, 25%)',
                     }}>
                         <div style={{ margin: '2em', paddingTop: '1em' }}>
-                            <Typography variant="title">
-                                Add New Canvas
+                            <Typography variant="h6">
+                                Add New Canvas or keyFrame
                             </Typography>
                         </div>
                         <div style={{ margin: '1em' }}>
-                            <TextField style={{ display: home.originalImage ? 'block' : 'none' }} label="width" value={home.addWidth} onChange={this.onChangeWidth} margin="normal" />
-                            <TextField style={{ display: home.originalImage ? 'block' : 'none' }} label="height" value={home.addHeight} onChange={this.onChangeHeight} margin="normal" />
+                            <TextField style={{ display: home.originalImage && home.isXSet ? 'block' : 'none' }} label="width" value={home.addWidth} onChange={this.onChangeWidth} margin="normal" />
+                            <TextField style={{ display: home.originalImage && home.isYSet ? 'block' : 'none' }} label="height" value={home.addHeight} onChange={this.onChangeHeight} margin="normal" />
                             <FormControlLabel
                                 control={
                                     <Switch
@@ -174,6 +216,13 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                 </SpeedDial>
             </div >
         )
+    }
+
+    public handleMenu = (event: any) => {
+        this.setState({ anchorEl: event.currentTarget });
+    }
+    public handleClose = () => {
+        this.setState({ anchorEl: null });
     }
 
     public getPreviewWidth = (state: WindowMode) => {
@@ -266,8 +315,8 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                         image.naturalWidth, image.naturalWidth, image.naturalWidth, true
                     );
                     keyFrames.addFrame(
-                        image.naturalWidth / 2, image.naturalWidth,
-                        home.isSeamRemove ? image.naturalWidth / 2 : image.naturalWidth,
+                        Math.floor(image.naturalWidth / 2), image.naturalWidth,
+                        home.isSeamRemove ? Math.floor(image.naturalWidth / 2) : image.naturalWidth,
                         true
                     );
                     keyFrames.addFrame(
@@ -279,8 +328,8 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                         image.naturalHeight, image.naturalHeight, image.naturalHeight, false
                     );
                     keyFrames.addFrame(
-                        image.naturalHeight / 2, image.naturalHeight,
-                        home.isSeamRemove ? image.naturalHeight / 2 : image.naturalHeight,
+                        Math.floor(image.naturalHeight / 2), image.naturalHeight,
+                        home.isSeamRemove ? Math.floor(image.naturalHeight / 2) : image.naturalHeight,
                         false
                     );
                     keyFrames.addFrame(
@@ -289,21 +338,29 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                         false
                     );
                     preview.setSize(image.naturalWidth, image.naturalHeight);
+                    home.setXKey(keyFrames.sortedXKeyFrames[0]);
+                    home.setYKey(keyFrames.sortedYKeyFrames[0]);
                 });
                 home.toggleLoading();
             }
         } else {
             home.onClickAddButton(null, () => {
-                keyFrames.addFrame(
-                    home.addWidth, home.originalImage!.naturalWidth,
-                    home.isSeamRemove ? home.addWidth : home.originalImage!.naturalWidth,
-                    true
-                );
-                keyFrames.addFrame(
-                    home.addHeight, home.originalImage!.naturalHeight,
-                    home.isSeamRemove ? home.addHeight : home.originalImage!.naturalHeight,
-                    false
-                );
+                if (home.isXSet) {
+                    keyFrames.addFrame(
+                        home.addWidth, home.originalImage!.naturalWidth,
+                        home.isSeamRemove ? home.addWidth : home.originalImage!.naturalWidth,
+                        true
+                    );
+                }
+                if (home.isYSet) {
+                    keyFrames.addFrame(
+                        home.addHeight, home.originalImage!.naturalHeight,
+                        home.isSeamRemove ? home.addHeight : home.originalImage!.naturalHeight,
+                        false
+                    );
+                }
+                home.toggleXParam(true);
+                home.toggleYParam(true);
                 if (preview.drawImage) {
                     preview.drawImage();
                 }

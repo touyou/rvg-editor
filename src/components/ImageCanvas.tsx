@@ -1,7 +1,6 @@
 import * as React from 'react';
-import ActionSlider from './ActionSlider';
 import * as linear from '../lib/math/Matrix';
-import { Paper, FormControlLabel, Switch, TextField } from '@material-ui/core';
+import { Paper, Typography } from '@material-ui/core';
 import { observer } from 'mobx-react';
 import { KeyFrame } from 'src/stores/ImageCanvasStore';
 import Vec2 from 'src/lib/math/Vec2';
@@ -34,14 +33,12 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
     imageMatrix: linear.ColorMatrix;
 
     get scale(): Vec2 {
-        const xKey = this.props.xKey;
-        const yKey = this.props.yKey;
+        const { xKey, yKey } = this.props;
         return new Vec2(xKey.scale, yKey.scale);
     }
 
     get originPoint(): Vec2 {
-        const xKey = this.props.xKey;
-        const yKey = this.props.yKey;
+        const { xKey, yKey } = this.props;
         return new Vec2(xKey.originPosition, yKey.originPosition);
     }
 
@@ -51,8 +48,7 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
         this.imageCanvas = document.createElement('canvas');
         this.imageCtx = this.imageCanvas.getContext('2d')!;
 
-        const xKey = this.props.xKey;
-        const yKey = this.props.yKey;
+        const { xKey, yKey } = this.props;
         this.newImage = seamCarver!.resize(xKey.seamLength, yKey.seamLength);
         this.imageCanvas.width = this.newImage.width;
         this.imageCanvas.height = this.newImage.height;
@@ -65,8 +61,7 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
     }
 
     public render() {
-        const xKey = this.props.xKey;
-        const yKey = this.props.yKey;
+        const { xKey, yKey } = this.props;
 
         return (
             <Paper style={{
@@ -89,34 +84,16 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
                 />
 
                 <div style={{ margin: '4px' }}>
-                    <TextField label="width" value={xKey.value} onChange={this.onChangeCanvasWidth} margin="dense" />
-                    <TextField label="height" value={yKey.value} onChange={this.onChangeCanvasHeight} margin="dense" />
+                    <Typography>width: {xKey.value} height: {yKey.value}</Typography>
+                    <Typography style={{ display: 'none' }}>{xKey.scale}{yKey.scale}{xKey.seamLength}{yKey.seamLength}{xKey.originPosition}{yKey.originPosition}</Typography>
                 </div>
-                <div style={{ color: '#424242' }}>
-                    <ActionSlider min={1} max={xKey.originalLength * 2} step={1} value={xKey.seamLength} title="seam width :" changeValue={this.onChangeSeamWidth} />
-                    <ActionSlider min={1} max={yKey.originalLength * 2} step={1} value={yKey.seamLength} title="seam height :" changeValue={this.onChangeSeamHeight} />
-                    <ActionSlider min={0.01} max={5} step={0.01} value={xKey.scale} title="width scale :" changeValue={this.onChangeScaleX} />
-                    <ActionSlider min={0.01} max={5} step={0.01} value={yKey.scale} title="height scale :" changeValue={this.onChangeScaleY} />
-                </div>
-                <FormControlLabel
-                    control={
-                        <Switch
-                            checked={this.state.isRatioLocked}
-                            onChange={this.toggleRatioLocked}
-                            value="locked"
-                            color="primary"
-                        />
-                    }
-                    label="Aspect Locked"
-                />
             </Paper >
         )
     }
 
     componentWillReact() {
         const { isDragging } = this.state;
-        const xKey = this.props.xKey;
-        const yKey = this.props.yKey;
+        const { xKey, yKey } = this.props;
         if (!isDragging) {
             this.drawImage(
                 xKey.value, yKey.value,
@@ -133,29 +110,15 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
     }
 
     updateStore = autorun(() => {
-        const xKey = this.props.xKey;
-        const yKey = this.props.yKey;
-        this.drawImage(
-            xKey.value, yKey.value,
-            this.originPoint,
-            this.scale
-        );
+        const { xKey, yKey } = this.props;
+        if (this.drawImage) {
+            this.drawImage(
+                xKey.value, yKey.value,
+                this.originPoint,
+                this.scale
+            );
+        }
     });
-
-    // componentDidUpdate(prevProps: any, prevState: any) {
-    //     const xKey = this.props.xKey;
-    //     const yKey = this.props.yKey;
-    //     console.log({
-    //         x: xKey.value,
-    //         y: yKey.value,
-    //         point: this.originPoint
-    //     })
-    //     this.drawImage(
-    //         xKey.value, yKey.value,
-    //         this.originPoint,
-    //         this.scale
-    //     );
-    // }
 
     public toggleRatioLocked = () => {
         const { isRatioLocked } = this.state;
@@ -163,8 +126,7 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
     }
 
     public onMouseDown = (event: any) => {
-        const xKey = this.props.xKey;
-        const yKey = this.props.yKey;
+        const { xKey, yKey } = this.props;
         if (xKey.isOriginal || yKey.isOriginal) {
             return;
         }
@@ -178,8 +140,7 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
         const { isDragging, startPoint } = this.state;
         if (isDragging) {
             const diffPoint = Vec2.add(Vec2.div(Vec2.sub(new Vec2(event.clientX, event.clientY), startPoint), this.scale), this.originPoint);
-            const xKey = this.props.xKey;
-            const yKey = this.props.yKey;
+            const { xKey, yKey } = this.props;
             this.drawImage(
                 xKey.value, yKey.value,
                 diffPoint,
@@ -192,8 +153,7 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
     public onMouseUp = (event: any) => {
         const { diffPoint } = this.state;
         const preview = this.props.preview;
-        const xKey = this.props.xKey;
-        const yKey = this.props.yKey;
+        const { xKey, yKey } = this.props;
         if (preview.drawImage) {
             preview.drawImage();
         }
@@ -224,61 +184,8 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
         // });
     }
 
-    public onChangeSeamWidth = (value: any) => {
-        const newWidth = Number(value);
-        const xKey = this.props.xKey;
-        if (newWidth < 1 || xKey.isOriginal) {
-            return;
-        }
-        xKey.setSeamLength(newWidth);
-    }
-
-    public onChangeSeamHeight = (value: any) => {
-        const newHeight = Number(value);
-        const yKey = this.props.yKey;
-        if (newHeight < 1 || yKey.isOriginal) {
-            return;
-        }
-        yKey.setSeamLength(newHeight);
-    }
-
-    public onChangeScaleX = (value: any) => {
-        const { isRatioLocked } = this.state;
-        const xKey = this.props.xKey;
-        const yKey = this.props.yKey;
-        const newValue = Number(value);
-        if (xKey.isOriginal) {
-            return;
-        }
-        let yScale = yKey.scale;
-        if (isRatioLocked) {
-            const diff = xKey.scale - newValue;
-            yScale -= diff;
-            yKey.setScale(yScale);
-        }
-        xKey.setScale(newValue);
-    }
-
-    public onChangeScaleY = (value: any) => {
-        const { isRatioLocked } = this.state;
-        const xKey = this.props.xKey;
-        const yKey = this.props.yKey;
-        const newValue = Number(value);
-        if (yKey.isOriginal) {
-            return;
-        }
-        let xScale = xKey.scale;
-        if (isRatioLocked) {
-            const diff = yKey.scale - newValue;
-            xScale -= diff;
-            xKey.setScale(xScale);
-        }
-        yKey.setScale(newValue);
-    }
-
     private drawImage = (width: number, height: number, origin: Vec2, scale: Vec2) => {
-        const xKey = this.props.xKey;
-        const yKey = this.props.yKey;
+        const { xKey, yKey } = this.props;
         this.newImage = seamCarver!.resize(xKey.seamLength, yKey.seamLength);
         this.imageCanvas.width = this.newImage.width;
         this.imageCanvas.height = this.newImage.height;

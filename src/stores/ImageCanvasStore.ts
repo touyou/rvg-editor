@@ -87,6 +87,22 @@ export class KeyFrameStore {
     this.seamCarver = seamCarver;
   }
 
+  public getXKey(id: string) {
+    return this._xKeyFrames.filter(key => { return key.id === id })[0];
+  }
+
+  public getYKey(id: string) {
+    return this._yKeyFrames.filter(key => { return key.id === id })[0];
+  }
+
+  public removeXKey(id: string) {
+    this._xKeyFrames = observable(this._xKeyFrames.filter(key => { return key.id !== id }));
+  }
+
+  public removeYKey(id: string) {
+    this._yKeyFrames = observable(this._yKeyFrames.filter(key => { return key.id !== id }));
+  }
+
   public saveFiles(path: string) {
     if (this.seamCarver) {
       const imageData = this.seamCarver.image;
@@ -176,17 +192,17 @@ export class KeyFrame {
     this.seamLength = seamLength;
   }
 
-  @action
+  @action.bound
   public setOrigin(value: number) {
     this.originPosition = value;
   }
 
-  @action
+  @action.bound
   public setScale(value: number) {
     this.scale = value;
   }
 
-  @action
+  @action.bound
   public setSeamLength(value: number, ) {
     this.seamLength = value;
   }

@@ -47,6 +47,8 @@ export default class SeamCarver {
   }
 
   resize(width: number, height: number) {
+    width = Math.floor(width);
+    height = Math.floor(height);
     let horizontalMap: number[][] = [];
     let image = this.image;
     let newImage = new Uint8ClampedArray(width * image.height * 4);

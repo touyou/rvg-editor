@@ -1,4 +1,5 @@
 import { action, observable } from 'mobx';
+import { KeyFrame } from './ImageCanvasStore';
 
 export class HomeStore {
     @observable
@@ -17,6 +18,24 @@ export class HomeStore {
     public addWidth: number = 0;
     @observable
     public addHeight: number = 0;
+
+    @observable
+    public selectedXKey: KeyFrame | null = null;
+    @observable
+    public selectedYKey: KeyFrame | null = null;
+
+    @observable
+    public isXSet: boolean = true;
+    @observable
+    public isYSet: boolean = true;
+
+    public toggleXParam(value: boolean) {
+        this.isXSet = value;
+    }
+
+    public toggleYParam(value: boolean) {
+        this.isYSet = value;
+    }
 
     @action.bound
     public toggleModalOpen() {
@@ -62,7 +81,17 @@ export class HomeStore {
         this.fileName = value;
     }
 
+    public setXKey(value: KeyFrame | null) {
+        this.selectedXKey = value;
+    }
+
+    public setYKey(value: KeyFrame | null) {
+        this.selectedYKey = value;
+    }
+
     public removeImage() {
         this.originalImage = null;
+        this.selectedXKey = null;
+        this.selectedYKey = null;
     }
 }

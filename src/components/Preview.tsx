@@ -39,6 +39,8 @@ export default class PreviewContainer extends React.Component<IPreviewProps, any
   public render() {
     const app = this.props.app as AppStore;
     const preview = this.props.preview as PreviewStore;
+    const keyFrames = this.props.keyFrames as KeyFrameStore;
+    console.log(keyFrames);
 
     return (
       <div style={{
@@ -101,7 +103,9 @@ export default class PreviewContainer extends React.Component<IPreviewProps, any
   }
 
   updateStore = autorun(() => {
-    this.drawImage();
+    if (this.drawImage) {
+      this.drawImage();
+    }
   });
 
   public getPreviewWidth = (state: WindowMode) => {
