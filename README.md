@@ -1,8 +1,8 @@
-# Multisize Image Editor
+# RVG Editor
 
-MultiSize Image Format Editor.
+RVG(Responsive Variable Size Graphics) Editor.
 
-## How to use msi files
+## How to use rvg files
 
 First, you must download `multisize-imageloader.js` and `worker_pako.js` file. And put them into same place.
 
@@ -15,7 +15,7 @@ Next, you should load `multisize-imageloader.js` like this.
 Then you can use `m-img` tag.
 
 ```html
-<m-img src="eagle-small.msi"></m-img>
+<m-img src="eagle-small.rvg"></m-img>
 ```
 
 This tag do **not** support normal image format.
