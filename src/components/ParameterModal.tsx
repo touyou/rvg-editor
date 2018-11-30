@@ -48,7 +48,7 @@ export default class ParameterModal extends React.Component<IParameterProps, any
                     color: '#424242'
                 }}>
                     <Typography variant="subtitle1">Y KeyFrame: {yKey.value}</Typography>
-                    <ActionSlider min={1} max={yKey.originalLength * 2} step={1} value={10} title="seam height :" changeValue={this.onChangeSeamHeight} />
+                    <ActionSlider min={1} max={yKey.originalLength * 2} step={1} value={yKey.seamLength} title="seam height :" changeValue={this.onChangeSeamHeight} />
                     <ActionSlider min={0.01} max={5} step={0.01} value={yKey.scale} title="vertical scale :" changeValue={this.onChangeScaleY} />
                     <Button color="secondary" variant="contained" onClick={this.onClickRemoveY}>Remove this key</Button>
                     <Divider light />
