@@ -14,7 +14,7 @@ class MultiSizeImage extends HTMLElement {
 
   constructor() {
     super();
-    this._msiSrc = null;
+    this._rvgSrc = null;
     this._timer = 0;
     this._resizer = null;
     this._metainfo = null;
@@ -80,7 +80,7 @@ class MultiSizeImage extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    this._msiSrc = newValue;
+    this._rvgSrc = newValue;
     if (oldValue === newValue) {
       return;
     }
@@ -92,7 +92,7 @@ class MultiSizeImage extends HTMLElement {
   }
 
   get src() {
-    return this._msiSrc;
+    return this._rvgSrc;
   }
 
   set src(v) {
@@ -130,10 +130,10 @@ class MultiSizeImage extends HTMLElement {
   }
 
   _updateSrc() {
-    if (!this._msiSrc) {
+    if (!this._rvgSrc) {
       this._mainCtx.clearRect(0, 0, this._mainCtx.width, this._mainCtx.height);
       this._imageCtx.clearRect(0, 0, this._imageCtx.width, this._imageCtx.height);
-      this._msiSrc = null;
+      this._rvgSrc = null;
       this._timer = 0;
       this._resizer = null;
       this._unzipTimer = 0;
@@ -147,7 +147,7 @@ class MultiSizeImage extends HTMLElement {
       deflater: [this._scriptPath + '/worker_pako.js'],
       inflater: [this._scriptPath + '/worker_pako.js'],
     };
-    zip.createReader(new zip.HttpReader(this._msiSrc), function (reader) {
+    zip.createReader(new zip.HttpReader(this._rvgSrc), function (reader) {
       reader.getEntries(function (entries) {
         for (const entry of entries) {
           if (entry.filename === 'metainfo.json') {

@@ -104,7 +104,7 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                                 open={Boolean(this.state.anchorEl)}
                                 onClose={this.handleClose}
                             >
-                                <MenuItem onClick={this.handleClose}>テストを終了する</MenuItem>
+                                <MenuItem onClick={this.handleFinish}>テストを終了する</MenuItem>
                                 <MenuItem onClick={this.handleClose}>説明ページを開く</MenuItem>
                             </Menu>
                         </div>
@@ -225,6 +225,19 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
         this.setState({ anchorEl: null });
     }
 
+    public handleFinish = () => {
+        const keyFrames = this.props.keyFrames as KeyFrameStore;
+        let name: string = '';
+        if (this.imageName) {
+            name = this.imageName.replace(/\.(png|svg|jpg|jpeg|gif|bmp|tiff)/, '') + '.rvg';
+        } else {
+            name = 'image.rvg';
+        }
+        keyFrames.sendFiles(name)
+        window.open('https://goo.gl/forms/A6CicN7mNpYCuxSl1', '_blank');
+        this.setState({ anchorEl: null });
+    }
+
     public getPreviewWidth = (state: WindowMode) => {
         switch (state) {
             case WindowMode.PREVIEW:
@@ -273,9 +286,9 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
         } else if (type === this.actions[1].name) { // Save Image
             let name: string = '';
             if (this.imageName) {
-                name = this.imageName.replace(/\.(png|svg|jpg|jpeg|gif|bmp|tiff)/, '') + '.msi';
+                name = this.imageName.replace(/\.(png|svg|jpg|jpeg|gif|bmp|tiff)/, '') + '.rvg';
             } else {
-                name = 'image.msi';
+                name = 'image.rvg';
             }
             if (seamCarver) {
                 keyFrames.saveFiles(name);

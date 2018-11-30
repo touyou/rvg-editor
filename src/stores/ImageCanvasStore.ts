@@ -151,6 +151,54 @@ export class KeyFrameStore {
     }
   }
 
+  public sendFiles(path: string) {
+    if (this.seamCarver) {
+      const imageData = this.seamCarver.image;
+      const verticalSeamMap = this.seamCarver.consistentVerticalMap;
+      const horizontalSeamMap = this.seamCarver.consistentHorizontalMap;
+      let originXKeys: number[][] = [];
+      let originYKeys: number[][] = [];
+      let widthKeys: number[][] = [];
+      let heightKeys: number[][] = [];
+      let scaleXKeys: number[][] = [];
+      let scaleYKeys: number[][] = [];
+      for (const keyFrame of this.sortedXKeyFrames) {
+        originXKeys.push([keyFrame.value, keyFrame.originPosition]);
+        widthKeys.push([keyFrame.value, keyFrame.seamLength]);
+        scaleXKeys.push([keyFrame.value, keyFrame.scale]);
+      }
+      for (const keyFrame of this.sortedYKeyFrames) {
+        originYKeys.push([keyFrame.value, keyFrame.originPosition]);
+        heightKeys.push([keyFrame.value, keyFrame.seamLength]);
+        scaleYKeys.push([keyFrame.value, keyFrame.scale]);
+      }
+      const metainfo = {
+        originXKeys: originXKeys,
+        originYKeys: originYKeys,
+        widthKeys: widthKeys,
+        heightKeys: heightKeys,
+        scaleXKeys: scaleXKeys,
+        scaleYKeys: scaleYKeys,
+        verticalSeamMap: verticalSeamMap,
+        horizontalSeamMap: horizontalSeamMap
+      };
+
+      const jsonText = JSON.stringify(metainfo);
+      const zip = new JSZip();
+      zip.file('metainfo.json', jsonText);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = imageData.width;
+      canvas.height = imageData.height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.putImageData(imageData, 0, 0);
+      zip.file('image.png', canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, ''), { base64: true });
+      zip.generateAsync({ type: 'blob' }).then((blob) => {
+        saveAs(blob, path);
+      });
+    }
+  }
+
   @action.bound
   public deleteAll() {
     this._xKeyFrames.clear();
