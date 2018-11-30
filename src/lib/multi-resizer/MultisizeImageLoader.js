@@ -182,9 +182,9 @@ class MultiSizeImage extends HTMLElement {
   }
 }
 
-customElements.define('m-img', MultiSizeImage);
+customElements.define('r-img', MultiSizeImage);
 window.addEventListener('resize', function () {
-  const multImgs = document.getElementsByTagName('m-img');
+  const multImgs = document.getElementsByTagName('r-img');
   for (const multImg of multImgs) {
     multImg._onresize();
   }

@@ -2,7 +2,7 @@ module.exports = {
   entry: './src/lib/multi-resizer/MultisizeImageLoader.js',
   output: {
     path: __dirname + '/public/js',
-    filename: 'multisize-imageloader.js'
+    filename: 'rvg-loader.js'
   },
   module: {
     rules: [{

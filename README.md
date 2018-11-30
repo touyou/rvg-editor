@@ -4,23 +4,23 @@ RVG(Responsive Variable Size Graphics) Editor.
 
 ## How to use rvg files
 
-First, you must download `multisize-imageloader.js` and `worker_pako.js` file. And put them into same place.
+First, you must download `rvg-loader.js` and `worker_pako.js` file. And put them into same place.
 
-Next, you should load `multisize-imageloader.js` like this.
+Next, you should load `rvg-loader.js` like this.
 
 ```html
-<script src="multisize-imageloader.js"></script>
+<script src="rvg-loader.js"></script>
 ```
 
-Then you can use `m-img` tag.
+Then you can use `r-img` tag.
 
 ```html
-<m-img src="eagle-small.rvg"></m-img>
+<r-img src="eagle-small.rvg"></r-img>
 ```
 
 This tag do **not** support normal image format.
 
-And you should also set responsive width and height to m-img tag and their parent elements.
+And you should also set responsive width and height to `r-img` tag and their parent elements.
 (`display: block` is needed.)
 
 ```css
@@ -30,7 +30,7 @@ html {
   height: 100vh;
 }
 
-m-img {
+r-img {
   display: block;
   width: 50%;
   height: 50%;
