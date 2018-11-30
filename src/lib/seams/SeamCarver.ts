@@ -2,15 +2,14 @@
  * Seam Carving Impelementation
  */
 
-import { Decimal } from 'decimal.js';
-
-const inf = new Decimal(Infinity);
-const minf = new Decimal(-Infinity);
+const inf = Infinity;
+const minf = -Infinity;
 
 export default class SeamCarver {
   imageData: ImageDataWrapper;
   consistentVerticalMap: number[][];
   consistentHorizontalMap: number[][];
+  sobelImage: ImageData;
 
   constructor(public image: ImageData) {
     this.imageData = new ImageDataWrapper(image);
@@ -32,10 +31,21 @@ export default class SeamCarver {
     const heatMap = this.sobelEnergy(this.imageData);
     const height = this.imageData.height;
     const width = this.imageData.width;
+    let newImage = new Uint8ClampedArray(width * height * 4);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const base = (y * width + x) * 4;
+        newImage[base] = Math.floor(heatMap[y][x]);
+        newImage[base + 1] = Math.floor(heatMap[y][x]);
+        newImage[base + 2] = Math.floor(heatMap[y][x]);
+        newImage[base + 3] = 255;
+      }
+    }
+    this.sobelImage = new ImageData(newImage, width, height);
     console.time('consistent');
     const mMap = this.calculateVerticalSeamMap(heatMap);
     // traverse
-    let trHeat: Decimal[][] = [];
+    let trHeat: number[][] = [];
     for (let x = 0; x < width; x++) {
       trHeat[x] = [];
       for (let y = 0; y < height; y++) {
@@ -145,29 +155,29 @@ export default class SeamCarver {
    * Calculate Vertical Consistency Seam Map
    * @param heatMap 
    */
-  calculateVerticalSeamMap(heatMap: Decimal[][]) {
+  calculateVerticalSeamMap(heatMap: number[][]) {
     const width = this.imageData.width;
     const height = this.imageData.height;
 
     // For calculating weights by the method of Real-time content-aware image resizing(2009)
-    let A: Decimal[][] = [];
-    let M: Decimal[][] = [];
+    let A: number[][] = [];
+    let M: number[][] = [];
     let mMap: number[][] = []; // for backtrack
 
     for (let j = 0; j <= height; j++) {
-      M[j] = new Array<Decimal>(width);
+      M[j] = new Array<number>(width);
     }
 
     // Calculate M by dynamic programming
     for (let i = 0; i < width; i++) {
-      M[height][i] = new Decimal(0);
+      M[height][i] = 0;
     }
     for (let j = height - 1; j >= 0; j--) {
       for (let i = 0; i < width; i++) {
         const vl = i - 1 >= 0 ? M[j + 1][i - 1] : inf;
         const vm = M[j + 1][i];
         const vr = i + 1 < width ? M[j + 1][i + 1] : inf;
-        M[j][i] = heatMap[j][i].add(Decimal.min(vl, vm, vr));
+        M[j][i] = heatMap[j][i] + Math.min(vl, vm, vr);
       }
     }
 
@@ -175,7 +185,7 @@ export default class SeamCarver {
     A[0] = heatMap[0].slice();
 
     // Frist compute best 1-edge path for all pairs of rows
-    let weight: Decimal[][] = [];
+    let weight: number[][] = [];
     for (let i = 0; i <= width; i++) {
       weight[i] = [];
       for (let j = 0; j <= width; j++) {
@@ -188,46 +198,46 @@ export default class SeamCarver {
       // compute weight
       for (let i = 1; i <= width; i++) {
         for (let j = Math.max(i - 1, 1); j <= Math.min(i + 1, width); j++) {
-          weight[i][j] = A[k][i - 1].mul(M[k + 1][j - 1]);
+          weight[i][j] = A[k][i - 1] * M[k + 1][j - 1];
         }
       }
 
       // calculate F(m)
-      let f: Decimal[] = [];
-      f[0] = new Decimal(0);
+      let f: number[] = [];
+      f[0] = 0;
       const getF = (i: number) => {
         if (i === -1) {
-          return new Decimal(0);
+          return 0;
         }
         return f[i];
       }
       for (let i = 1; i <= width; i++) {
-        let f1 = getF(i - 1).add(weight[i][i]);
-        let f2 = getF(i - 2).add(weight[i - 1][i]).add(weight[i][i - 1]);
-        f[i] = Decimal.max(f1, f2);
+        let f1 = getF(i - 1) + weight[i][i];
+        let f2 = getF(i - 2) + weight[i - 1][i] + weight[i][i - 1];
+        f[i] = Math.max(f1, f2);
       }
       // Solve the optimal matching and update A
       let x = width;
       while (x > 1) {
-        let f1 = getF(x - 1).add(weight[x][x]);
-        let f2 = getF(x - 2).add(weight[x - 1][x]).add(weight[x][x - 1]);
-        if (f1.greaterThan(f2)) {
+        let f1 = getF(x - 1) + weight[x][x];
+        let f2 = getF(x - 2) + weight[x - 1][x] + weight[x][x - 1];
+        if (f1 > f2) {
           // m(i,k) = i
           mMap[k][x - 1] = x - 1;
-          A[k + 1][x - 1] = heatMap[k + 1][x - 1].add(A[k][x - 1]);
+          A[k + 1][x - 1] = heatMap[k + 1][x - 1] + A[k][x - 1];
           x -= 1;
         } else {
           // m(i,k) = i-1, m(i-1,k) = i
           mMap[k][x - 1] = x - 2;
           mMap[k][x - 2] = x - 1;
-          A[k + 1][x - 1] = heatMap[k + 1][x - 1].add(A[k][x - 2]);
-          A[k + 1][x - 2] = heatMap[k + 1][x - 2].add(A[k][x - 1]);
+          A[k + 1][x - 1] = heatMap[k + 1][x - 1] + A[k][x - 2];
+          A[k + 1][x - 2] = heatMap[k + 1][x - 2] + A[k][x - 1];
           x -= 2;
         }
       }
       if (x === 1) {
         mMap[k][0] = 0;
-        A[k + 1][0] = heatMap[k + 1][0].add(A[k][0]);
+        A[k + 1][0] = heatMap[k + 1][0] + A[k][0];
       }
     }
 
@@ -237,7 +247,7 @@ export default class SeamCarver {
     }
 
     // Quicksort last row
-    const quickSort = (arr: Decimal[], left: number, right: number) => {
+    const quickSort = (arr: number[], left: number, right: number) => {
       let pivot = 0;
       let partitionIndex = 0;
       if (left < right) {
@@ -247,12 +257,12 @@ export default class SeamCarver {
         quickSort(arr, partitionIndex + 1, right);
       }
     }
-    const partition = (arr: Decimal[], pivot: number, left: number, right: number) => {
+    const partition = (arr: number[], pivot: number, left: number, right: number) => {
       const pivotValue = arr[pivot];
       let partitionIndex = left;
 
       for (let i = left; i < right; i++) {
-        if (arr[i].lessThan(pivotValue)) {
+        if (arr[i] < pivotValue) {
           swap(arr, i, partitionIndex);
           partitionIndex += 1;
         }
@@ -260,7 +270,7 @@ export default class SeamCarver {
       swap(arr, right, partitionIndex);
       return partitionIndex;
     }
-    const swap = (arr: Decimal[], i: number, j: number) => {
+    const swap = (arr: number[], i: number, j: number) => {
       const temp = arr[i];
       arr[i] = arr[j];
       arr[j] = temp;
@@ -287,29 +297,29 @@ export default class SeamCarver {
    * @param heatMap 
    * @param vMap 
    */
-  calculateHorizontalSeamMap(heatMap: Decimal[][], vMap: number[][]) {
+  calculateHorizontalSeamMap(heatMap: number[][], vMap: number[][]) {
     const width = this.imageData.width;
     const height = this.imageData.height;
 
     // For calculating weights by the method of Real-time content-aware image resizing(2009)
-    let A: Decimal[][] = [];
-    let M: Decimal[][] = [];
+    let A: number[][] = [];
+    let M: number[][] = [];
     let mMap: number[][] = []; // for backtrack
 
     for (let j = 0; j <= width; j++) {
-      M[j] = new Array<Decimal>(height);
+      M[j] = new Array<number>(height);
     }
 
     // Calculate M by dynamic programming
     for (let i = 0; i < height; i++) {
-      M[width][i] = new Decimal(0);
+      M[width][i] = 0;
     }
     for (let j = width - 1; j >= 0; j--) {
       for (let i = 0; i < height; i++) {
         const vl = i - 1 >= 0 ? M[j + 1][i - 1] : inf;
         const vm = M[j + 1][i];
         const vr = i + 1 < height ? M[j + 1][i + 1] : inf;
-        M[j][i] = heatMap[j][i].add(Decimal.min(vl, vm, vr));
+        M[j][i] = heatMap[j][i] + Math.min(vl, vm, vr);
       }
     }
 
@@ -317,7 +327,7 @@ export default class SeamCarver {
     A[0] = heatMap[0].slice();
 
     // Frist compute best 1-edge path for all pairs of cols
-    let weight: Decimal[][] = [];
+    let weight: number[][] = [];
     for (let i = 0; i <= height; i++) {
       weight[i] = [];
       for (let j = 0; j <= height; j++) {
@@ -330,51 +340,51 @@ export default class SeamCarver {
       // compute weight
       for (let i = 1; i <= height; i++) {
         for (let j = Math.max(i - 1, 1); j <= Math.min(i + 1, height); j++) {
-          weight[i][j] = A[k][i - 1].mul(M[k + 1][j - 1]);
+          weight[i][j] = A[k][i - 1] * M[k + 1][j - 1];
         }
       }
 
       // calculate F(m)
-      let f: Decimal[] = [];
-      f[0] = new Decimal(0);
+      let f: number[] = [];
+      f[0] = 0;
       const getF = (i: number) => {
         if (i === -1) {
-          return new Decimal(0);
+          return 0;
         }
         return f[i];
       }
       for (let i = 1; i <= height; i++) {
-        let f1 = getF(i - 1).add(weight[i][i]);
-        let f2 = getF(i - 2).add(weight[i - 1][i]).add(weight[i][i - 1]);
-        f[i] = Decimal.max(f1, f2);
+        let f1 = getF(i - 1) + weight[i][i];
+        let f2 = getF(i - 2) + weight[i - 1][i] + weight[i][i - 1];
+        f[i] = Math.max(f1, f2);
       }
       // Solve the optimal matching and update A
       let y = height;
       while (y > 1) {
         if (vMap[y - 2][k] !== k) {
           mMap[k][y - 1] = y - 1;
-          A[k + 1][y - 1] = heatMap[k + 1][y - 1].add(A[k][y - 1]);
+          A[k + 1][y - 1] = heatMap[k + 1][y - 1] + A[k][y - 1];
           y -= 1;
         }
-        let f1 = getF(y - 1).add(weight[y][y]);
-        let f2 = getF(y - 2).add(weight[y - 1][y]).add(weight[y][y - 1]);
-        if (f1.greaterThan(f2)) {
+        let f1 = getF(y - 1) + weight[y][y];
+        let f2 = getF(y - 2) + weight[y - 1][y] + weight[y][y - 1];
+        if (f1 > f2) {
           // m(i,k) = i
           mMap[k][y - 1] = y - 1;
-          A[k + 1][y - 1] = heatMap[k + 1][y - 1].add(A[k][y - 1]);
+          A[k + 1][y - 1] = heatMap[k + 1][y - 1] + A[k][y - 1];
           y -= 1;
         } else {
           // m(i,k) = i-1, m(i-1,k) = i
           mMap[k][y - 1] = y - 2;
           mMap[k][y - 2] = y - 1;
-          A[k + 1][y - 1] = heatMap[k + 1][y - 1].add(A[k][y - 2]);
-          A[k + 1][y - 2] = heatMap[k + 1][y - 2].add(A[k][y - 1]);
+          A[k + 1][y - 1] = heatMap[k + 1][y - 1] + A[k][y - 2];
+          A[k + 1][y - 2] = heatMap[k + 1][y - 2] + A[k][y - 1];
           y -= 2;
         }
       }
       if (y === 1) {
         mMap[k][0] = 0;
-        A[k + 1][0] = heatMap[k + 1][0].add(A[k][0]);
+        A[k + 1][0] = heatMap[k + 1][0] + A[k][0];
       }
     }
 
@@ -384,7 +394,7 @@ export default class SeamCarver {
     }
 
     // Quicksort last row
-    const quickSort = (arr: Decimal[], left: number, right: number) => {
+    const quickSort = (arr: number[], left: number, right: number) => {
       let pivot = 0;
       let partitionIndex = 0;
       if (left < right) {
@@ -394,12 +404,12 @@ export default class SeamCarver {
         quickSort(arr, partitionIndex + 1, right);
       }
     }
-    const partition = (arr: Decimal[], pivot: number, left: number, right: number) => {
+    const partition = (arr: number[], pivot: number, left: number, right: number) => {
       const pivotValue = arr[pivot];
       let partitionIndex = left;
 
       for (let i = left; i < right; i++) {
-        if (arr[i].lessThan(pivotValue)) {
+        if (arr[i] < pivotValue) {
           swap(arr, i, partitionIndex);
           partitionIndex += 1;
         }
@@ -407,7 +417,7 @@ export default class SeamCarver {
       swap(arr, right, partitionIndex);
       return partitionIndex;
     }
-    const swap = (arr: Decimal[], i: number, j: number) => {
+    const swap = (arr: number[], i: number, j: number) => {
       const temp = arr[i];
       arr[i] = arr[j];
       arr[j] = temp;
@@ -433,34 +443,46 @@ export default class SeamCarver {
    * @param pixels 
    */
   sobelEnergy(pixels: ImageDataWrapper) {
-    const b = (x: number, y: number): Decimal => {
-      if (x < 0 || y < 0 || x >= pixels.width || y >= pixels.height) {
-        return new Decimal(0);
+    const b = (x: number, y: number): number => {
+      if ((x < 0 && y < 0) || (x < 0 && y >= pixels.height)
+        || (x >= pixels.width && y < 0) || (x >= pixels.width && y >= pixels.height)) {
+        return 0;
       }
-      const data = pixels.editedData[y][x];
-      return data[0].add(data[1]).add(data[2]);
+      let data: number[] = [];
+      if (x < 0) {
+        data = pixels.editedData[y][0];
+      } else if (y < 0) {
+        data = pixels.editedData[0][x];
+      } else if (x >= pixels.width) {
+        data = pixels.editedData[y][pixels.width - 1];
+      } else if (y >= pixels.height) {
+        data = pixels.editedData[pixels.height - 1][x];
+      } else {
+        data = pixels.editedData[y][x];
+      }
+      return 0.299 * data[0] + 0.587 * data[1] + 0.114 * data[2];
     }
-    const dot = (a: Decimal[], b: Decimal[]): Decimal => {
+    const dot = (a: number[], b: number[]): number => {
       if (a.length !== b.length) {
-        return new Decimal(0);
+        return 0;
       }
-      let sum = new Decimal(0);
+      let sum = 0;
       for (let i = 0, len = a.length; i < len; i++) {
-        sum = sum.add(a[i].mul(b[i]));
+        sum += a[i] * b[i];
       }
       return sum;
     }
     const xMap = [
-      new Decimal(-1), new Decimal(0), new Decimal(1),
-      new Decimal(-2), new Decimal(0), new Decimal(2),
-      new Decimal(-1), new Decimal(0), new Decimal(1)
+      -1, 0, 1,
+      -2, 0, 2,
+      -1, 0, 1
     ];
     const yMap = [
-      new Decimal(-1), new Decimal(-2), new Decimal(-1),
-      new Decimal(0), new Decimal(0), new Decimal(0),
-      new Decimal(1), new Decimal(2), new Decimal(1)
+      -1, -2, -1,
+      0, 0, 0,
+      1, 2, 1
     ];
-    let energyMap: Decimal[][] = [];
+    let energyMap: number[][] = [];
     for (let y = 0, height = pixels.height; y < height; y++) {
       energyMap[y] = [];
       for (let x = 0, width = pixels.width; x < width; x++) {
@@ -469,9 +491,11 @@ export default class SeamCarver {
           b(x - 1, y), b(x, y), b(x + 1, y),
           b(x - 1, y + 1), b(x, y + 1), b(x + 1, y + 1)
         ];
-        const xenergy = dot(xMap, bMap);
-        const yenergy = dot(yMap, bMap);
-        energyMap[y][x] = xenergy.pow(2).add(yenergy.pow(2)).sqrt();
+        let xenergy = dot(xMap, bMap);
+        let yenergy = dot(yMap, bMap);
+        energyMap[y][x] = Math.sqrt(xenergy * xenergy + yenergy * yenergy);
+        if (energyMap[y][x] > 255) energyMap[y][x] = 255;
+        else if (energyMap[y][x] < 0) energyMap[y][x] *= -1;
       }
     }
     return energyMap;
@@ -480,7 +504,7 @@ export default class SeamCarver {
 
 class ImageDataWrapper {
   originalData: ImageData;
-  editedData: Decimal[][][];
+  editedData: number[][][];
   verticalMap: number[][];
   horizontalMap: number[][];
   count: number;
@@ -515,12 +539,12 @@ class ImageDataWrapper {
    * @param x 
    * @param y 
    */
-  getPixel(x: number, y: number): Decimal[] {
-    const offset = y * this.originalData.width + x;
+  getPixel(x: number, y: number): number[] {
+    const offset = (y * this.originalData.width + x) * 4;
     const data = this.originalData.data;
     return [
-      new Decimal(data[offset]), new Decimal(data[offset + 1]),
-      new Decimal(data[offset + 2]), new Decimal(data[offset + 3])
+      data[offset], data[offset + 1],
+      data[offset + 2], data[offset + 3]
     ];
   }
 }

@@ -68,7 +68,7 @@ export default class Home extends React.Component<IHomeProps> {
                     display: 'flex'
                 }}
                 onClick={() => {
-                    this.setXKey(yKey.id);
+                    this.setYKey(yKey.id);
                 }}
             >
                 {yKey.value}
