@@ -157,8 +157,8 @@ export class KeyFrameStore {
       const ctx = canvas.getContext('2d')!;
       ctx.putImageData(imageData, 0, 0);
       zip.file('image.png', canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, ''), { base64: true });
-      ctx.putImageData(this.seamCarver!.sobelImage, 0, 0);
-      zip.file('sobel.png', canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, ''), { base64: true });
+      // ctx.putImageData(this.seamCarver!.sobelImage, 0, 0);
+      // zip.file('sobel.png', canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, ''), { base64: true });
       zip.generateAsync({ type: 'blob' }).then((blob) => {
         saveAs(blob, path);
       });

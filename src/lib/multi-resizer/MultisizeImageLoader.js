@@ -121,6 +121,8 @@ class MultiSizeImage extends HTMLElement {
 
     this._canvas.width = width;
     this._canvas.height = height;
+    this._imageCanvas.width = img.width;
+    this._imageCanvas.height = img.height;
     this._imageCtx.clearRect(0, 0, this._imageCanvas.width, this._imageCanvas.height);
     this._imageCtx.putImageData(img, 0, 0);
     this._mainCtx.clearRect(0, 0, width, height);
@@ -154,7 +156,7 @@ class MultiSizeImage extends HTMLElement {
             entry.getData(new zip.TextWriter(), function (text) {
               that._metainfo = JSON.parse(text);
             });
-          } else {
+          } else if (entry.filename === 'image.png') {
             entry.getData(new zip.BlobWriter(), function (blob) {
               that._fileUrl = URL.createObjectURL(blob);
             });
