@@ -48,7 +48,7 @@ export default class Home extends React.Component<IHomeProps> {
                     originX={originX}
                     originY={originY}
                 />);
-                originX += Math.max(xKeyFrames[j].value, 80) + 16;
+                originX += Math.max(xKeyFrames[j].value, 150) + 16;
             }
             const yKey = yKeyFrames[i];
             if (yKey.value === yKey.originalLength) {
@@ -80,7 +80,7 @@ export default class Home extends React.Component<IHomeProps> {
         for (let j = 0; j < xKeyFrames.length; j++) {
             const xKey = xKeyFrames[j];
             if (xKey.value === xKey.originalLength) {
-                originX += Math.max(xKeyFrames[j].value, 80) + 16;
+                originX += Math.max(xKeyFrames[j].value, 150) + 16;
                 continue;
             }
             buttonArray.push(<Button
@@ -92,7 +92,7 @@ export default class Home extends React.Component<IHomeProps> {
                 style={{
                     position: 'absolute',
                     top: '16px',
-                    left: originX + Math.max(xKeyFrames[j].value, 80) / 2 - 32,
+                    left: originX + Math.max(xKeyFrames[j].value, 150) / 2 - 32,
                     display: 'flex'
                 }}
                 onClick={() => {
@@ -101,7 +101,7 @@ export default class Home extends React.Component<IHomeProps> {
             >
                 {xKey.value}
             </Button>);
-            originX += Math.max(xKeyFrames[j].value, 80) + 16;
+            originX += Math.max(xKeyFrames[j].value, 150) + 16;
         }
 
         if (buttonArray.length !== 0) {

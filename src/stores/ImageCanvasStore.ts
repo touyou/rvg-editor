@@ -12,6 +12,8 @@ export class KeyFrameStore {
   @observable
   public _yKeyFrames: IObservableArray<KeyFrame> = observable([]);
 
+  private log: string = '';
+
   @computed
   get sortedXKeyFrames(): Array<KeyFrame> {
     let keyFrames = this._xKeyFrames.slice();
@@ -74,11 +76,15 @@ export class KeyFrameStore {
   public addFrame(value: number, originalLength: number, seamLength: number, isHorizontal: boolean) {
     if (isHorizontal) {
       if (this._xKeyFrames.filter(key => { return key.value === value }).length === 0) {
-        this._xKeyFrames.push(new KeyFrame(value, originalLength, seamLength));
+        const newKey = new KeyFrame(value, originalLength, seamLength)
+        this._xKeyFrames.push(newKey);
+        this.log += 'add x key(' + newKey.id + '): ' + value.toString() + ';';
       }
     } else {
       if (this._yKeyFrames.filter(key => { return key.value === value }).length === 0) {
-        this._yKeyFrames.push(new KeyFrame(value, originalLength, seamLength));
+        const newKey = new KeyFrame(value, originalLength, seamLength)
+        this._yKeyFrames.push(newKey);
+        this.log += 'add y key(' + newKey.id + '): ' + value.toString() + ';';
       }
     }
   }
@@ -97,10 +103,16 @@ export class KeyFrameStore {
 
   public removeXKey(id: string) {
     this._xKeyFrames = observable(this._xKeyFrames.filter(key => { return key.id !== id }));
+    this.log += 'add x key(' + id + ');';
   }
 
   public removeYKey(id: string) {
     this._yKeyFrames = observable(this._yKeyFrames.filter(key => { return key.id !== id }));
+    this.log += 'add y key(' + id + ');';
+  }
+
+  public logging(str: string) {
+    this.log += str;
   }
 
   public saveFiles(path: string) {
@@ -188,6 +200,7 @@ export class KeyFrameStore {
       const jsonText = JSON.stringify(metainfo);
       const zip = new JSZip();
       zip.file('metainfo.json', jsonText);
+      zip.file('log.txt', this.log);
 
       const canvas = document.createElement('canvas');
       canvas.width = imageData.width;
@@ -205,6 +218,7 @@ export class KeyFrameStore {
   public deleteAll() {
     this._xKeyFrames.clear();
     this._yKeyFrames.clear();
+    this.log += 'delete all';
   }
 }
 

@@ -87,7 +87,7 @@ export default class ParameterModal extends React.Component<IParameterProps, any
         const keyFrames = this.props.keyFrames as KeyFrameStore;
         const home = this.props.home as HomeStore;
         const yKey = this.props.yKey as KeyFrame;
-        keyFrames.removeXKey(yKey.id);
+        keyFrames.removeYKey(yKey.id);
         home.setYKey(null);
     }
 
@@ -98,6 +98,10 @@ export default class ParameterModal extends React.Component<IParameterProps, any
             return;
         }
         xKey.setSeamLength(newWidth);
+        const keyFrames = this.props.keyFrames as KeyFrameStore;
+        keyFrames.logging(
+            'xkey=' + xKey.value + '(' + xKey.id + ') seam width to ' + newWidth.toString() + ';'
+        );
     }
 
     public onChangeSeamHeight = (value: any) => {
@@ -107,6 +111,10 @@ export default class ParameterModal extends React.Component<IParameterProps, any
             return;
         }
         yKey.setSeamLength(newHeight);
+        const keyFrames = this.props.keyFrames as KeyFrameStore;
+        keyFrames.logging(
+            'ykey=' + yKey.value + '(' + yKey.id + ') seam height to ' + newHeight.toString() + ';'
+        );
     }
 
     public onChangeScaleX = (value: any) => {
@@ -117,12 +125,17 @@ export default class ParameterModal extends React.Component<IParameterProps, any
             return;
         }
         let yScale = yKey!.scale;
+        const keyFrames = this.props.keyFrames as KeyFrameStore;
         if (isRatioLocked) {
             const diff = xKey!.scale - newValue;
             yScale -= diff;
             yKey!.setScale(yScale);
+            keyFrames.logging('ykey lock-');
         }
         xKey!.setScale(newValue);
+        keyFrames.logging(
+            'xkey=' + xKey!.value + '(' + xKey!.id + ') scale x to ' + newValue.toString() + ';'
+        );
     }
 
     public onChangeScaleY = (value: any) => {
@@ -133,11 +146,16 @@ export default class ParameterModal extends React.Component<IParameterProps, any
             return;
         }
         let xScale = xKey!.scale;
+        const keyFrames = this.props.keyFrames as KeyFrameStore;
         if (isRatioLocked) {
             const diff = yKey!.scale - newValue;
             xScale -= diff;
             xKey!.setScale(xScale);
+            keyFrames.logging('xkey lock-')
         }
         yKey!.setScale(newValue);
+        keyFrames.logging(
+            'ykey=' + yKey!.value + '(' + yKey!.id + ') scale y to ' + newValue.toString() + ';'
+        );
     }
 }

@@ -1,8 +1,8 @@
 import * as React from 'react';
 import * as linear from '../lib/math/Matrix';
 import { Paper, Typography } from '@material-ui/core';
-import { observer } from 'mobx-react';
-import { KeyFrame } from 'src/stores/ImageCanvasStore';
+import { observer, inject } from 'mobx-react';
+import { KeyFrame, KeyFrameStore } from 'src/stores/ImageCanvasStore';
 import Vec2 from 'src/lib/math/Vec2';
 import { PreviewStore } from 'src/stores/PreviewStore';
 import { seamCarver } from './SplitContainer';
@@ -14,8 +14,10 @@ interface IImageProps {
     preview: PreviewStore;
     originX: number;
     originY: number;
+    keyFrames?: KeyFrameStore;
 }
 
+@inject('keyFrames')
 @observer
 export default class CanvasContainer extends React.Component<IImageProps, any> {
     state = {
@@ -100,12 +102,6 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
                 this.originPoint,
                 this.scale
             );
-        } else {
-            // this.drawImage(
-            //     xKey.value, yKey.value,
-            //     diffPoint,
-            //     this.scale
-            // );
         }
     }
 
@@ -160,28 +156,11 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
         xKey.setOrigin(diffPoint.x);
         yKey.setOrigin(diffPoint.y);
         this.setState({ isDragging: false });
-    }
-
-    public onChangeCanvasWidth = (event: any) => {
-        // const newWidth = Number(event.target.value);
-        // if (isNaN(newWidth)) {
-        //     return;
-        // }
-        // const image = this.props.image;
-        // image.onChangeCanvasWidth(newWidth, () => {
-        //     this.drawImage(newWidth, image.canvasHeight, image.originPoint, image.scale);
-        // });
-    }
-
-    public onChangeCanvasHeight = (event: any) => {
-        // const newHeight = Number(event.target.value);
-        // if (isNaN(newHeight)) {
-        //     return;
-        // }
-        // const image = this.props.image;
-        // image.onChangeCanvasHeight(newHeight, () => {
-        //     this.drawImage(image.canvasWidth, newHeight, image.originPoint, image.scale);
-        // });
+        const keyFrames = this.props.keyFrames as KeyFrameStore;
+        keyFrames.logging(
+            'origin change(' + xKey.value.toString() + ', ' + yKey.value.toString() + '): ' +
+            xKey.originPosition.toString() + ', ' + yKey.originPosition.toString() + ' ;'
+        )
     }
 
     private drawImage = (width: number, height: number, origin: Vec2, scale: Vec2) => {
