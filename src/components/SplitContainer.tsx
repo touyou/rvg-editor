@@ -83,13 +83,13 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                         </Typography>
                         <div style={{ flexGrow: 1 }} />
                         <div>
-                            <IconButton color="inherit" onClick={app.selectEditorMode}>
+                            <IconButton color="inherit" disabled={app.windowMode === WindowMode.EDITOR} onClick={app.selectEditorMode}>
                                 <CropRotateIcon />
                             </IconButton>
-                            <IconButton color="inherit" onClick={app.selectPreviewMode}>
+                            <IconButton color="inherit" disabled={app.windowMode === WindowMode.PREVIEW} onClick={app.selectPreviewMode}>
                                 <ImageIcon />
                             </IconButton>
-                            <IconButton color="inherit" onClick={app.selectSplitMode}>
+                            <IconButton color="inherit" disabled={app.windowMode === WindowMode.SPLIT} onClick={app.selectSplitMode}>
                                 <CompareIcon />
                             </IconButton>
                             <IconButton color="inherit" onClick={this.handleMenu}>

@@ -47,6 +47,8 @@ export default class Home extends React.Component<IHomeProps> {
                     preview={preview}
                     originX={originX}
                     originY={originY}
+                    selectedX={home.selectedXKey !== null && xKey.value === home.selectedXKey.value}
+                    selectedY={home.selectedYKey !== null && yKey.value === home.selectedYKey.value}
                 />);
                 originX += Math.max(xKeyFrames[j].value, 150) + 16;
             }

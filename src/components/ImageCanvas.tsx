@@ -14,6 +14,8 @@ interface IImageProps {
     preview: PreviewStore;
     originX: number;
     originY: number;
+    selectedX: boolean;
+    selectedY: boolean;
     keyFrames?: KeyFrameStore;
 }
 
@@ -75,7 +77,8 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
             }}>
                 <canvas
                     style={{
-                        margin: 'auto'
+                        margin: 'auto',
+                        cursor: (xKey.isOriginal || yKey.isOriginal ? 'default' : 'move'),
                     }}
                     ref="canvas"
                     width={xKey.value}
@@ -86,7 +89,8 @@ export default class CanvasContainer extends React.Component<IImageProps, any> {
                 />
 
                 <div style={{ margin: '4px' }}>
-                    <Typography>width: {xKey.value} height: {yKey.value}</Typography>
+                    <Typography style={{ color: this.props.selectedX ? '#FF9800' : '#666' }}>width: {xKey.value}</Typography>
+                    <Typography style={{ color: this.props.selectedY ? '#FF9800' : '#666' }}>height: {yKey.value}</Typography>
                     <Typography style={{ display: 'none' }}>{xKey.scale}{yKey.scale}{xKey.seamLength}{yKey.seamLength}{xKey.originPosition}{yKey.originPosition}</Typography>
                 </div>
             </Paper >
