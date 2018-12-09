@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { Typography } from '@material-ui/core';
+import { Typography, Dialog, DialogTitle, DialogContent, TextField, Button, DialogActions, IconButton } from '@material-ui/core';
 import { Slider } from '@material-ui/lab';
+import CreateIcon from '@material-ui/icons/Create';
 
 interface ActionSliderProps {
     min: number,
@@ -12,7 +13,9 @@ interface ActionSliderProps {
 }
 
 interface ActionSliderState {
-    value: number
+    value: number,
+    textValue: number,
+    open: boolean
 }
 
 export default class ActionSlider extends React.Component<ActionSliderProps, ActionSliderState> {
@@ -26,7 +29,7 @@ export default class ActionSlider extends React.Component<ActionSliderProps, Act
 
     constructor(props: ActionSliderProps) {
         super(props);
-        this.state = { value: this.props.value };
+        this.state = { value: this.props.value, textValue: this.props.value, open: false };
     }
 
     componentDidUpdate(prevProps: ActionSliderProps, prevState: ActionSliderState) {
@@ -40,27 +43,75 @@ export default class ActionSlider extends React.Component<ActionSliderProps, Act
 
         return (
             <div style={{ margin: '8px' }}>
-                <Typography>
-                    {this.props.title} {this.state.value.toFixed(2)}
-                </Typography>
+                <div style={{ display: 'block' }}>
+                    <Typography style={{ float: 'left', marginRight: '6px' }}>
+                        {this.props.title} {this.state.value.toFixed(2)}
+                    </Typography>
+                    <IconButton style={{ float: 'left', padding: '0' }} onClick={this.handleOpen}>
+                        <CreateIcon fontSize="small"></CreateIcon>
+                    </IconButton>
+                </div>
                 <Slider
-                    style={{ padding: '16px 0px' }}
+                    style={{ padding: '16px 0px', clear: 'both' }}
                     value={value}
                     min={this.props.min}
                     max={this.props.max}
                     step={this.props.step}
                     onChange={this.handleChange}
                 ></Slider>
+                <Dialog
+                    open={this.state.open}
+                    onClose={this.handleClose}
+                >
+                    <DialogTitle>Change Value</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            fullWidth
+                            onChange={this.handleChangeText}
+                            value={this.state.textValue}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={this.handleClose} color="primary">
+                            Cancel
+                        </Button>
+                        <Button onClick={this.handleCloseText} color="primary">
+                            OK
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </div>
         )
     }
 
     handleChange = (event: any, value: any) => {
         this.props.changeValue(value);
-        this.setState({ value });
+        this.setState({ value: value });
     };
 
     handleChangeOnlyValue = (value: any) => {
-        this.setState({ value });
+        this.setState({ value: value });
     };
+
+    handleOpen = () => {
+        this.setState({ textValue: this.state.value, open: true });
+    }
+
+    handleClose = () => {
+        this.setState({ open: false });
+    }
+
+    handleChangeText = (event: any) => {
+        this.setState({ textValue: Number(event.target.value) });
+    }
+
+    handleCloseText = () => {
+        if (this.state.textValue < this.props.min || this.state.textValue > this.props.max) {
+            return;
+        }
+
+        this.setState({ value: this.state.textValue, open: false });
+    }
 }
