@@ -118,6 +118,7 @@ export default class Home extends React.Component<IHomeProps> {
                 }}
                 onClick={() => {
                     home.toggleYParam(false);
+                    home.toggleXParam(true);
                     home.toggleModalOpen();
                 }}
             ><AddIcon /></IconButton>);
@@ -132,6 +133,7 @@ export default class Home extends React.Component<IHomeProps> {
                 }}
                 onClick={() => {
                     home.toggleXParam(false);
+                    home.toggleYParam(true);
                     home.toggleModalOpen();
                 }}
             ><AddIcon /></IconButton>);

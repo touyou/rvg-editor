@@ -19,6 +19,7 @@ import PreviewContainer from './Preview';
 import { PreviewStore } from 'src/stores/PreviewStore';
 import { Rnd } from 'react-rnd';
 import ParameterModal from './ParameterModal';
+import Dropzone from 'react-dropzone'
 
 interface ISplitProps {
     app?: AppStore;
@@ -33,8 +34,8 @@ export let seamCarver: SeamCarver | null = null;
 @observer
 export default class SplitContainer extends React.Component<ISplitProps, any> {
     private actions = [
-        { icon: <AddIcon />, name: 'Add Image' },
-        { icon: <SaveIcon />, name: 'Save Image' },
+        { icon: <AddIcon />, name: 'Load Image' },
+        { icon: <SaveIcon />, name: 'Save RVG' },
         { icon: <DeleteIcon />, name: 'Delete All' },
     ]
 
@@ -67,6 +68,9 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
     public render() {
         const app = this.props.app as AppStore;
         const home = this.props.home as HomeStore;
+        const xor = (a: boolean, b: boolean) => {
+            return (a || b) && !(a && b);
+        };
 
         return (
             <div style={{
@@ -79,7 +83,7 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                     position="relative" color="primary">
                     <Toolbar>
                         <Typography variant="h6" color="inherit">
-                            Multi-size Image Editor
+                            RVG Editor
                         </Typography>
                         <div style={{ flexGrow: 1 }} />
                         <div>
@@ -167,13 +171,15 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                                 }
                                 label="Initial Seam"
                             />
-                            <div style={{ overflow: 'hidden', flexDirection: 'row' }}>
-                                <input accept="image/*" style={{ display: 'none' }} id="icon-button-file" type="file" onChange={this.onClickOpenButton} />
-                                <label htmlFor="icon-button-file">
-                                    <IconButton color="primary" component="span">
+                            <div style={{ display: xor(home.isXSet, home.isYSet) ? 'none' : 'block', overflow: 'hidden', flexDirection: 'row' }}>
+                                <Dropzone
+                                    accept="image/jpeg, image/png"
+                                    onDrop={this.onDropFiles}
+                                >
+                                    <div style={{ height: '100%', textAlign: 'center', justifyContent: 'center' }}>
                                         <PhotoCamera />
-                                    </IconButton>
-                                </label>
+                                    </div>
+                                </Dropzone>
                                 <Typography variant="caption">{home.fileName ? home.fileName! : 'Select a Photo.'}</Typography>
                             </div>
                         </div>
@@ -277,11 +283,24 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
         home.onClickOpenButton(URL.createObjectURL(files[0]));
     }
 
+    public onDropFiles = (files: any) => {
+        if (files.length === 0) {
+            return;
+        }
+        this.imageName = files[0].name;
+        const home = this.props.home as HomeStore;
+        home.onClickOpenButton(URL.createObjectURL(files[0]));
+    }
+
     public onClickDialAction = (type: string) => {
         const home = this.props.home as HomeStore;
         const keyFrames = this.props.keyFrames as KeyFrameStore;
 
         if (type === this.actions[0].name) {        // Add Image
+            if (home.originalImage) {
+                home.toggleXParam(true);
+                home.toggleYParam(true);
+            }
             home.toggleModalOpen();
         } else if (type === this.actions[1].name) { // Save Image
             let name: string = '';

@@ -26,6 +26,7 @@
     "re-resizable": "^4.9.3",
     "react": "^16.6.0",
     "react-dom": "^16.6.0",
+    "react-dropzone": "^7.0.1",
     "react-rnd": "^9.0.4",
     "react-scripts-ts": "3.1.0",
     "react-scrollarea": "^0.6.15",
