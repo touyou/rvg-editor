@@ -112,6 +112,7 @@ export default class ActionSlider extends React.Component<ActionSliderProps, Act
             return;
         }
 
+        this.props.changeValue(this.state.textValue);
         this.setState({ value: this.state.textValue, open: false });
     }
 }
