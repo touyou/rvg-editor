@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
-import { AppBar, Toolbar, Typography, IconButton, Button, Modal, Paper, TextField, FormControlLabel, Switch, CircularProgress, Menu, MenuItem } from '@material-ui/core';
+import { AppBar, Toolbar, Typography, IconButton, Button, Modal, Paper, TextField, FormControlLabel, Switch, CircularProgress, Menu, MenuItem, Tooltip } from '@material-ui/core';
 import CropRotateIcon from '@material-ui/icons/CropRotate';
 import ImageIcon from '@material-ui/icons/Image';
 import CompareIcon from '@material-ui/icons/Compare';
@@ -87,15 +87,21 @@ export default class SplitContainer extends React.Component<ISplitProps, any> {
                         </Typography>
                         <div style={{ flexGrow: 1 }} />
                         <div>
-                            <IconButton color="inherit" disabled={app.windowMode === WindowMode.EDITOR} onClick={app.selectEditorMode}>
-                                <CropRotateIcon />
-                            </IconButton>
-                            <IconButton color="inherit" disabled={app.windowMode === WindowMode.PREVIEW} onClick={app.selectPreviewMode}>
-                                <ImageIcon />
-                            </IconButton>
-                            <IconButton color="inherit" disabled={app.windowMode === WindowMode.SPLIT} onClick={app.selectSplitMode}>
-                                <CompareIcon />
-                            </IconButton>
+                            <Tooltip title="Edit">
+                                <IconButton color="inherit" disabled={app.windowMode === WindowMode.EDITOR} onClick={app.selectEditorMode}>
+                                    <CropRotateIcon />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Preview">
+                                <IconButton color="inherit" disabled={app.windowMode === WindowMode.PREVIEW} onClick={app.selectPreviewMode}>
+                                    <ImageIcon />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Split">
+                                <IconButton color="inherit" disabled={app.windowMode === WindowMode.SPLIT} onClick={app.selectSplitMode}>
+                                    <CompareIcon />
+                                </IconButton>
+                            </Tooltip>
                             <IconButton color="inherit" onClick={this.handleMenu}>
                                 <MoreIcon />
                             </IconButton>
