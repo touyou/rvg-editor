@@ -63,7 +63,7 @@ export default class ParameterModal extends React.Component<IParameterProps, any
                                 color="primary"
                             />
                         }
-                        label="Aspect Locked"
+                        label="Scale Aspect Locked"
                     />
                 </div>}
             </Paper>
