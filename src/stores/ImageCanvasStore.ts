@@ -202,12 +202,45 @@ export class KeyFrameStore {
       zip.file('metainfo.json', jsonText);
       zip.file('log.txt', this.log);
 
+      let vHeatImage = new Uint8ClampedArray(imageData.width * imageData.height * 4);
+      let hHeatImage = new Uint8ClampedArray(imageData.width * imageData.height * 4);
+      for (let y = 0; y < imageData.height; y++) {
+        for (let x = 0; x < imageData.width; x++) {
+          const base = (y * imageData.width + x) * 4;
+          const vColor = verticalSeamMap[y][x] / imageData.width * 255;
+          vHeatImage[base] = vColor;
+          vHeatImage[base + 1] = vColor;
+          vHeatImage[base + 2] = vColor;
+          vHeatImage[base + 3] = 255;
+          const hColor = horizontalSeamMap[y][x] / imageData.height * 255;
+          hHeatImage[base] = hColor;
+          hHeatImage[base + 1] = hColor;
+          hHeatImage[base + 2] = hColor;
+          hHeatImage[base + 3] = 255;
+        }
+      }
+
+
       const canvas = document.createElement('canvas');
       canvas.width = imageData.width;
       canvas.height = imageData.height;
       const ctx = canvas.getContext('2d')!;
       ctx.putImageData(imageData, 0, 0);
       zip.file('image.png', canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, ''), { base64: true });
+
+      const vCanvas = document.createElement('canvas');
+      vCanvas.width = imageData.width;
+      vCanvas.height = imageData.height;
+      const vctx = vCanvas.getContext('2d')!;
+      vctx.putImageData(new ImageData(vHeatImage, imageData.width, imageData.height), 0, 0);
+      zip.file('vimage.png', vCanvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, ''), { base64: true });
+      const hCanvas = document.createElement('canvas');
+      hCanvas.width = imageData.width;
+      hCanvas.height = imageData.height;
+      const hctx = vCanvas.getContext('2d')!;
+      hctx.putImageData(new ImageData(hHeatImage, imageData.width, imageData.height), 0, 0);
+      zip.file('himage.png', vCanvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, ''), { base64: true });
+
       zip.generateAsync({ type: 'blob' }).then((blob) => {
         saveAs(blob, path);
       });
