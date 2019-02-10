@@ -1,0 +1,3 @@
+/**
+ * Adjusting Parameters Panel
+ */
