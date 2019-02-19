@@ -731,6 +731,32 @@
     lodash "^4.17.10"
     to-fast-properties "^2.0.0"
 
+"@bluemath/common@^0.2.1", "@bluemath/common@^0.2.2":
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/@bluemath/common/-/common-0.2.3.tgz#6f66e5214e1f2f2397b7f9211cd4427ac60f97db"
+  integrity sha1-b2blIU4fLyOXt/khHNRCesYPl9s=
+
+"@bluemath/geom@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@bluemath/geom/-/geom-0.2.2.tgz#71ab23caecc21cbd7277f38bb59f726de597cb02"
+  integrity sha512-6L8hT/S8cdK/NALQp4ZPmPSyjnyLgkYpP9QCpKKVyrIqYT+iOLDaZo+08et8ip5ho58q5saEgD6v/10vb0hZXw==
+  dependencies:
+    "@bluemath/common" "^0.2.1"
+
+"@bluemath/linalg@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@bluemath/linalg/-/linalg-0.2.2.tgz#5fe8c39543e4571aef6c89494a416f10cbaf70ba"
+  integrity sha512-t0ruoeurxlyE4NuYAGIEyDcmwC164RZHIDFE/SZCWXptcnSBH2E9ehDILF585auOI99HPK0Q/tJgPQk1fDPUeg==
+  dependencies:
+    "@bluemath/common" "^0.2.1"
+
+"@bluemath/topo@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@bluemath/topo/-/topo-0.2.2.tgz#feaf3d3ca443cb711d0e59cb46a8df009b649e66"
+  integrity sha512-sQQ/6Fj+LLuXT1IGu19viVGnXQdI7/wAYFzeqKp3DrzKQkC7CrZeoZ03fiRMRrIZ/055A/QogcUjuvvk6KYYMA==
+  dependencies:
+    "@bluemath/common" "^0.2.1"
+
 "@webassemblyjs/ast@1.7.8":
   version "1.7.8"
   resolved "https://registry.yarnpkg.com/@webassemblyjs/ast/-/ast-1.7.8.tgz#f31f480debeef957f01b623f27eabc695fa4fe8f"
@@ -1191,6 +1217,19 @@ bluebird@^3.5.0, bluebird@^3.5.1, bluebird@^3.5.3:
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.5.3.tgz#7d01c6f9616c9a51ab0f8c549a79dfe6ec33efa7"
   integrity sha512-/qKPUQlaW1OyR51WeCPBvRnAlnZFUJkCSG5HzGnuIqhgyJtF+T94lFnn33eiazjRm2LAHVy2guNnaq48X9SJuw==
 
+bluemath@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/bluemath/-/bluemath-0.5.0.tgz#878526565171e13fe61a0e4381a672dd6e83200b"
+  integrity sha512-Yn6gE+qwGcf3vwgi4nRNuNKykflHIKKhQUVF8uPCVOV7rcpkeyEKqtYf2mNHp9kKv2cMlZyds0DERNrqsAh2qQ==
+  dependencies:
+    "@bluemath/common" "^0.2.2"
+    "@bluemath/geom" "^0.2.2"
+    "@bluemath/linalg" "^0.2.2"
+    "@bluemath/topo" "^0.2.2"
+    set-blocking "^2.0.0"
+    string-width "^2.1.1"
+    yargs-parser "^8.0.0"
+
 bn.js@^4.0.0, bn.js@^4.1.0, bn.js@^4.1.1, bn.js@^4.4.0:
   version "4.11.8"
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.11.8.tgz#2cde09eb5ee341f484746bb0309b3253b1b1442f"
@@ -1370,6 +1409,11 @@ cache-base@^1.0.1:
     to-object-path "^0.3.0"
     union-value "^1.0.0"
     unset-value "^1.0.0"
+
+camelcase@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-4.1.0.tgz#d545635be1e33c542649c69173e5de6acfae34dd"
+  integrity sha1-1UVjW+HjPFQmScaRc+Xeas+uNN0=
 
 caniuse-lite@^1.0.30000929:
   version "1.0.30000935"
@@ -3914,7 +3958,7 @@ serialize-javascript@^1.4.0:
   resolved "https://registry.yarnpkg.com/serialize-javascript/-/serialize-javascript-1.6.1.tgz#4d1f697ec49429a847ca6f442a2a755126c4d879"
   integrity sha512-A5MOagrPFga4YaKQSWHryl7AXvbQkEqpw4NNYMTNYUNV51bA8ABHgYFpqKx+YFFrw59xMV1qGH1R4AgoNIVgCw==
 
-set-blocking@~2.0.0:
+set-blocking@^2.0.0, set-blocking@~2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/set-blocking/-/set-blocking-2.0.0.tgz#045f9782d011ae9a6803ddd382b24392b3d890f7"
   integrity sha1-BF+XgtARrppoA93TgrJDkrPYkPc=
@@ -4743,3 +4787,10 @@ yallist@^3.0.0, yallist@^3.0.2:
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/yallist/-/yallist-3.0.3.tgz#b4b049e314be545e3ce802236d6cd22cd91c3de9"
   integrity sha512-S+Zk8DEWE6oKpV+vI3qWkaK+jSbIK86pCwe2IF/xwIpQ8jEuxpw9NyaGjmp9+BoJv5FV2piqCDcoCtStppiq2A==
+
+yargs-parser@^8.0.0:
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-8.1.0.tgz#f1376a33b6629a5d063782944da732631e966950"
+  integrity sha512-yP+6QqN8BmrgW2ggLtTbdrOyBNSI7zBa4IykmiV5R1wl1JWNxQvWhMfMdmzIYtKU7oP3OOInY/tl2ov3BDjnJQ==
+  dependencies:
+    camelcase "^4.1.0"
