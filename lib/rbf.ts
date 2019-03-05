@@ -1,6 +1,7 @@
 /**
  * RBF Interpolation
  *
+ * ※ 過学習は一旦気にしない（点においてはマッチしないと編集結果と）
  */
 
 import { linalg } from 'bluemath';
@@ -24,7 +25,9 @@ class RBF {
     let phiMat = zeros([n, n]);
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
-        phiMat.set(i, j, this.phi(x[i], x[j]));
+        const rbfValue = this.phi(x[i], x[j]);
+        phiMat.set(i, j, rbfValue);
+        phiMat.set(j, i, rbfValue);
       }
     }
 
@@ -35,4 +38,15 @@ class RBF {
     const luA = linalg.lu_custom(A);
     return linalg.solve(luA, b);
   }
+
+  interpolate(input: NDArray, x: NDArray, w: NDArray) {
+    let n = x.shape[0];
+    let yInterp = 0.0;
+    for (let i = 0; i < n; i++) {
+      yInterp += w[i] * this.phi(input, x[i]);
+    }
+    return yInterp;
+  }
 }
+
+let rbf = new RBF();
