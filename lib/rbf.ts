@@ -5,9 +5,9 @@
  */
 
 import { linalg } from 'bluemath';
-import { NDArray, sub, zeros } from '@bluemath/common';
+import { NDArray, mul, sub, zeros } from '@bluemath/common';
 
-class RBF {
+export class RBF {
   private _phi = (x: NDArray) => {
     // xをもとにφを計算する関数
     return linalg.norm(x);
@@ -30,23 +30,21 @@ class RBF {
         phiMat.set(j, i, rbfValue);
       }
     }
-
     return this.solveLinearSystem(phiMat, y);
   }
 
   solveLinearSystem(A: NDArray, b: NDArray) {
-    const luA = linalg.lu_custom(A);
-    return linalg.solve(luA, b);
+    linalg.solve(A, b)
+    return b;
   }
 
-  interpolate(input: NDArray, x: NDArray, w: NDArray) {
-    let n = x.shape[0];
+  interpolate(input: NDArray, x: Array<NDArray>, w: NDArray) {
+    let n = x.length;
     let yInterp = 0.0;
     for (let i = 0; i < n; i++) {
-      yInterp += w[i] * this.phi(input, x[i]);
+      let elem = <number>w.get(i, 0) * this.phi(input, x[i]);
+      yInterp += elem;
     }
     return yInterp;
   }
 }
-
-let rbf = new RBF();
