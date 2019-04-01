@@ -35,8 +35,9 @@ class Main extends React.Component {
     return (
       <div className='root'>
         <Head>
-          <title>My page title</title>
+          <title>RVG Editor</title>
           <meta name="viewport" content="initial-scale=1.0, width=device-width" key="viewport" />
+          <style src="static/font-face.css"></style>
         </Head>
         {/* <p>{testRbf()}</p> */}
         <div className='main'>

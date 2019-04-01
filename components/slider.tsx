@@ -35,7 +35,12 @@ function Slider(props: Props) {
       />
 
       <style jsx>{`
+        .slider-container {
+          clear: both;
+        }
         h3 {
+          font-family: 'Futura', sans-serif;
+          font-weight: 500;
           font-size: 0.8rem;
           color: #707070;
           margin-bottom: 0px;
