@@ -11,6 +11,7 @@ function EditPanel() {
     <div className='editpanel'>
       <Slider
         title='Canvas Width'
+        imageName='static/canvas_width.svg'
         unit='px'
         min={0}
         max={100}
@@ -22,6 +23,7 @@ function EditPanel() {
       />
       <Slider
         title='Canvas Height'
+        imageName='static/canvas_height.svg'
         unit='px'
         min={0}
         max={100}
@@ -32,6 +34,7 @@ function EditPanel() {
       />
       <Slider
         title='Horizontal Scale'
+        imageName='static/width_scale.svg'
         unit='x'
         min={0}
         max={10}
@@ -42,6 +45,7 @@ function EditPanel() {
       />
       <Slider
         title='Vertical Scale'
+        imageName='static/height_scale.svg'
         unit='x'
         min={0}
         max={10}
@@ -52,6 +56,7 @@ function EditPanel() {
       />
       <Slider
         title='Content Width'
+        imageName='static/content_width.svg'
         unit='px'
         min={0}
         max={100}
@@ -62,6 +67,7 @@ function EditPanel() {
       />
       <Slider
         title='Content Height'
+        imageName='static/content_height.svg'
         unit='px'
         min={0}
         max={100}

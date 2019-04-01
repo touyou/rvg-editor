@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 type Props = {
   title: string;
+  imageName: string;
   unit: string;
   min: number;
   max: number;
@@ -19,7 +20,7 @@ function Slider(props: Props) {
 
   return (
     <div className='slider-container'>
-      <h3>{props.title}: {value} {props.unit}</h3>
+      <h3><img src={props.imageName}></img>{props.title}: {value} {props.unit}</h3>
       <input
         type="range"
         min={props.min}
@@ -35,9 +36,15 @@ function Slider(props: Props) {
 
       <style jsx>{`
         h3 {
-          font-size: 0.7rem;
+          font-size: 0.8rem;
           color: #707070;
           margin-bottom: 0px;
+          margin-top: 0px
+        }
+        img {
+          width: 4em;
+          padding-right: 16px;
+          vertical-align: middle;
         }
         .slider {
           -webkit-appearance: none;
@@ -48,6 +55,7 @@ function Slider(props: Props) {
           outline: none;
           opacity: 0.7;
           transition: opacity .2s;
+          margin-bottom: 1.8em;
         }
         .slider::-webkit-slider-thumb {
           -webkit-appearance: none;
