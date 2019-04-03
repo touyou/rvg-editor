@@ -5,15 +5,22 @@
 import React, { useState } from 'react';
 
 type Props = {
+  onChange: (boolean) => void;
 }
 
 function Switch(props: Props) {
+  const [isLocked, setIsLocked] = useState(false);
+
   return (
     <div className='switch-container'>
       <p>Aspect Lock Scaling</p>
       <label className="switch">
         <input
           type="checkbox"
+          onChange={(event) => {
+            props.onChange(!isLocked)
+            setIsLocked(!isLocked)
+          }}
         />
         <span className="slider"></span>
       </label>

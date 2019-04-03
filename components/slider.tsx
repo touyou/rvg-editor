@@ -10,26 +10,24 @@ type Props = {
   unit: string;
   min: number;
   max: number;
-  defaultValue: number;
+  value: number;
   step: number;
   onChange: (number) => void;
 }
 
 function Slider(props: Props) {
-  const [value, setValue] = useState(props.defaultValue);
 
   return (
     <div className='slider-container'>
-      <h3><img src={props.imageName}></img>{props.title}: {value} {props.unit}</h3>
+      <h3><img src={props.imageName}></img>{props.title}: {Number(props.value).toFixed(2)} {props.unit}</h3>
       <input
         type="range"
         min={props.min}
         max={props.max}
-        value={value}
+        value={props.value}
         step={props.step}
         onChange={(event) => {
           props.onChange(event.target.value)
-          setValue(event.target.value)
         }}
         className="slider"
       />

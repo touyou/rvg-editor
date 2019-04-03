@@ -6,7 +6,15 @@ import Slider from './slider';
 import Switch from './switch';
 
 function EditPanel() {
-  const [value, setValue] = useState(50);
+  const [params, setParams] = useState({
+    width: 50,
+    height: 50,
+    hScale: 1.0,
+    vScale: 1.0,
+    cWidth: 50,
+    cHeight: 50,
+  });
+  const [isLocked, setIsLocked] = useState(false);
 
   return (
     <div className='editpanel'>
@@ -17,10 +25,10 @@ function EditPanel() {
           unit='px'
           min={0}
           max={100}
-          defaultValue={50}
+          value={params.width}
           step={1}
           onChange={(value) => {
-            setValue(value)
+            setParams({ ...params, width: value })
           }}
         />
         <Slider
@@ -29,9 +37,10 @@ function EditPanel() {
           unit='px'
           min={0}
           max={100}
-          defaultValue={50}
+          value={params.height}
           step={1}
           onChange={(value) => {
+            setParams({ ...params, height: value })
           }}
         />
       </div>
@@ -42,9 +51,18 @@ function EditPanel() {
           unit='x'
           min={0}
           max={10}
-          defaultValue={1.0}
+          value={params.hScale}
           step={0.1}
           onChange={(value) => {
+            if (isLocked) {
+              setParams({
+                ...params,
+                hScale: value,
+                vScale: params.vScale - (params.hScale - value),
+              })
+            } else {
+              setParams({ ...params, hScale: value })
+            }
           }}
         />
         <Slider
@@ -53,12 +71,23 @@ function EditPanel() {
           unit='x'
           min={0}
           max={10}
-          defaultValue={1.0}
+          value={params.vScale}
           step={0.1}
           onChange={(value) => {
+            if (isLocked) {
+              setParams({
+                ...params,
+                vScale: value,
+                hScale: params.hScale - (params.vScale - value),
+              })
+            } else {
+              setParams({ ...params, vScale: value })
+            }
           }}
         />
-        <Switch />
+        <Switch onChange={(value) => {
+          setIsLocked(value);
+        }} />
       </div>
       <div className='edit-section'>
         <Slider
@@ -67,9 +96,10 @@ function EditPanel() {
           unit='px'
           min={0}
           max={100}
-          defaultValue={50}
+          value={params.cWidth}
           step={1}
           onChange={(value) => {
+            setParams({ ...params, cWidth: value })
           }}
         />
         <Slider
@@ -78,9 +108,10 @@ function EditPanel() {
           unit='px'
           min={0}
           max={100}
-          defaultValue={50}
+          value={params.cHeight}
           step={1}
           onChange={(value) => {
+            setParams({ ...params, cHeight: value })
           }}
         />
       </div>
