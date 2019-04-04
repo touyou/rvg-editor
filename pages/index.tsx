@@ -62,9 +62,13 @@ class Main extends React.Component<{}, IMainState> {
       canvasList.push(
         <canvas
           key={i}
-          className='list-canvas'
+          className={i == this.state.selectIndex ? 'list-canvas selected' : 'list-canvas'}
           width={this.state.pointList[i].canvasWidth * factor}
-          height={this.state.pointList[i].canvasHeight * factor}>
+          height={this.state.pointList[i].canvasHeight * factor}
+          onClick={() => {
+            this.setState({ selectIndex: i });
+          }}
+        >
         </canvas>
       )
     }
@@ -127,10 +131,12 @@ class Main extends React.Component<{}, IMainState> {
           display: inline-block;
           background-color: #fff;
           margin: 8px;
-          border: 1px #333 solid;
           // -webkit-box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
           // -moz-box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
           // box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
+        }
+        .selected {
+          border: 4px #707070 solid;
         }
             `}</style>
           </div>
@@ -177,7 +183,8 @@ class Main extends React.Component<{}, IMainState> {
           width: 100%;
           height: 180px;
           white-space: nowrap;
-          background-color: #fff;
+          // background-color: #fff;
+          background-color: #eee;
           vertical-align: middle;
         }
         `}</style>
