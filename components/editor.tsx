@@ -40,11 +40,13 @@ function Editor(props: Props) {
           width: 100%;
           height: 100%;
           background-color: #eeeeee;
+          overflow: hidden;
         }
         .scale-editor {
           position: absolute;
           top: 8px;
           left: 8px;
+          z-index: 1;
         }
         .circular-button {
           display: inline-block;
