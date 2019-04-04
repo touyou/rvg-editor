@@ -127,9 +127,10 @@ class Main extends React.Component<{}, IMainState> {
           display: inline-block;
           background-color: #fff;
           margin: 8px;
-          -webkit-box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
-          -moz-box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
-          box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
+          border: 1px #333 solid;
+          // -webkit-box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
+          // -moz-box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
+          // box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
         }
             `}</style>
           </div>
