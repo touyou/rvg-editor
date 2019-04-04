@@ -38,7 +38,7 @@ function Editor(props: Props) {
         .editor {
           position: relative;
           width: 100%;
-          height: 100%;
+          height: 85%;
           background-color: #eeeeee;
           overflow: hidden;
         }

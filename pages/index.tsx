@@ -35,18 +35,20 @@ interface IMainState {
   pointList?: Array<EditPoint>,
   selectIndex?: number,
   viewScale?: number,
+  isBottomAppear: boolean,
 }
 
 class Main extends React.Component<{}, IMainState> {
   public state: IMainState = {
     // demo
     pointList: [
-      new EditPoint(100, 200, 300, 200),
-      new EditPoint(400, 200, 300, 20),
-      new EditPoint(10, 200, 100, 200)
+      new EditPoint(500, 200, 300, 200),
+      new EditPoint(400, 400, 300, 20),
+      new EditPoint(1000, 200, 100, 200)
     ],
     selectIndex: 0,
     viewScale: 1.0,
+    isBottomAppear: false,
   };
 
   get currentPoint() {
@@ -54,6 +56,19 @@ class Main extends React.Component<{}, IMainState> {
   }
 
   render() {
+    let canvasList: any[] = [];
+    for (let i = 0; i < this.state.pointList.length; i++) {
+      const factor = 200 / this.state.pointList[i].canvasHeight * 0.75;
+      canvasList.push(
+        <canvas
+          key={i}
+          className='list-canvas'
+          width={this.state.pointList[i].canvasWidth * factor}
+          height={this.state.pointList[i].canvasHeight * factor}>
+        </canvas>
+      )
+    }
+
     return (
       <div className='root'>
         <Head>
@@ -105,6 +120,19 @@ class Main extends React.Component<{}, IMainState> {
               this.setState({ viewScale: value });
             }}
           />
+          <div className='bottompanel'>
+            {canvasList}
+            <style>{`
+        .list-canvas {
+          display: inline-block;
+          background-color: #fff;
+          margin: 8px;
+          -webkit-box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
+          -moz-box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
+          box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
+        }
+            `}</style>
+          </div>
         </div>
         <div className='sidepanel'>
           <Preview></Preview>
@@ -128,18 +156,28 @@ class Main extends React.Component<{}, IMainState> {
           flex-direction: row;
         }
         .main {
+          display: block;
+          position: relative;
           flex: 8 1 auto;
         }
         .sidepanel {
           flex: 1 1 auto;
-
           display: flex;
-          flex-direction: column
+          flex-direction: column;
         }
-
         .editpanel {
-          background-color: green;
           flex: 0 1 auto;
+        }
+        .bottompanel {
+          position: absolute;
+          overflow-x: scroll;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          height: 180px;
+          white-space: nowrap;
+          background-color: #fff;
+          vertical-align: middle;
         }
         `}</style>
         <style jsx global>{`
