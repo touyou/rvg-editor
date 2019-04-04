@@ -2,6 +2,7 @@ import Editor from '../components/editor';
 import EditPanel from '../components/editPanel';
 import Preview from '../components/preview';
 import { RBF } from '../lib/rbf';
+import EditPoint from '../lib/editPoint';
 import { NDArray } from '@bluemath/common';
 import React from 'react';
 import Head from 'next/head';
@@ -30,22 +31,92 @@ function testRbf() {
   );
 }
 
-class Main extends React.Component {
+interface IMainState {
+  pointList?: Array<EditPoint>,
+  selectIndex?: number,
+  viewScale?: number,
+}
+
+class Main extends React.Component<{}, IMainState> {
+  public state: IMainState = {
+    // demo
+    pointList: [
+      new EditPoint(100, 200, 300, 200),
+      new EditPoint(400, 200, 300, 20),
+      new EditPoint(10, 200, 100, 200)
+    ],
+    selectIndex: 0,
+    viewScale: 1.0,
+  };
+
+  get currentPoint() {
+    return this.state.pointList[this.state.selectIndex]
+  }
+
   render() {
     return (
       <div className='root'>
         <Head>
           <title>RVG Editor</title>
           <meta name="viewport" content="initial-scale=1.0, width=device-width" key="viewport" />
-          <style src="static/font-face.css"></style>
+          <style>
+            {`
+@font-face {
+  font-family: 'Futura';
+  src: url('../static/Futura-Lig.ttf') format('truetype');
+  font-weight: 300;
+}
+@font-face {
+  font-family: 'Futura';
+  src: url('../static/Futura-Boo.ttf') format('truetype');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Futura';
+  src: url('../static/Futura-Med.ttf') format('truetype');
+  font-weight: 500;
+}
+@font-face {
+  font-family: 'Futura';
+  src: url('../static/Futura-Dem.ttf') format('truetype');
+  font-weight: 600;
+}
+@font-face {
+  font-family: 'Futura';
+  src: url('../static/Futura-Bol.ttf') format('truetype');
+  font-weight: 700;
+}
+@font-face {
+  font-family: 'Futura';
+  src: url('../static/Futura-ExtBol.ttf') format('truetype');
+  font-weight: 800;
+}
+            `}
+          </style>
         </Head>
+
         {/* <p>{testRbf()}</p> */}
         <div className='main'>
-          <Editor></Editor>
+          <Editor
+            canvasWidth={this.currentPoint.canvasWidth}
+            canvasHeight={this.currentPoint.canvasHeight}
+            viewScale={this.state.viewScale}
+            onChangeViewScale={(value) => {
+              this.setState({ viewScale: value });
+            }}
+          />
         </div>
         <div className='sidepanel'>
           <Preview></Preview>
-          <EditPanel></EditPanel>
+          <EditPanel
+            point={this.currentPoint}
+            onChange={(value) => {
+              const pointCopy = this.state.pointList.slice();
+              pointCopy[this.state.selectIndex] = value;
+              this.setState({
+                pointList: pointCopy
+              });
+            }}></EditPanel>
         </div>
 
         <style jsx>{`
@@ -57,7 +128,6 @@ class Main extends React.Component {
           flex-direction: row;
         }
         .main {
-          background-color: red;
           flex: 8 1 auto;
         }
         .sidepanel {

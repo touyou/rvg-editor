@@ -4,16 +4,22 @@
 import React, { useState } from 'react';
 import Slider from './slider';
 import Switch from './switch';
+import EditPoint from '../lib/editPoint';
 
-function EditPanel() {
-  const [params, setParams] = useState({
-    width: 50,
-    height: 50,
-    hScale: 1.0,
-    vScale: 1.0,
-    cWidth: 50,
-    cHeight: 50,
-  });
+type Props = {
+  point: EditPoint;
+  onChange: (EditPoint) => void;
+}
+
+function EditPanel(props: Props) {
+  // const [params, setParams] = useState({
+  //   width: 50,
+  //   height: 50,
+  //   hScale: 1.0,
+  //   vScale: 1.0,
+  //   cWidth: 50,
+  //   cHeight: 50,
+  // });
   const [isLocked, setIsLocked] = useState(false);
 
   return (
@@ -24,11 +30,13 @@ function EditPanel() {
           imageName='static/canvas_width.svg'
           unit='px'
           min={0}
-          max={100}
-          value={params.width}
+          max={3840}
+          value={props.point.canvasWidth}
           step={1}
           onChange={(value) => {
-            setParams({ ...params, width: value })
+            const newValue = props.point.clone();
+            newValue.canvasWidth = value;
+            props.onChange(newValue);
           }}
         />
         <Slider
@@ -36,11 +44,13 @@ function EditPanel() {
           imageName='static/canvas_height.svg'
           unit='px'
           min={0}
-          max={100}
-          value={params.height}
+          max={3840}
+          value={props.point.canvasHeight}
           step={1}
           onChange={(value) => {
-            setParams({ ...params, height: value })
+            const newValue = props.point.clone();
+            newValue.canvasHeight = value;
+            props.onChange(newValue);
           }}
         />
       </div>
@@ -51,18 +61,15 @@ function EditPanel() {
           unit='x'
           min={0}
           max={10}
-          value={params.hScale}
+          value={props.point.hScale}
           step={0.1}
           onChange={(value) => {
+            const newValue = props.point.clone();
+            newValue.hScale = value;
             if (isLocked) {
-              setParams({
-                ...params,
-                hScale: value,
-                vScale: params.vScale - (params.hScale - value),
-              })
-            } else {
-              setParams({ ...params, hScale: value })
+              newValue.vScale = props.point.vScale - (props.point.hScale - value);
             }
+            props.onChange(newValue);
           }}
         />
         <Slider
@@ -71,18 +78,15 @@ function EditPanel() {
           unit='x'
           min={0}
           max={10}
-          value={params.vScale}
+          value={props.point.vScale}
           step={0.1}
           onChange={(value) => {
+            const newValue = props.point.clone();
+            newValue.vScale = value;
             if (isLocked) {
-              setParams({
-                ...params,
-                vScale: value,
-                hScale: params.hScale - (params.vScale - value),
-              })
-            } else {
-              setParams({ ...params, vScale: value })
+              newValue.hScale = props.point.hScale - (props.point.vScale - value);
             }
+            props.onChange(newValue);
           }}
         />
         <Switch onChange={(value) => {
@@ -95,11 +99,13 @@ function EditPanel() {
           imageName='static/content_width.svg'
           unit='px'
           min={0}
-          max={100}
-          value={params.cWidth}
+          max={3840}
+          value={props.point.contentWidth}
           step={1}
           onChange={(value) => {
-            setParams({ ...params, cWidth: value })
+            const newValue = props.point.clone();
+            newValue.contentWidth = value;
+            props.onChange(newValue);
           }}
         />
         <Slider
@@ -107,11 +113,13 @@ function EditPanel() {
           imageName='static/content_height.svg'
           unit='px'
           min={0}
-          max={100}
-          value={params.cHeight}
+          max={3840}
+          value={props.point.contentHeight}
           step={1}
           onChange={(value) => {
-            setParams({ ...params, cHeight: value })
+            const newValue = props.point.clone();
+            newValue.contentHeight = value;
+            props.onChange(newValue);
           }}
         />
       </div>
