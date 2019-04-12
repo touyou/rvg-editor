@@ -3,16 +3,21 @@
  */
 
 import React, { useState, useRef } from 'react';
+import ImageCanvas from './imageCanvas';
+import EditPoint from 'lib/editPoint';
+import { NDArray } from '@bluemath/common/src';
 
 type Props = {
   canvasWidth: number,
   canvasHeight: number,
   viewScale: number,
+  image: ImageData,
+  currentEditPoint: EditPoint,
   onChangeViewScale: (number) => void;
+  onChangeOrigin: (NDArray) => void;
 }
 
 function Editor(props: Props) {
-  const canvasRefContainer = useRef(null);
 
   return (
     <div className='editor'>
@@ -29,11 +34,15 @@ function Editor(props: Props) {
           }
         }}>+</button>
       </div>
-      <canvas
-        ref={canvasRefContainer}
-        width={props.canvasWidth * props.viewScale}
-        height={props.canvasHeight * props.viewScale}>
-      </canvas>
+      <ImageCanvas
+        canvasWidth={props.canvasWidth}
+        canvasHeight={props.canvasHeight}
+        image={props.image}
+        currentEditPoint={props.currentEditPoint}
+        viewScale={props.viewScale}
+        onChangeOrigin={props.onChangeOrigin}
+        isEditable={true}
+      ></ImageCanvas>
       <style jsx>{`
         .editor {
           position: relative;
@@ -78,16 +87,6 @@ function Editor(props: Props) {
           font-family: 'Futura', sans-serif;
           font-weight: 300;
           font-size: 16px;
-        }
-        canvas {
-          position: absolute;
-          display: block;
-          top: 0;
-          right: 0;
-          left: 0;
-          bottom: 0;
-          margin: auto;
-          background-color: #ffffff;
         }
       `}</style>
     </div>

@@ -2,14 +2,19 @@ export default class EditPoint {
   canvasWidth: number;
   canvasHeight: number;
 
+  x: number;
+  y: number;
   hScale: number;
   vScale: number;
   contentWidth: number;
   contentHeight: number;
 
-  constructor(canvasWidth: number, canvasHeight: number, contentWidth: number, contentHeight: number) {
+  constructor(canvasWidth: number, canvasHeight: number, x: number, y: number, contentWidth: number, contentHeight: number) {
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
+
+    this.x = x;
+    this.y = y;
     this.hScale = 1.0;
     this.vScale = 1.0;
     this.contentWidth = contentWidth;
@@ -17,7 +22,7 @@ export default class EditPoint {
   }
 
   clone(): EditPoint {
-    let result = new EditPoint(this.canvasWidth, this.canvasHeight, this.contentWidth, this.contentHeight);
+    let result = new EditPoint(this.canvasWidth, this.canvasHeight, this.x, this.y, this.contentWidth, this.contentHeight);
     result.hScale = this.hScale;
     result.vScale = this.vScale;
     return result;

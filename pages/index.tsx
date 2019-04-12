@@ -6,6 +6,7 @@ import EditPoint from '../lib/editPoint';
 import { NDArray } from '@bluemath/common';
 import React from 'react';
 import Head from 'next/head';
+import ImageCanvas from '../components/imageCanvas';
 
 function testRbf() {
   let rbf = new RBF();
@@ -36,23 +37,38 @@ interface IMainState {
   selectIndex?: number,
   viewScale?: number,
   isBottomAppear: boolean,
+  image?: ImageData,
 }
 
 class Main extends React.Component<{}, IMainState> {
   public state: IMainState = {
     // demo
     pointList: [
-      new EditPoint(500, 200, 300, 200),
-      new EditPoint(400, 400, 300, 20),
-      new EditPoint(1000, 200, 100, 200)
+      new EditPoint(500, 200, 0, 0, 300, 200),
+      new EditPoint(400, 400, 0, 0, 300, 20),
+      new EditPoint(1000, 200, 0, 0, 100, 200)
     ],
     selectIndex: 0,
     viewScale: 1.0,
     isBottomAppear: false,
+    image: null,
   };
 
   get currentPoint() {
     return this.state.pointList[this.state.selectIndex]
+  }
+
+  componentDidMount() {
+    const tmpCanvas = document.createElement('canvas');
+    const tmpCtx = tmpCanvas.getContext('2d');
+    let image = new Image();
+    image.src = 'static/bicycle2.png';
+    image.onload = () => {
+      tmpCanvas.width = image.naturalWidth;
+      tmpCanvas.height = image.naturalHeight;
+      tmpCtx.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
+      this.setState({ image: tmpCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight) });
+    }
   }
 
   render() {
@@ -60,16 +76,18 @@ class Main extends React.Component<{}, IMainState> {
     for (let i = 0; i < this.state.pointList.length; i++) {
       const factor = 200 / this.state.pointList[i].canvasHeight * 0.75;
       canvasList.push(
-        <canvas
-          key={i}
-          className={i == this.state.selectIndex ? 'list-canvas selected' : 'list-canvas'}
-          width={this.state.pointList[i].canvasWidth * factor}
-          height={this.state.pointList[i].canvasHeight * factor}
+        <ImageCanvas
+          id={i}
+          canvasWidth={this.state.pointList[i].canvasWidth}
+          canvasHeight={this.state.pointList[i].canvasHeight}
+          image={this.state.image}
+          currentEditPoint={this.state.pointList[i]}
+          viewScale={factor}
+          isSelected={i == this.state.selectIndex}
           onClick={() => {
             this.setState({ selectIndex: i });
           }}
-        >
-        </canvas>
+        ></ImageCanvas>
       )
     }
 
@@ -120,25 +138,22 @@ class Main extends React.Component<{}, IMainState> {
             canvasWidth={this.currentPoint.canvasWidth}
             canvasHeight={this.currentPoint.canvasHeight}
             viewScale={this.state.viewScale}
+            image={this.state.image}
+            currentEditPoint={this.state.pointList[this.state.selectIndex]}
             onChangeViewScale={(value) => {
               this.setState({ viewScale: value });
+            }}
+            onChangeOrigin={(value) => {
+              const pointCopy = this.state.pointList.slice();
+              const newPoint = pointCopy[this.state.selectIndex].clone();
+              newPoint.x = value.data[0];
+              newPoint.y = value.data[1];
+              pointCopy[this.state.selectIndex] = newPoint;
+              this.setState({ pointList: pointCopy });
             }}
           />
           <div className='bottompanel'>
             {canvasList}
-            <style>{`
-        .list-canvas {
-          display: inline-block;
-          background-color: #fff;
-          margin: 8px;
-          // -webkit-box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
-          // -moz-box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
-          // box-shadow: 0px 0px 4px 1px rgba(140,140,140,0.3);
-        }
-        .selected {
-          border: 4px #707070 solid;
-        }
-            `}</style>
           </div>
         </div>
         <div className='sidepanel'>
