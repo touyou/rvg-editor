@@ -7,6 +7,7 @@ import { NDArray } from '@bluemath/common';
 import React from 'react';
 import Head from 'next/head';
 import ImageCanvas from '../components/imageCanvas';
+import SeamCarver from '../lib/seamCarver';
 
 function testRbf() {
   let rbf = new RBF();
@@ -44,15 +45,13 @@ class Main extends React.Component<{}, IMainState> {
   public state: IMainState = {
     // demo
     pointList: [
-      new EditPoint(500, 200, 0, 0, 300, 200),
-      new EditPoint(400, 400, 0, 0, 300, 20),
-      new EditPoint(1000, 200, 0, 0, 100, 200)
     ],
     selectIndex: 0,
     viewScale: 1.0,
     isBottomAppear: false,
     image: null,
   };
+  private _seamCarver: SeamCarver;
 
   get currentPoint() {
     return this.state.pointList[this.state.selectIndex]
@@ -67,7 +66,8 @@ class Main extends React.Component<{}, IMainState> {
       tmpCanvas.width = image.naturalWidth;
       tmpCanvas.height = image.naturalHeight;
       tmpCtx.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
-      this.setState({ image: tmpCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight) });
+      this._seamCarver = new SeamCarver(tmpCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight));
+      this.setState({ image: tmpCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight), pointList: [new EditPoint(image.naturalWidth, image.naturalHeight, 0, 0, image.naturalWidth, image.naturalHeight)] });
     }
   }
 
@@ -80,7 +80,7 @@ class Main extends React.Component<{}, IMainState> {
           id={i}
           canvasWidth={this.state.pointList[i].canvasWidth}
           canvasHeight={this.state.pointList[i].canvasHeight}
-          image={this.state.image}
+          image={this._seamCarver == null ? this.state.image : this._seamCarver.resize(this.state.pointList[i].contentWidth, this.state.pointList[i].contentHeight)}
           currentEditPoint={this.state.pointList[i]}
           viewScale={factor}
           isSelected={i == this.state.selectIndex}
@@ -135,10 +135,10 @@ class Main extends React.Component<{}, IMainState> {
         {/* <p>{testRbf()}</p> */}
         <div className='main'>
           <Editor
-            canvasWidth={this.currentPoint.canvasWidth}
-            canvasHeight={this.currentPoint.canvasHeight}
+            canvasWidth={this.state.pointList.length == 0 ? 0 : this.currentPoint.canvasWidth}
+            canvasHeight={this.state.pointList.length == 0 ? 0 : this.currentPoint.canvasHeight}
             viewScale={this.state.viewScale}
-            image={this.state.image}
+            image={this._seamCarver == null ? this.state.image : this._seamCarver.resize(this.state.pointList[this.state.selectIndex].contentWidth, this.state.pointList[this.state.selectIndex].contentHeight)}
             currentEditPoint={this.state.pointList[this.state.selectIndex]}
             onChangeViewScale={(value) => {
               this.setState({ viewScale: value });
@@ -160,6 +160,16 @@ class Main extends React.Component<{}, IMainState> {
           <Preview></Preview>
           <EditPanel
             point={this.currentPoint}
+            imageWidth={this.state.image != null ? this.state.image.width : 0}
+            imageHeight={this.state.image != null ? this.state.image.height : 0}
+            onAddPoint={() => {
+              const newPoint = new EditPoint(this.state.image.width, this.state.image.height, 0, 0, this.state.image.width, this.state.image.height);
+              const pointCopy = this.state.pointList.slice();
+              pointCopy.push(newPoint);
+              this.setState({
+                pointList: pointCopy
+              });
+            }}
             onChange={(value) => {
               const pointCopy = this.state.pointList.slice();
               pointCopy[this.state.selectIndex] = value;

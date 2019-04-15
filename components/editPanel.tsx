@@ -8,22 +8,35 @@ import EditPoint from '../lib/editPoint';
 
 type Props = {
   point: EditPoint;
+  imageWidth: number;
+  imageHeight: number;
   onChange: (EditPoint) => void;
+  onAddPoint: () => void;
 }
 
 function EditPanel(props: Props) {
-  // const [params, setParams] = useState({
-  //   width: 50,
-  //   height: 50,
-  //   hScale: 1.0,
-  //   vScale: 1.0,
-  //   cWidth: 50,
-  //   cHeight: 50,
-  // });
   const [isLocked, setIsLocked] = useState(false);
+
+  if (props.point == null) {
+    return (
+      <div className='editpanel'>
+        <style jsx>{`
+        .editpanel {
+          flex: 1 1 auto;
+          padding: 8px;
+        }
+        `}</style>
+      </div >
+    )
+  }
 
   return (
     <div className='editpanel'>
+      <div className='edit-buttons'>
+        <button className="circular-button" onClick={() => {
+          props.onAddPoint();
+        }}><img src='../static/keyframe-icon.svg'></img></button>
+      </div>
       <div className='edit-section'>
         <Slider
           title='Canvas Width'
@@ -98,8 +111,8 @@ function EditPanel(props: Props) {
           title='Content Width'
           imageName='static/content_width.svg'
           unit='px'
-          min={0}
-          max={3840}
+          min={1}
+          max={props.imageWidth * 2}
           value={props.point.contentWidth}
           step={1}
           onChange={(value) => {
@@ -112,8 +125,8 @@ function EditPanel(props: Props) {
           title='Content Height'
           imageName='static/content_height.svg'
           unit='px'
-          min={0}
-          max={3840}
+          min={1}
+          max={props.imageWidth * 2}
           value={props.point.contentHeight}
           step={1}
           onChange={(value) => {
@@ -129,7 +142,36 @@ function EditPanel(props: Props) {
           padding: 8px;
         }
         .edit-section {
+          margin-top: 8px;
           margin-bottom: 3.5em;
+        }
+        .circular-button {
+          display: inline-block;
+          width: 42px;
+          height: 42px;
+          overflow: hidden;
+          border-radius: 50%;
+          margin: 8px 8px;
+          padding-bottom: 4px;
+          font-size: 24px;
+          text-decoration: none;
+          vertical-align: middle;
+          text-align: center;
+          cursor: pointer;
+          white-space: nowrap;
+          border: none;
+          background-color: #707070;
+          color: #fff;
+          transition: .5s;
+        }
+
+        .circular-button:hover {
+          background-color: #f0f0f0;
+        }
+
+        .edit-buttons img {
+          width: 1em;
+          vertical-align: middle;
         }
         `}</style>
     </div>
