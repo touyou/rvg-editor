@@ -5,7 +5,6 @@
 import React from 'react';
 
 type Props = {
-  key: string;
   value: string;
   onClick: () => void;
 }
@@ -14,7 +13,6 @@ function ListButton(props: Props) {
   return (
     <div className='list-button'>
       <button
-        key={props.key}
         onClick={() => { props.onClick() }}
       >{props.value}</button>
       <style jsx>{`

@@ -10,6 +10,7 @@ import ImageCanvas from '../components/imageCanvas';
 import SeamCarver from '../lib/seamCarver';
 import { templates, Device } from '../lib/templateSize';
 import ListButton from '../components/listButton';
+import TextField from '../components/textField';
 
 function testRbf() {
   let rbf = new RBF();
@@ -42,6 +43,8 @@ interface IMainState {
   isBottomAppear: boolean,
   image?: ImageData,
   isModalOpen: Boolean,
+  inputWidth: number,
+  inputHeight: number,
 }
 
 class Main extends React.Component<{}, IMainState> {
@@ -52,7 +55,9 @@ class Main extends React.Component<{}, IMainState> {
     viewScale: 1.0,
     isBottomAppear: false,
     image: null,
-    isModalOpen: true,
+    isModalOpen: false,
+    inputWidth: 0,
+    inputHeight: 0,
   };
   private _seamCarver: SeamCarver;
 
@@ -70,7 +75,11 @@ class Main extends React.Component<{}, IMainState> {
       tmpCanvas.height = image.naturalHeight;
       tmpCtx.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
       this._seamCarver = new SeamCarver(tmpCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight));
-      this.setState({ image: tmpCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight), pointList: [new EditPoint(image.naturalWidth, image.naturalHeight, 0, 0, image.naturalWidth, image.naturalHeight)] });
+      this.setState({
+        image: tmpCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight), pointList: [new EditPoint(image.naturalWidth, image.naturalHeight, 0, 0, image.naturalWidth, image.naturalHeight)],
+        inputWidth: image.naturalWidth,
+        inputHeight: image.naturalHeight,
+      });
     }
   }
 
@@ -80,6 +89,7 @@ class Main extends React.Component<{}, IMainState> {
       const factor = 200 / this.state.pointList[i].canvasHeight * 0.75;
       canvasList.push(
         <ImageCanvas
+          key={'canvas' + i.toString()}
           id={i}
           canvasWidth={this.state.pointList[i].canvasWidth}
           canvasHeight={this.state.pointList[i].canvasHeight}
@@ -99,7 +109,10 @@ class Main extends React.Component<{}, IMainState> {
       const device: Device = value[1];
       sizeList.push(
         <ListButton key={key} onClick={() => {
-          console.log(device)
+          this.setState({
+            inputWidth: device.width,
+            inputHeight: device.height,
+          })
         }} value={device.name}></ListButton>
       );
     });
@@ -176,11 +189,8 @@ class Main extends React.Component<{}, IMainState> {
             imageWidth={this.state.image != null ? this.state.image.width : 0}
             imageHeight={this.state.image != null ? this.state.image.height : 0}
             onAddPoint={() => {
-              const newPoint = new EditPoint(this.state.image.width, this.state.image.height, 0, 0, this.state.image.width, this.state.image.height);
-              const pointCopy = this.state.pointList.slice();
-              pointCopy.push(newPoint);
               this.setState({
-                pointList: pointCopy
+                isModalOpen: true,
               });
             }}
             onChange={(value) => {
@@ -194,6 +204,37 @@ class Main extends React.Component<{}, IMainState> {
         <div className={this.state.isModalOpen ? 'modal' : 'close'}>
           <div className='device-list'>
             {sizeList}
+          </div>
+          <div className='input-area'>
+            <TextField
+              placeholder='width'
+              value={this.state.inputWidth.toString()}
+              onChange={(value) => {
+                const number = Number(value);
+                this.setState({
+                  inputWidth: number,
+                });
+              }}></TextField>
+            <TextField
+              placeholder='height'
+              value={this.state.inputHeight.toString()}
+              onChange={(value) => {
+                const number = Number(value);
+                this.setState({
+                  inputHeight: number,
+                });
+              }}></TextField>
+            <ListButton key='add-button' onClick={() => {
+              const newPoint = new EditPoint(this.state.inputWidth, this.state.inputHeight, 0, 0, this.state.image.width, this.state.image.height);
+              const pointCopy = this.state.pointList.slice();
+              pointCopy.push(newPoint);
+              this.setState({
+                pointList: pointCopy,
+                isModalOpen: false,
+                inputWidth: this.state.image.width,
+                inputHeight: this.state.image.height,
+              });
+            }} value='Add'></ListButton>
           </div>
         </div>
 
@@ -209,6 +250,7 @@ class Main extends React.Component<{}, IMainState> {
           display: block;
           position: relative;
           flex: 8 1 auto;
+          clear: both;
         }
         .modal {
           position: absolute;
@@ -227,19 +269,29 @@ class Main extends React.Component<{}, IMainState> {
           display: none;
         }
         .device-list {
-          display: block;
+          display: inline-block;
           width: 40%;
           height: 100%;
           overflow-y: scroll;
           overflow-x: hidden;
+          float: left;
+        }
+        .input-area {
+          display: inline-block;
+          width: 54%;
+          height: 90%;
+          float: left;
+          padding: 16px;
         }
         .sidepanel {
           flex: 1 1 auto;
           display: flex;
           flex-direction: column;
+          clear: both;
         }
         .editpanel {
           flex: 0 1 auto;
+          clear: both;
         }
         .bottompanel {
           position: absolute;
@@ -252,6 +304,7 @@ class Main extends React.Component<{}, IMainState> {
           // background-color: #fff;
           background-color: #eee;
           vertical-align: middle;
+          clear: both;
         }
         `}</style>
         <style jsx global>{`
