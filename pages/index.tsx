@@ -103,7 +103,14 @@ class Main extends React.Component<{}, IMainState> {
         ></ImageCanvas>
       )
     }
-    let sizeList = [];
+    let sizeList = [
+      <ListButton key='original-button' onClick={() => {
+        this.setState({
+          inputWidth: this.state.image.width,
+          inputHeight: this.state.image.height,
+        })
+      }} value='Original'></ListButton>
+    ];
     Object.entries(templates).forEach((value) => {
       const key: string = value[0];
       const device: Device = value[1];
@@ -227,6 +234,12 @@ class Main extends React.Component<{}, IMainState> {
                   inputHeight: number,
                 });
               }}></TextField>
+            <ListButton key='switch-button' onClick={() => {
+              this.setState({
+                inputWidth: this.state.inputHeight,
+                inputHeight: this.state.inputWidth,
+              });
+            }} value='Switch'></ListButton>
             <ListButton key='add-button' onClick={() => {
               const newPoint = new EditPoint(this.state.inputWidth, this.state.inputHeight, 0, 0, this.state.image.width, this.state.image.height);
               const pointCopy = this.state.pointList.slice();
@@ -283,8 +296,8 @@ class Main extends React.Component<{}, IMainState> {
           display: inline-block;
           width: 54%;
           height: 90%;
-          float: left;
-          padding: 16px;
+          float: right;
+          padding: 8px;
         }
         .sidepanel {
           flex: 1 1 auto;
