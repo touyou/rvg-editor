@@ -19,7 +19,7 @@ function ListButton(props: Props) {
       button {
         display: inline-block;
         width: 90%;
-        height: 50px;
+        height: 45px;
         text-decoration: none;
         background-color: #f0f0f0;
         color: #707070;
@@ -30,6 +30,7 @@ function ListButton(props: Props) {
         font-weight: 500;
         font-size: 0.8rem;
         cursor: pointer;
+        outline: none;
       }
       button:hover {
         background-color: #707070;

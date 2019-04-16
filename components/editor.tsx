@@ -71,6 +71,7 @@ function Editor(props: Props) {
           text-align: center;
           cursor: pointer;
           white-space: nowrap;
+          outline: none;
         }
 
         .minus {

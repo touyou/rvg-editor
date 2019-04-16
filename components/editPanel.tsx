@@ -163,6 +163,7 @@ function EditPanel(props: Props) {
           background-color: #707070;
           color: #fff;
           transition: .5s;
+          outline: none;
         }
 
         .circular-button:hover {

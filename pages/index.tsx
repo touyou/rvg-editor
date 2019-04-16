@@ -206,6 +206,9 @@ class Main extends React.Component<{}, IMainState> {
             {sizeList}
           </div>
           <div className='input-area'>
+            <button className="circular-button" onClick={() => {
+              this.setState({ isModalOpen: false });
+            }}>×</button>
             <TextField
               placeholder='width'
               value={this.state.inputWidth.toString()}
@@ -301,10 +304,34 @@ class Main extends React.Component<{}, IMainState> {
           width: 100%;
           height: 180px;
           white-space: nowrap;
-          // background-color: #fff;
           background-color: #eee;
           vertical-align: middle;
           clear: both;
+        }
+        .circular-button {
+          display: inline-block;
+          width: 24px;
+          height: 24px;
+          overflow: hidden;
+          margin: 8px 8px;
+          padding-bottom: 4px;
+          font-size: 15px;
+          text-decoration: none;
+          vertical-align: middle;
+          text-align: center;
+          cursor: pointer;
+          white-space: nowrap;
+          float:right;
+          outline: none;
+          border-radius: 50%;
+          border: none;
+          background-color: #fff;
+          color: #707070;
+          transition: 0.3s;
+        }
+        .circular-button:hover {
+          background-color: #707070;
+          color: #fff;
         }
         `}</style>
         <style jsx global>{`
