@@ -8,6 +8,8 @@ import React from 'react';
 import Head from 'next/head';
 import ImageCanvas from '../components/imageCanvas';
 import SeamCarver from '../lib/seamCarver';
+import { templates, Device } from '../lib/templateSize';
+import ListButton from '../components/listButton';
 
 function testRbf() {
   let rbf = new RBF();
@@ -39,17 +41,18 @@ interface IMainState {
   viewScale?: number,
   isBottomAppear: boolean,
   image?: ImageData,
+  isModalOpen: Boolean,
 }
 
 class Main extends React.Component<{}, IMainState> {
   public state: IMainState = {
-    // demo
     pointList: [
     ],
     selectIndex: 0,
     viewScale: 1.0,
     isBottomAppear: false,
     image: null,
+    isModalOpen: true,
   };
   private _seamCarver: SeamCarver;
 
@@ -90,6 +93,16 @@ class Main extends React.Component<{}, IMainState> {
         ></ImageCanvas>
       )
     }
+    let sizeList = [];
+    Object.entries(templates).forEach((value) => {
+      const key: string = value[0];
+      const device: Device = value[1];
+      sizeList.push(
+        <ListButton key={key} onClick={() => {
+          console.log(device)
+        }} value={device.name}></ListButton>
+      );
+    });
 
     return (
       <div className='root'>
@@ -178,6 +191,11 @@ class Main extends React.Component<{}, IMainState> {
               });
             }}></EditPanel>
         </div>
+        <div className={this.state.isModalOpen ? 'modal' : 'close'}>
+          <div className='device-list'>
+            {sizeList}
+          </div>
+        </div>
 
         <style jsx>{`
         .root {
@@ -191,6 +209,29 @@ class Main extends React.Component<{}, IMainState> {
           display: block;
           position: relative;
           flex: 8 1 auto;
+        }
+        .modal {
+          position: absolute;
+          display: block;
+          top: 0;
+          right: 0;
+          left: 0;
+          bottom: 0;
+          margin: auto;
+          background-color: #ffffff;
+          width: 50%;
+          height: 50%;
+          box-shadow: 0 0 3px 5px rgba(0,0,0,0.1);
+        }
+        .close {
+          display: none;
+        }
+        .device-list {
+          display: block;
+          width: 40%;
+          height: 100%;
+          overflow-y: scroll;
+          overflow-x: hidden;
         }
         .sidepanel {
           flex: 1 1 auto;
