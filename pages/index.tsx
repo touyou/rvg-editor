@@ -11,6 +11,7 @@ import SeamCarver from '../lib/seamCarver';
 import { templates, Device } from '../lib/templateSize';
 import ListButton from '../components/listButton';
 import TextField from '../components/textField';
+import { Resizer } from '../lib/resizer';
 
 function testRbf() {
   let rbf = new RBF();
@@ -60,6 +61,7 @@ class Main extends React.Component<{}, IMainState> {
     inputHeight: 0,
   };
   private _seamCarver: SeamCarver;
+  private _resizer: Resizer;
 
   get currentPoint() {
     return this.state.pointList[this.state.selectIndex]
@@ -81,6 +83,7 @@ class Main extends React.Component<{}, IMainState> {
         inputHeight: image.naturalHeight,
       });
     }
+    this._resizer = new Resizer();
   }
 
   render() {
@@ -195,6 +198,7 @@ class Main extends React.Component<{}, IMainState> {
             width={this.state.image != null ? this.state.image.width : 0}
             height={this.state.image != null ? this.state.image.height : 0}
             image={this.state.image}
+            resizer={this._seamCarver != null ? this._resizer.getResizer(true, this.state.pointList, this._seamCarver) : null}
           ></Preview>
           <EditPanel
             point={this.currentPoint}

@@ -144,7 +144,7 @@ function EditPanel(props: Props) {
         }
         .edit-section {
           margin-top: 8px;
-          margin-bottom: 3.5em;
+          // margin-bottom: 3.5em;
         }
         .circular-button {
           display: inline-block;

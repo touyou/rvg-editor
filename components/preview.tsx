@@ -3,12 +3,15 @@
  */
 import React, { useRef, useEffect, useState } from 'react';
 import EditPoint from 'lib/editPoint';
+import { NDArray } from '@bluemath/common';
+import { MultiResizer } from 'lib/multi_resizer/multiResizer';
 
 type Props = {
   editPoints: EditPoint[];
   width: number;
   height: number;
   image: ImageData;
+  resizer?: MultiResizer;
 }
 
 function Preview(props: Props) {
@@ -17,30 +20,35 @@ function Preview(props: Props) {
   const [canvasHeight, setCanvasHeight] = useState(props.height);
 
   useEffect(() => {
-    const canvasCtx = (canvasRefContainer.current as HTMLCanvasElement).getContext('2d');
 
-    if (props.image != null) {
-      console.log(props.image);
-      const imageCanvas = document.createElement('canvas');
-      const imageCtx = imageCanvas.getContext('2d');
-      const canvasCtx = (canvasRefContainer.current as HTMLCanvasElement).getContext('2d');
-      canvasCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-      imageCanvas.width = props.image.width;
-      imageCanvas.height = props.image.height;
-      imageCtx.putImageData(props.image, 0, 0);
-
-      canvasCtx.scale(0.2, 0.2);
-      canvasCtx.drawImage(imageCanvas, 0, 0);
-      canvasCtx.scale(5, 5);
+    if (props.image != null && props.resizer != null) {
+      let originPoint = new NDArray([props.resizer.originX(canvasWidth), props.resizer.originY(canvasHeight)]);
+      drawImage(canvasWidth, canvasHeight, originPoint, props.resizer.scaleX(canvasWidth) * 0.2, props.resizer.scaleY(canvasHeight) * 0.2);
     }
-  }, [props.editPoints, props.image]);
+  }, [props.editPoints, props.image, props.resizer]);
 
   useEffect(() => {
-    console.log(props);
-    setCanvasWidth(props.width);
-    setCanvasHeight(props.height);
+    setCanvasWidth(1000);
+    setCanvasHeight(300);
   }, [props.width, props.height]);
+
+  function drawImage(width: number, height: number, origin: NDArray, hScale: number, vScale: number) {
+    // Initialize
+    const imageCanvas = document.createElement('canvas');
+    const imageCtx = imageCanvas.getContext('2d');
+    const canvasCtx = (canvasRefContainer.current as HTMLCanvasElement).getContext('2d');
+    canvasCtx.clearRect(0, 0, width, height);
+
+    // Prepare Image
+    imageCanvas.width = props.image.width;
+    imageCanvas.height = props.image.height;
+    imageCtx.putImageData(props.image, 0, 0);
+
+    // Change Scale and Render to canvas
+    canvasCtx.scale(hScale, vScale);
+    canvasCtx.drawImage(imageCanvas, origin.data[0], origin.data[1]);
+    canvasCtx.scale(1 / hScale, 1 / vScale);
+  }
 
   return (
     <div className='preview'>
