@@ -29,7 +29,8 @@ function Switch(props: Props) {
           font-family: 'Futura', sans-serif;
           font-weight: 500;
           font-size: 0.8rem;
-          color: #707070;
+          // color: #707070;
+          color: #eee;
           float: right;
           height: 1.8em;
           line-height: 1.8em;

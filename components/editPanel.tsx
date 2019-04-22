@@ -140,6 +140,7 @@ function EditPanel(props: Props) {
         .editpanel {
           flex: 1 1 auto;
           padding: 8px;
+          background-color: #707070;
         }
         .edit-section {
           margin-top: 8px;
@@ -160,14 +161,13 @@ function EditPanel(props: Props) {
           cursor: pointer;
           white-space: nowrap;
           border: none;
-          background-color: #707070;
-          color: #fff;
+          background-color: #eee;
           transition: .5s;
           outline: none;
         }
 
         .circular-button:hover {
-          background-color: #f0f0f0;
+          background-color: #555;
         }
 
         .edit-buttons img {

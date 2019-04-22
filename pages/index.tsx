@@ -190,7 +190,12 @@ class Main extends React.Component<{}, IMainState> {
           </div>
         </div>
         <div className='sidepanel'>
-          <Preview></Preview>
+          <Preview
+            editPoints={this.state.pointList}
+            width={this.state.image != null ? this.state.image.width : 0}
+            height={this.state.image != null ? this.state.image.height : 0}
+            image={this.state.image}
+          ></Preview>
           <EditPanel
             point={this.currentPoint}
             imageWidth={this.state.image != null ? this.state.image.width : 0}
@@ -304,6 +309,7 @@ class Main extends React.Component<{}, IMainState> {
           display: flex;
           flex-direction: column;
           clear: both;
+          border-left: 4px solid #555;
         }
         .editpanel {
           flex: 0 1 auto;

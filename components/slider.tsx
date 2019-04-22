@@ -40,7 +40,8 @@ function Slider(props: Props) {
           font-family: 'Futura', sans-serif;
           font-weight: 500;
           font-size: 0.8rem;
-          color: #707070;
+          // color: #707070;
+          color: #eee;
           margin-bottom: 0px;
           margin-top: 0px
         }
@@ -54,9 +55,10 @@ function Slider(props: Props) {
           width: 90%;
           height: 5px;
           border-radius: 2px;
-          background: #707070;
+          // background: #707070;
+          background-color: #eee;
           outline: none;
-          opacity: 0.7;
+          opacity: 0.9;
           transition: opacity .2s;
           margin-bottom: 1.8em;
         }
@@ -70,6 +72,7 @@ function Slider(props: Props) {
           border-color: #707070;
           border-radius: 50%;
           background: #ffffff;
+          // background-color: #707070;
           cursor: pointer;
         }
         .slider::-moz-range-thumb {
@@ -80,6 +83,7 @@ function Slider(props: Props) {
           border-color: #707070;
           border-radius: 50%;
           background: #ffffff;
+          // background-color: #707070;
           cursor: pointer;
         }
       `}</style>
