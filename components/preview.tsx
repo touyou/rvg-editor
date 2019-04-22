@@ -22,15 +22,10 @@ function Preview(props: Props) {
   const [canvasHeight, setCanvasHeight] = useState(props.height);
 
   useEffect(() => {
-
     if (props.image != null && props.resizer != null) {
-      let originPoint = new NDArray([props.resizer.originX(canvasWidth), props.resizer.originY(canvasHeight)]);
-      let scaleX = props.resizer.scaleX(canvasWidth);
-      let scaleY = props.resizer.scaleY(canvasHeight);
-      if (!props.isFullScreen) {
-        scaleX *= 0.2;
-        scaleY *= 0.2;
-      }
+      const originPoint = new NDArray([props.resizer.originX(canvasWidth), props.resizer.originY(canvasHeight)]);
+      const scaleX = props.resizer.scaleX(canvasWidth) * getScale();
+      const scaleY = props.resizer.scaleY(canvasHeight) * getScale();
       drawImage(canvasWidth, canvasHeight, originPoint, scaleX, scaleY);
     }
   }, [props.editPoints, props.image, props.resizer]);
@@ -58,115 +53,118 @@ function Preview(props: Props) {
     canvasCtx.scale(1 / hScale, 1 / vScale);
   }
 
-  let sidePanel = (
-    <div className='preview'>
-      <button className="circular-button" onClick={() => {
-        props.onChangeMode();
-      }}>+</button>
-      <canvas
-        className='canvas'
-        ref={canvasRefContainer}
-        width={canvasWidth * 0.2}
-        height={canvasHeight * 0.2}
-      ></canvas>
-      <style jsx>{`
-        .canvas {
-          position: absolute;
-          display: block;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          margin: auto;
-          background-color: #fff;
-        }
-        .preview {
-          position: relative;
-          overflow: scroll;
-          flex: 1 1 auto;
-          background-color: #eee;
-          transition: .2s;
-        }
-        .circular-button {
-          display: inline-block;
-          width: 42px;
-          height: 42px;
-          overflow: hidden;
-          border-radius: 50%;
-          margin: 8px 8px;
-          padding-bottom: 4px;
-          font-size: 24px;
-          text-decoration: none;
-          vertical-align: middle;
-          text-align: center;
-          cursor: pointer;
-          white-space: nowrap;
-          outline: none;
-          border: none;
-          background-color: #707070;
-          color: #fff
-        }
-        `}</style>
-    </div>
-  )
+  function getScale() {
+    return props.isFullScreen ? 1.0 : 0.2;
+  }
 
-  let fullScreen = (
-    <div className='preview'>
-      <button className="circular-button" onClick={() => {
-        props.onChangeMode();
-      }}>-</button>
-      <canvas
-        className='canvas'
-        ref={canvasRefContainer}
-        width={canvasWidth}
-        height={canvasHeight}
-      ></canvas>
-      <style jsx>{`
-        .canvas {
-          position: absolute;
-          display: block;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          margin: auto;
-          background-color: #fff;
-        }
-        .preview {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          overflow: scroll;
-          background-color: #eee;
-          z-index: 100;
-          transition: .2s;
-        }
-        .circular-button {
-          display: inline-block;
-          width: 42px;
-          height: 42px;
-          overflow: hidden;
-          border-radius: 50%;
-          margin: 8px 8px;
-          padding-bottom: 4px;
-          font-size: 24px;
-          text-decoration: none;
-          vertical-align: middle;
-          text-align: center;
-          cursor: pointer;
-          white-space: nowrap;
-          outline: none;
-          border: none;
-          background-color: #707070;
-          color: #fff
-        }
-        `}</style>
-    </div>
+  let sidePanelStyle = (
+    <style jsx>{`
+      .canvas {
+        position: absolute;
+        display: block;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        margin: auto;
+        background-color: #fff;
+      }
+      .preview {
+        position: relative;
+        overflow: scroll;
+        flex: 1 1 auto;
+        background-color: #eee;
+        transition: .2s;
+      }
+      .circular-button {
+        display: inline-block;
+        width: 42px;
+        height: 42px;
+        overflow: hidden;
+        border-radius: 50%;
+        margin: 8px 8px;
+        padding-bottom: 4px;
+        font-size: 24px;
+        text-decoration: none;
+        vertical-align: middle;
+        text-align: center;
+        cursor: pointer;
+        white-space: nowrap;
+        outline: none;
+        border: none;
+        background-color: #707070;
+        color: #fff
+      }
+      .circular-button img {
+        width: 1em;
+        vertical-align: middle;
+      }
+    `}</style>
   );
 
-  return props.isFullScreen ? fullScreen : sidePanel;
+  let fullScreenStyle = (
+    <style jsx>{`
+      .canvas {
+        position: absolute;
+        display: block;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        margin: auto;
+        background-color: #fff;
+      }
+      .preview {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: scroll;
+        background-color: #eee;
+        z-index: 100;
+        transition: .2s;
+      }
+      .circular-button {
+        display: inline-block;
+        width: 42px;
+        height: 42px;
+        overflow: hidden;
+        border-radius: 50%;
+        margin: 8px 8px;
+        padding-bottom: 4px;
+        font-size: 24px;
+        text-decoration: none;
+        vertical-align: middle;
+        text-align: center;
+        cursor: pointer;
+        white-space: nowrap;
+        outline: none;
+        border: none;
+        background-color: #707070;
+        color: #fff
+      }
+      .circular-button img {
+        width: 1em;
+        vertical-align: middle;
+      }
+    `}</style>
+  );
+
+  return (
+    <div className='preview'>
+      <button className="circular-button" onClick={() => {
+        props.onChangeMode();
+      }}><img src={props.isFullScreen ? '../static/scale-minus-icon.svg' : '../static/scale-plus-icon.svg'}></img></button>
+      <canvas
+        className='canvas'
+        ref={canvasRefContainer}
+        width={canvasWidth * getScale()}
+        height={canvasHeight * getScale()}
+      ></canvas>
+      {props.isFullScreen ? fullScreenStyle : sidePanelStyle}
+    </div>
+  );
 }
 
 export default Preview;
