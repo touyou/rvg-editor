@@ -5,6 +5,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import EditPoint from 'lib/editPoint';
 import { NDArray } from '@bluemath/common';
 import { MultiResizer } from 'lib/multi_resizer/multiResizer';
+import Resizable, { NumberSize } from 're-resizable';
 
 type Props = {
   editPoints: EditPoint[];
@@ -22,18 +23,23 @@ function Preview(props: Props) {
   const [canvasHeight, setCanvasHeight] = useState(props.height);
 
   useEffect(() => {
+    updateImage();
+  }, [props.editPoints, props.image, props.resizer]);
+
+  useEffect(() => {
+    setCanvasWidth(props.width);
+    setCanvasHeight(props.height);
+    updateImage();
+  }, [props.width, props.height]);
+
+  function updateImage() {
     if (props.image != null && props.resizer != null) {
       const originPoint = new NDArray([props.resizer.originX(canvasWidth), props.resizer.originY(canvasHeight)]);
       const scaleX = props.resizer.scaleX(canvasWidth) * getScale();
       const scaleY = props.resizer.scaleY(canvasHeight) * getScale();
       drawImage(canvasWidth, canvasHeight, originPoint, scaleX, scaleY);
     }
-  }, [props.editPoints, props.image, props.resizer]);
-
-  useEffect(() => {
-    setCanvasWidth(props.width);
-    setCanvasHeight(props.height);
-  }, [props.width, props.height]);
+  }
 
   function drawImage(width: number, height: number, origin: NDArray, hScale: number, vScale: number) {
     // Initialize
@@ -156,12 +162,29 @@ function Preview(props: Props) {
       <button className="circular-button" onClick={() => {
         props.onChangeMode();
       }}><img src={props.isFullScreen ? '../static/scale-minus-icon.svg' : '../static/scale-plus-icon.svg'}></img></button>
-      <canvas
-        className='canvas'
-        ref={canvasRefContainer}
-        width={canvasWidth * getScale()}
-        height={canvasHeight * getScale()}
-      ></canvas>
+      <Resizable
+        style={{
+          margin: 'auto'
+        }}
+        size={{
+          width: canvasWidth * getScale(),
+          height: canvasHeight * getScale(),
+        }}
+        onResizeStop={(event, direction, ref, delta: NumberSize) => {
+          if (!props.isFullScreen) return;
+
+          setCanvasWidth(canvasWidth + delta.width);
+          setCanvasHeight(canvasHeight + delta.height);
+          updateImage();
+        }}
+      >
+        <canvas
+          className='canvas'
+          ref={canvasRefContainer}
+          width={canvasWidth * getScale()}
+          height={canvasHeight * getScale()}
+        ></canvas>
+      </Resizable>
       {props.isFullScreen ? fullScreenStyle : sidePanelStyle}
     </div>
   );
