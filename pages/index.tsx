@@ -43,9 +43,10 @@ interface IMainState {
   viewScale?: number,
   isBottomAppear: boolean,
   image?: ImageData,
-  isModalOpen: Boolean,
+  isModalOpen: boolean,
   inputWidth: number,
   inputHeight: number,
+  previewFullScreen: boolean,
 }
 
 class Main extends React.Component<{}, IMainState> {
@@ -59,6 +60,7 @@ class Main extends React.Component<{}, IMainState> {
     isModalOpen: false,
     inputWidth: 0,
     inputHeight: 0,
+    previewFullScreen: false,
   };
   private _seamCarver: SeamCarver;
   private _resizer: Resizer;
@@ -199,6 +201,10 @@ class Main extends React.Component<{}, IMainState> {
             height={this.state.image != null ? this.state.image.height : 0}
             image={this.state.image}
             resizer={this._seamCarver != null ? this._resizer.getResizer(true, this.state.pointList, this._seamCarver) : null}
+            onChangeMode={() => {
+              this.setState({ previewFullScreen: !this.state.previewFullScreen });
+            }}
+            isFullScreen={this.state.previewFullScreen}
           ></Preview>
           <EditPanel
             point={this.currentPoint}
@@ -369,7 +375,7 @@ class Main extends React.Component<{}, IMainState> {
           height: 100vh;
         }
         `}</style>
-      </div>
+      </div >
     );
   }
 }
