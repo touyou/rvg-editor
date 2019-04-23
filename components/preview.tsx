@@ -23,13 +23,12 @@ function Preview(props: Props) {
   const [canvasHeight, setCanvasHeight] = useState(props.height);
 
   useEffect(() => {
-    updateImage();
+    setTimeout(updateImage, 10);
   }, [props.editPoints, props.image, props.resizer]);
 
   useEffect(() => {
     setCanvasWidth(props.width);
     setCanvasHeight(props.height);
-    updateImage();
   }, [props.width, props.height]);
 
   function updateImage() {
