@@ -42,8 +42,8 @@ function Navigator(props: Props) {
     canvasCtx.beginPath();
     canvasCtx.moveTo(8, 16);
     canvasCtx.lineTo(props.width - 16, 16);
-    canvasCtx.moveTo(16, 8);
-    canvasCtx.lineTo(16, props.height - 16);
+    canvasCtx.moveTo(20, 8);
+    canvasCtx.lineTo(20, props.height - 16);
     canvasCtx.stroke();
     canvasCtx.closePath();
     canvasCtx.restore();
@@ -51,13 +51,19 @@ function Navigator(props: Props) {
     canvasCtx.save();
     canvasCtx.beginPath();
     canvasCtx.fillStyle = 'rgb(112, 112, 112)';
+    canvasCtx.font = "8px 'Futura', sans-serif";
+    canvasCtx.textBaseline = 'bottom';
     for (let editPoint of props.editPoints) {
       let x = getCanvasPos(editPoint.canvasWidth, xmin, scaleX);
       let y = getCanvasPos(editPoint.canvasHeight, ymin, scaleY);
       canvasCtx.moveTo(x, 16);
       canvasCtx.arc(x, 16, 2, 0, 2 * Math.PI);
-      canvasCtx.moveTo(16, y);
-      canvasCtx.arc(16, y, 2, 0, 2 * Math.PI);
+      canvasCtx.moveTo(20, y);
+      canvasCtx.arc(20, y, 2, 0, 2 * Math.PI);
+      canvasCtx.textAlign = 'center';
+      canvasCtx.fillText(editPoint.canvasWidth.toString(), x, 14);
+      canvasCtx.textAlign = 'right';
+      canvasCtx.fillText(editPoint.canvasHeight.toString(), 18, y + 4);
     }
     canvasCtx.fill();
     canvasCtx.closePath();
