@@ -113,6 +113,7 @@ function Navigator(props: Props) {
           right: 0;
           margin: 16px;
           border-radius: 5px;
+          border: 2px #707070 solid;
           background-color: #fff;
           width: ${props.width}px;
           height: ${props.height}px;

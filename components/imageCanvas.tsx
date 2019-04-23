@@ -105,7 +105,7 @@ function ImageCanvas(props: Props) {
           margin: 8px;
         }
         .selected {
-          border: 4px #707070 solid;
+          border: 4px #FFD380 solid;
         }
       `}</style>
     </div>

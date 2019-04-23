@@ -196,7 +196,7 @@ class Main extends React.Component<{}, IMainState> {
           </div>
           <Navigator
             width={200}
-            height={100}
+            height={200}
             editPoints={this.state.pointList}
             selectedIndex={this.state.selectIndex}
           ></Navigator>
