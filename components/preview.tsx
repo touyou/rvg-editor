@@ -47,11 +47,12 @@ function Preview(props: Props) {
     const imageCtx = imageCanvas.getContext('2d');
     const canvasCtx = (canvasRefContainer.current as HTMLCanvasElement).getContext('2d');
     canvasCtx.clearRect(0, 0, width, height);
+    const newImage = props.resizer.seamImageData(width, height);
 
     // Prepare Image
-    imageCanvas.width = props.image.width;
-    imageCanvas.height = props.image.height;
-    imageCtx.putImageData(props.image, 0, 0);
+    imageCanvas.width = newImage.width;
+    imageCanvas.height = newImage.height;
+    imageCtx.putImageData(newImage, 0, 0);
 
     // Change Scale and Render to canvas
     canvasCtx.scale(hScale, vScale);
@@ -63,63 +64,52 @@ function Preview(props: Props) {
     return props.isFullScreen ? 1.0 : 0.2;
   }
 
-  let sidePanelStyle = (
-    <style jsx>{`
-      .canvas {
-        position: absolute;
-        display: block;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        margin: auto;
-        background-color: #fff;
-      }
+  const commonStyle = `
+    .canvas {
+      position: absolute;
+      display: block;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      margin: auto;
+      background-color: #fff;
+    }
+    .circular-button {
+      display: inline-block;
+      width: 42px;
+      height: 42px;
+      overflow: hidden;
+      border-radius: 50%;
+      margin: 8px 8px;
+      padding-bottom: 4px;
+      font-size: 24px;
+      text-decoration: none;
+      vertical-align: middle;
+      text-align: center;
+      cursor: pointer;
+      white-space: nowrap;
+      outline: none;
+      border: none;
+      background-color: #707070;
+      color: #fff;
+    }
+    .circular-button img {
+      width: 1em;
+      vertical-align: middle;
+    }
+  `;
+
+  const sidePanelStyle = commonStyle + `
       .preview {
         position: relative;
         overflow: scroll;
         flex: 1 1 auto;
         background-color: #eee;
         transition: .2s;
-      }
-      .circular-button {
-        display: inline-block;
-        width: 42px;
-        height: 42px;
-        overflow: hidden;
-        border-radius: 50%;
-        margin: 8px 8px;
-        padding-bottom: 4px;
-        font-size: 24px;
-        text-decoration: none;
-        vertical-align: middle;
-        text-align: center;
-        cursor: pointer;
-        white-space: nowrap;
-        outline: none;
-        border: none;
-        background-color: #707070;
-        color: #fff
-      }
-      .circular-button img {
-        width: 1em;
-        vertical-align: middle;
-      }
-    `}</style>
-  );
+      }`;
 
-  let fullScreenStyle = (
-    <style jsx>{`
-      .canvas {
-        position: absolute;
-        display: block;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        margin: auto;
-        background-color: #fff;
-      }
+  const fullScreenStyle = commonStyle + `
       .preview {
         position: absolute;
         top: 0;
@@ -130,32 +120,9 @@ function Preview(props: Props) {
         background-color: #eee;
         z-index: 100;
         transition: .2s;
-      }
-      .circular-button {
-        display: inline-block;
-        width: 42px;
-        height: 42px;
-        overflow: hidden;
-        border-radius: 50%;
-        margin: 8px 8px;
-        padding-bottom: 4px;
-        font-size: 24px;
-        text-decoration: none;
-        vertical-align: middle;
-        text-align: center;
-        cursor: pointer;
-        white-space: nowrap;
-        outline: none;
-        border: none;
-        background-color: #707070;
-        color: #fff
-      }
-      .circular-button img {
-        width: 1em;
-        vertical-align: middle;
-      }
-    `}</style>
-  );
+      }`;
+
+  const style = (<style jsx>{props.isFullScreen ? fullScreenStyle : sidePanelStyle}</style>);
 
   return (
     <div className='preview'>
@@ -185,7 +152,7 @@ function Preview(props: Props) {
           height={canvasHeight * getScale()}
         ></canvas>
       </Resizable>
-      {props.isFullScreen ? fullScreenStyle : sidePanelStyle}
+      {style}
     </div>
   );
 }

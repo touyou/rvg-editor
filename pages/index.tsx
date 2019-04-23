@@ -12,6 +12,7 @@ import { templates, Device } from '../lib/templateSize';
 import ListButton from '../components/listButton';
 import TextField from '../components/textField';
 import { Resizer } from '../lib/resizer';
+import Navigator from '../components/navigator';
 
 function testRbf() {
   let rbf = new RBF();
@@ -193,6 +194,12 @@ class Main extends React.Component<{}, IMainState> {
           <div className='bottompanel'>
             {canvasList}
           </div>
+          <Navigator
+            width={200}
+            height={100}
+            editPoints={this.state.pointList}
+            selectedIndex={this.state.selectIndex}
+          ></Navigator>
         </div>
         <div className='sidepanel'>
           <Preview
