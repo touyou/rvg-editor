@@ -6,7 +6,7 @@ import EditPoint from 'lib/editPoint';
 import { NDArray } from '@bluemath/common';
 import { MultiResizer } from 'lib/multi_resizer/multiResizer';
 import Resizable, { NumberSize } from 're-resizable';
-import CircleButton from './circleButton';
+import CircleButton from './atom/circleButton';
 
 type Props = {
   editPoints: EditPoint[];

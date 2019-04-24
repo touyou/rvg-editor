@@ -3,10 +3,10 @@
  */
 
 import React, { useState, useRef } from 'react';
-import ImageCanvas from './imageCanvas';
+import ImageCanvas from './atom/imageCanvas';
 import EditPoint from 'lib/editPoint';
 import { NDArray } from '@bluemath/common/src';
-import CircleButton from './circleButton';
+import CircleButton from './atom/circleButton';
 
 type Props = {
   canvasWidth: number,

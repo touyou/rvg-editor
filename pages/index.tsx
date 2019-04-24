@@ -6,11 +6,11 @@ import EditPoint from '../lib/editPoint';
 import { NDArray } from '@bluemath/common';
 import React from 'react';
 import Head from 'next/head';
-import ImageCanvas from '../components/imageCanvas';
+import ImageCanvas from '../components/atom/imageCanvas';
 import SeamCarver from '../lib/seamCarver';
 import { templates, Device } from '../lib/templateSize';
-import ListButton from '../components/listButton';
-import TextField from '../components/textField';
+import ListButton from '../components/atom/listButton';
+import TextField from '../components/atom/textField';
 import { Resizer } from '../lib/resizer';
 import Navigator from '../components/navigator';
 

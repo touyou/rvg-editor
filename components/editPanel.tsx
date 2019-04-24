@@ -2,10 +2,10 @@
  * Adjusting Parameters Panel
  */
 import React, { useState } from 'react';
-import Slider from './slider';
-import Switch from './switch';
+import Slider from './atom/slider';
+import Switch from './atom/switch';
 import EditPoint from '../lib/editPoint';
-import CircleButton from './circleButton';
+import CircleButton from './atom/circleButton';
 
 type Props = {
   point: EditPoint;
