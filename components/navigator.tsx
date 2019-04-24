@@ -11,6 +11,47 @@ type Props = {
   selectedIndex: number;
 };
 
+function getCanvasPos(length: number, minP: number, scale: number) {
+  return (length - minP) * scale + 40;
+}
+
+function drawCoordinate(canvasCtx: CanvasRenderingContext2D, width: number, height: number, xmin: number, ymin: number, scaleX: number, scaleY: number, editPoints: EditPoint[]) {
+  // 座標軸
+  canvasCtx.save();
+  canvasCtx.beginPath();
+  canvasCtx.strokeStyle = 'rgb(112, 112, 112)';
+  canvasCtx.lineWidth = 2;
+  canvasCtx.beginPath();
+  canvasCtx.moveTo(8, 16);
+  canvasCtx.lineTo(width - 16, 16);
+  canvasCtx.moveTo(20, 8);
+  canvasCtx.lineTo(20, height - 16);
+  canvasCtx.stroke();
+  canvasCtx.closePath();
+  canvasCtx.restore();
+
+  canvasCtx.save();
+  canvasCtx.beginPath();
+  canvasCtx.fillStyle = 'rgb(112, 112, 112)';
+  canvasCtx.font = "8px 'Futura', sans-serif";
+  canvasCtx.textBaseline = 'bottom';
+  for (let editPoint of editPoints) {
+    let x = getCanvasPos(editPoint.canvasWidth, xmin, scaleX);
+    let y = getCanvasPos(editPoint.canvasHeight, ymin, scaleY);
+    canvasCtx.moveTo(x, 16);
+    canvasCtx.arc(x, 16, 2, 0, 2 * Math.PI);
+    canvasCtx.moveTo(20, y);
+    canvasCtx.arc(20, y, 2, 0, 2 * Math.PI);
+    canvasCtx.textAlign = 'center';
+    canvasCtx.fillText(editPoint.canvasWidth.toString(), x, 14);
+    canvasCtx.textAlign = 'right';
+    canvasCtx.fillText(editPoint.canvasHeight.toString(), 18, y + 4);
+  }
+  canvasCtx.fill();
+  canvasCtx.closePath();
+  canvasCtx.restore();
+}
+
 function Navigator(props: Props) {
   const canvasRefContainer = useRef();
 
@@ -21,8 +62,6 @@ function Navigator(props: Props) {
     let xmax: number;
     let ymin: number;
     let ymax: number;
-    // const xSet = new Set();
-    // const ySet = new Set();
     for (let editPoint of props.editPoints) {
       if (xmin == null || xmin > editPoint.canvasWidth) xmin = editPoint.canvasWidth;
       if (xmax == null || xmax < editPoint.canvasWidth) xmax = editPoint.canvasWidth;
@@ -34,40 +73,7 @@ function Navigator(props: Props) {
     let scaleY = (props.height - 80) / (ymax - ymin == 0 ? 2 : ymax - ymin);
 
     canvasCtx.clearRect(0, 0, props.width, props.height);
-    // 座標軸
-    canvasCtx.save();
-    canvasCtx.beginPath();
-    canvasCtx.strokeStyle = 'rgb(112, 112, 112)';
-    canvasCtx.lineWidth = 2;
-    canvasCtx.beginPath();
-    canvasCtx.moveTo(8, 16);
-    canvasCtx.lineTo(props.width - 16, 16);
-    canvasCtx.moveTo(20, 8);
-    canvasCtx.lineTo(20, props.height - 16);
-    canvasCtx.stroke();
-    canvasCtx.closePath();
-    canvasCtx.restore();
-
-    canvasCtx.save();
-    canvasCtx.beginPath();
-    canvasCtx.fillStyle = 'rgb(112, 112, 112)';
-    canvasCtx.font = "8px 'Futura', sans-serif";
-    canvasCtx.textBaseline = 'bottom';
-    for (let editPoint of props.editPoints) {
-      let x = getCanvasPos(editPoint.canvasWidth, xmin, scaleX);
-      let y = getCanvasPos(editPoint.canvasHeight, ymin, scaleY);
-      canvasCtx.moveTo(x, 16);
-      canvasCtx.arc(x, 16, 2, 0, 2 * Math.PI);
-      canvasCtx.moveTo(20, y);
-      canvasCtx.arc(20, y, 2, 0, 2 * Math.PI);
-      canvasCtx.textAlign = 'center';
-      canvasCtx.fillText(editPoint.canvasWidth.toString(), x, 14);
-      canvasCtx.textAlign = 'right';
-      canvasCtx.fillText(editPoint.canvasHeight.toString(), 18, y + 4);
-    }
-    canvasCtx.fill();
-    canvasCtx.closePath();
-    canvasCtx.restore();
+    drawCoordinate(canvasCtx, props.width, props.height, xmin, ymin, scaleX, scaleY, props.editPoints);
 
     // Point
     for (let i = 0; i < props.editPoints.length; i++) {
@@ -88,12 +94,12 @@ function Navigator(props: Props) {
     }
   }, [props.width, props.height, props.editPoints, props.selectedIndex])
 
-  function getCanvasPos(length: number, minP: number, scale: number) {
-    return (length - minP) * scale + 40;
-  }
-
   return (
-    <div className='navigator'>
+    <div className='navigator'
+      onClick={() => {
+        console.log('zoom in');
+      }}
+    >
       <canvas
         ref={canvasRefContainer}
         width={props.width}
@@ -117,6 +123,7 @@ function Navigator(props: Props) {
           background-color: #fff;
           width: ${props.width}px;
           height: ${props.height}px;
+          cursor: zoom-in;
         }
       `}</style>
     </div>

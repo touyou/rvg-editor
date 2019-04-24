@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import Slider from './slider';
 import Switch from './switch';
 import EditPoint from '../lib/editPoint';
+import CircleButton from './circleButton';
 
 type Props = {
   point: EditPoint;
@@ -33,9 +34,19 @@ function EditPanel(props: Props) {
   return (
     <div className='editpanel'>
       <div className='edit-buttons'>
-        <button className="circular-button" onClick={() => {
-          props.onAddPoint();
-        }}><img src='../static/keyframe-icon.svg'></img></button>
+        <CircleButton
+          border='none'
+          backgroundColor='#eee'
+          color='#fff'
+          onClick={() => {
+            props.onAddPoint();
+          }}
+        >
+          <img
+            src='../static/keyframe-icon.svg'
+            style={{ width: '1em', verticalAlign: 'middle' }}
+          />
+        </CircleButton>
       </div>
       <div className='edit-section'>
         <Slider
@@ -146,30 +157,6 @@ function EditPanel(props: Props) {
           margin-top: 8px;
           // margin-bottom: 3.5em;
         }
-        .circular-button {
-          display: inline-block;
-          width: 42px;
-          height: 42px;
-          overflow: hidden;
-          border-radius: 50%;
-          margin: 8px 8px;
-          padding-bottom: 4px;
-          font-size: 24px;
-          text-decoration: none;
-          vertical-align: middle;
-          text-align: center;
-          cursor: pointer;
-          white-space: nowrap;
-          border: none;
-          background-color: #eee;
-          transition: .5s;
-          outline: none;
-        }
-
-        .circular-button:hover {
-          background-color: #555;
-        }
-
         .edit-buttons img {
           width: 1em;
           vertical-align: middle;

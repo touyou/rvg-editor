@@ -6,6 +6,7 @@ import React, { useState, useRef } from 'react';
 import ImageCanvas from './imageCanvas';
 import EditPoint from 'lib/editPoint';
 import { NDArray } from '@bluemath/common/src';
+import CircleButton from './circleButton';
 
 type Props = {
   canvasWidth: number,
@@ -22,17 +23,27 @@ function Editor(props: Props) {
   return (
     <div className='editor'>
       <div className='scale-editor'>
-        <button className="circular-button minus" onClick={() => {
-          if (props.viewScale > 0.25) {
-            props.onChangeViewScale(props.viewScale - 0.25);
-          }
-        }}>-</button>
+        <CircleButton
+          border='none'
+          backgroundColor='#707070'
+          color='#fff'
+          onClick={() => {
+            if (props.viewScale > 0.25) {
+              props.onChangeViewScale(props.viewScale - 0.25);
+            }
+          }}
+        >-</CircleButton>
         <span>{(props.viewScale * 100).toFixed(0)} %</span>
-        <button className="circular-button plus" onClick={() => {
-          if (props.viewScale <= 2.75) {
-            props.onChangeViewScale(props.viewScale + 0.25);
-          }
-        }}>+</button>
+        <CircleButton
+          border='1px #333 solid'
+          backgroundColor='#fff'
+          color='#111'
+          onClick={() => {
+            if (props.viewScale <= 2.75) {
+              props.onChangeViewScale(props.viewScale + 0.25);
+            }
+          }}
+        >+</CircleButton>
       </div>
       <ImageCanvas
         canvasWidth={props.canvasWidth}
@@ -56,33 +67,6 @@ function Editor(props: Props) {
           top: 8px;
           left: 8px;
           z-index: 1;
-        }
-        .circular-button {
-          display: inline-block;
-          width: 42px;
-          height: 42px;
-          overflow: hidden;
-          border-radius: 50%;
-          margin: 8px 8px;
-          padding-bottom: 4px;
-          font-size: 24px;
-          text-decoration: none;
-          vertical-align: middle;
-          text-align: center;
-          cursor: pointer;
-          white-space: nowrap;
-          outline: none;
-        }
-
-        .minus {
-          border: none;
-          background-color: #707070;
-          color: #fff;
-        }
-        .plus {
-          border: 1px #333 solid;
-          background-color: #fff;
-          color: #111;
         }
         span {
           font-family: 'Futura', sans-serif;

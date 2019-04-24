@@ -6,6 +6,7 @@ import EditPoint from 'lib/editPoint';
 import { NDArray } from '@bluemath/common';
 import { MultiResizer } from 'lib/multi_resizer/multiResizer';
 import Resizable, { NumberSize } from 're-resizable';
+import CircleButton from './circleButton';
 
 type Props = {
   editPoints: EditPoint[];
@@ -74,29 +75,6 @@ function Preview(props: Props) {
       margin: auto;
       background-color: #fff;
     }
-    .circular-button {
-      display: inline-block;
-      width: 42px;
-      height: 42px;
-      overflow: hidden;
-      border-radius: 50%;
-      margin: 8px 8px;
-      padding-bottom: 4px;
-      font-size: 24px;
-      text-decoration: none;
-      vertical-align: middle;
-      text-align: center;
-      cursor: pointer;
-      white-space: nowrap;
-      outline: none;
-      border: none;
-      background-color: #707070;
-      color: #fff;
-    }
-    .circular-button img {
-      width: 1em;
-      vertical-align: middle;
-    }
   `;
 
   const sidePanelStyle = commonStyle + `
@@ -125,9 +103,18 @@ function Preview(props: Props) {
 
   return (
     <div className='preview'>
-      <button className="circular-button" onClick={() => {
-        props.onChangeMode();
-      }}><img src={props.isFullScreen ? '../static/scale-minus-icon.svg' : '../static/scale-plus-icon.svg'}></img></button>
+      <CircleButton
+        border='none'
+        backgroundColor='#707070'
+        color='#fff'
+        onClick={() => {
+          props.onChangeMode();
+        }}>
+        <img
+          src={props.isFullScreen ? '../static/scale-minus-icon.svg' : '../static/scale-plus-icon.svg'}
+          style={{ width: '1em', verticalAlign: 'middle' }}
+        />
+      </CircleButton>
       <Resizable
         style={{
           margin: 'auto'
