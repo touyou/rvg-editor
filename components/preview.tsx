@@ -74,8 +74,7 @@ function Preview(props: Props) {
       left: 0;
       margin: auto;
       background-color: #fff;
-    }
-  `;
+    }`;
 
   const sidePanelStyle = commonStyle + `
       .preview {
@@ -99,7 +98,7 @@ function Preview(props: Props) {
         transition: .2s;
       }`;
 
-  const style = (<style jsx>{props.isFullScreen ? fullScreenStyle : sidePanelStyle}</style>);
+  const style = props.isFullScreen ? (<style jsx>{fullScreenStyle}</style>) : (<style jsx>{sidePanelStyle}</style>);
 
   return (
     <div className='preview'>

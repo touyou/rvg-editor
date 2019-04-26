@@ -25,7 +25,7 @@ const CircleButton: FunctionComponent<Props> = (props) => {
           overflow: hidden;
           border-radius: 50%;
           margin: 8px 8px;
-          padding-bottom: 4px;
+          padding-bottom: 6px;
           font-size: 24px;
           text-decoration: none;
           vertical-align: middle;
@@ -38,7 +38,6 @@ const CircleButton: FunctionComponent<Props> = (props) => {
           color: ${props.color};
           transition: .2s;
         }
-
         .circular-button:hover {
           opacity: 0.2;
         }
