@@ -97,11 +97,12 @@ function ImageCanvas(props: Props) {
           left: 0;
           bottom: 0;
           margin: auto;
-          background-color: #ffffff;
+        }
+        canvas {
+          background-color: #fff;
         }
         .list-canvas {
           display: inline-block;
-          background-color: #fff;
           margin: 8px;
         }
         .selected {

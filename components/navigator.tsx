@@ -111,7 +111,7 @@ function Navigator(props: Props) {
   }
 
   function generateCanvasPreview() {
-    const margin = 8;
+    const margin = 16;
 
     let xSet = new Set();
     let ySet = new Set();
@@ -129,9 +129,10 @@ function Navigator(props: Props) {
       originX = margin;
       for (let x of sortedXSet) {
         let currentPoint: EditPoint = null;
-        for (let editPoint of props.editPoints) {
-          if (y == editPoint.canvasHeight && x == editPoint.canvasWidth) {
-            currentPoint = editPoint;
+        let i = 0;
+        for (; i < props.editPoints.length; i++) {
+          if (y == props.editPoints[i].canvasHeight && x == props.editPoints[i].canvasWidth) {
+            currentPoint = props.editPoints[i];
             break;
           }
         }
@@ -149,6 +150,7 @@ function Navigator(props: Props) {
                 currentEditPoint={currentPoint}
                 viewScale={1.0}
                 isEditable={false}
+                isSelected={i == props.selectedIndex}
                 onClick={(_) => { }}
               ></ImageCanvas>
               <style jsx>{`
@@ -157,8 +159,8 @@ function Navigator(props: Props) {
                   position: absolute;
                   top: ${originY}px;
                   left: ${originX}px;
-                  width: ${x}px;
-                  height: ${y}px;
+                  // width: ${x}px;
+                  // height: ${y}px;
                 }
               `}</style>
             </div>
@@ -188,7 +190,7 @@ function Navigator(props: Props) {
   `;
 
   const miniPanelStyle = `
-    canvas {
+    .nav-canvas {
       position: absolute;
       display: block;
       top: 0;
@@ -221,6 +223,7 @@ function Navigator(props: Props) {
     >
       <canvas
         ref={canvasRefContainer}
+        className='nav-canvas'
         width={props.width}
         height={props.height}
         hidden={isFullScreen}
