@@ -4,7 +4,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import EditPoint from 'lib/editPoint';
-import { NDArray, add, div, sub } from '@bluemath/common';
+import { NDArray } from '@bluemath/common';
 
 type Props = {
   canvasWidth: number,

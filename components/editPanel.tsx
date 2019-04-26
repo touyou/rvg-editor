@@ -47,6 +47,32 @@ function EditPanel(props: Props) {
             style={{ width: '1em', verticalAlign: 'middle' }}
           />
         </CircleButton>
+        <CircleButton
+          border='none'
+          backgroundColor='#eee'
+          color='#fff'
+          onClick={() => {
+            console.log('linear');
+          }}
+        >
+          <img
+            src='../static/linear.svg'
+            style={{ width: '1em', verticalAlign: 'middle' }}
+          />
+        </CircleButton>
+        <CircleButton
+          border='none'
+          backgroundColor='#eee'
+          color='#fff'
+          onClick={() => {
+            console.log('nonlinear');
+          }}
+        >
+          <img
+            src='../static/nonlinear.svg'
+            style={{ width: '1em', verticalAlign: 'middle' }}
+          />
+        </CircleButton>
       </div>
       <div className='edit-section'>
         <Slider
