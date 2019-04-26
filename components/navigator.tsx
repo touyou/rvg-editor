@@ -1,10 +1,12 @@
 /**
  * Navigate Point Panel
  */
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import EditPoint from '../lib/editPoint';
+import ImageCanvas from './atom/imageCanvas';
 
 type Props = {
+  image: ImageData;
   width: number;
   height: number;
   editPoints: EditPoint[];
@@ -56,6 +58,20 @@ function Navigator(props: Props) {
   const canvasRefContainer = useRef();
 
   useEffect(() => {
+    updateView();
+  }, [props.width, props.height, props.editPoints, props.selectedIndex])
+
+  const [isFullScreen, setFullScreen] = useState(false);
+  useEffect(updateView);
+
+  function updateView() {
+    console.log('update at ' + isFullScreen);
+    if (!isFullScreen) {
+      drawPoints();
+    }
+  }
+
+  function drawPoints() {
     const canvasCtx = (canvasRefContainer.current as HTMLCanvasElement).getContext('2d');
 
     let xmin: number;
@@ -92,40 +108,125 @@ function Navigator(props: Props) {
       canvasCtx.closePath();
       canvasCtx.restore();
     }
-  }, [props.width, props.height, props.editPoints, props.selectedIndex])
+  }
+
+  function generateCanvasPreview() {
+    const margin = 8;
+
+    let xSet = new Set();
+    let ySet = new Set();
+    for (let editPoint of props.editPoints) {
+      xSet.add(editPoint.canvasWidth);
+      ySet.add(editPoint.canvasHeight);
+    }
+
+    let canvasList = [];
+    let originY = margin;
+    let originX = margin;
+    const sortedYSet = Array.from(ySet).sort((a: number, b: number) => { return a - b; });
+    const sortedXSet = Array.from(xSet).sort((a: number, b: number) => { return a - b; });
+    for (let y of sortedYSet) {
+      originX = margin;
+      for (let x of sortedXSet) {
+        let currentPoint: EditPoint = null;
+        for (let editPoint of props.editPoints) {
+          if (y == editPoint.canvasHeight && x == editPoint.canvasWidth) {
+            currentPoint = editPoint;
+            break;
+          }
+        }
+        if (currentPoint !== null) {
+          canvasList.push(
+            <div
+              key={'wrapper' + x.toString() + ',' + y.toString()}
+              className='wrapper'
+            >
+              <ImageCanvas
+                key={'canvas' + x.toString() + ',' + y.toString()}
+                canvasWidth={x}
+                canvasHeight={y}
+                image={props.image}
+                currentEditPoint={currentPoint}
+                viewScale={1.0}
+                isEditable={false}
+                onClick={(_) => { }}
+              ></ImageCanvas>
+              <style jsx>{`
+                .wrapper {
+                  display: block;
+                  position: absolute;
+                  top: ${originY}px;
+                  left: ${originX}px;
+                  width: ${x}px;
+                  height: ${y}px;
+                }
+              `}</style>
+            </div>
+          );
+        }
+        originX += margin + x;
+      }
+      originY += margin + y;
+    }
+
+    return canvasList;
+  }
+
+  const fullScreenStyle = `
+    .navigator {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: scroll;
+      background-color: #eee;
+      z-index: 100;
+      transition: .2s;
+      cursor: ${'zoom-out'};
+    }
+  `;
+
+  const miniPanelStyle = `
+    canvas {
+      position: absolute;
+      display: block;
+      top: 0;
+      left: 0;
+      margin: auto;
+    }
+    .navigator {
+      position: absolute;
+      top: 0;
+      right: 0;
+      margin: 16px;
+      border-radius: 5px;
+      border: 2px #707070 solid;
+      background-color: #fff;
+      width: ${props.width}px;
+      height: ${props.height}px;
+      cursor: ${'zoom-in'};
+    }`;
+
+  const style = isFullScreen ? (<style jsx>{fullScreenStyle}</style>) : (<style jsx>{miniPanelStyle}</style>);
+  const canvasList = generateCanvasPreview();
+
+  console.log(canvasList);
 
   return (
     <div className='navigator'
       onClick={() => {
-        console.log('zoom in');
+        setFullScreen(!isFullScreen);
       }}
     >
       <canvas
         ref={canvasRefContainer}
         width={props.width}
         height={props.height}
+        hidden={isFullScreen}
       ></canvas>
-      <style jsx>{`
-        canvas {
-          position: absolute;
-          display: block;
-          top: 0;
-          left: 0;
-          margin: auto;
-        }
-        .navigator {
-          position: absolute;
-          top: 0;
-          right: 0;
-          margin: 16px;
-          border-radius: 5px;
-          border: 2px #707070 solid;
-          background-color: #fff;
-          width: ${props.width}px;
-          height: ${props.height}px;
-          cursor: zoom-in;
-        }
-      `}</style>
+      {isFullScreen ? canvasList : null}
+      {style}
     </div>
   );
 }

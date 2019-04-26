@@ -195,6 +195,7 @@ class Main extends React.Component<{}, IMainState> {
             {canvasList}
           </div>
           <Navigator
+            image={this.state.image}
             width={200}
             height={200}
             editPoints={this.state.pointList}
