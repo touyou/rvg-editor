@@ -1,6 +1,7 @@
 import { MultiResizer } from './multi_resizer/multiResizer';
 import EditPoint from './editPoint';
 import SeamCarver from './seamCarver';
+import { RbfResizer } from './multi_resizer/newResizer';
 
 type Key = {
   key: number;
@@ -68,7 +69,7 @@ export class Resizer {
         horizontalSeamMap: seamCarver.consistentHorizontalMap,
       });
     } else {
-      return new MultiResizer(seamCarver.image, {});
+      return new RbfResizer();
     }
   }
 }

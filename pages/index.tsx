@@ -48,6 +48,7 @@ interface IMainState {
   inputWidth: number,
   inputHeight: number,
   previewFullScreen: boolean,
+  resizeMode: number;
 }
 
 class Main extends React.Component<{}, IMainState> {
@@ -62,6 +63,7 @@ class Main extends React.Component<{}, IMainState> {
     inputWidth: 0,
     inputHeight: 0,
     previewFullScreen: false,
+    resizeMode: 0,
   };
   private _seamCarver: SeamCarver;
   private _resizer: Resizer;
@@ -137,36 +139,36 @@ class Main extends React.Component<{}, IMainState> {
           <meta name="viewport" content="initial-scale=1.0, width=device-width" key="viewport" />
           <style>
             {`
-@font-face {
-  font-family: 'Futura';
-  src: url('../static/Futura-Lig.ttf') format('truetype');
-  font-weight: 300;
-}
-@font-face {
-  font-family: 'Futura';
-  src: url('../static/Futura-Boo.ttf') format('truetype');
-  font-weight: 400;
-}
-@font-face {
-  font-family: 'Futura';
-  src: url('../static/Futura-Med.ttf') format('truetype');
-  font-weight: 500;
-}
-@font-face {
-  font-family: 'Futura';
-  src: url('../static/Futura-Dem.ttf') format('truetype');
-  font-weight: 600;
-}
-@font-face {
-  font-family: 'Futura';
-  src: url('../static/Futura-Bol.ttf') format('truetype');
-  font-weight: 700;
-}
-@font-face {
-  font-family: 'Futura';
-  src: url('../static/Futura-ExtBol.ttf') format('truetype');
-  font-weight: 800;
-}
+              @font-face {
+                font-family: 'Futura';
+                src: url('../static/Futura-Lig.ttf') format('truetype');
+                font-weight: 300;
+              }
+              @font-face {
+                font-family: 'Futura';
+                src: url('../static/Futura-Boo.ttf') format('truetype');
+                font-weight: 400;
+              }
+              @font-face {
+                font-family: 'Futura';
+                src: url('../static/Futura-Med.ttf') format('truetype');
+                font-weight: 500;
+              }
+              @font-face {
+                font-family: 'Futura';
+                src: url('../static/Futura-Dem.ttf') format('truetype');
+                font-weight: 600;
+              }
+              @font-face {
+                font-family: 'Futura';
+                src: url('../static/Futura-Bol.ttf') format('truetype');
+                font-weight: 700;
+              }
+              @font-face {
+                font-family: 'Futura';
+                src: url('../static/Futura-ExtBol.ttf') format('truetype');
+                font-weight: 800;
+              }
             `}
           </style>
         </Head>
@@ -209,6 +211,7 @@ class Main extends React.Component<{}, IMainState> {
             height={this.state.image != null ? this.state.image.height : 0}
             image={this.state.image}
             resizer={this._seamCarver != null ? this._resizer.getResizer(true, this.state.pointList, this._seamCarver) : null}
+            resizeMode={this.state.resizeMode}
             onChangeMode={() => {
               this.setState({ previewFullScreen: !this.state.previewFullScreen });
             }}
@@ -218,6 +221,7 @@ class Main extends React.Component<{}, IMainState> {
             point={this.currentPoint}
             imageWidth={this.state.image != null ? this.state.image.width : 0}
             imageHeight={this.state.image != null ? this.state.image.height : 0}
+            resizeMode={this.state.resizeMode}
             onAddPoint={() => {
               this.setState({
                 isModalOpen: true,
@@ -229,7 +233,13 @@ class Main extends React.Component<{}, IMainState> {
               this.setState({
                 pointList: pointCopy
               });
-            }}></EditPanel>
+            }}
+            onMethodChange={(value) => {
+              this.setState({
+                resizeMode: value,
+              })
+            }}
+          ></EditPanel>
         </div>
         <div className={this.state.isModalOpen ? 'modal' : 'close'}>
           <div className='device-list'>

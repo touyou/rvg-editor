@@ -11,7 +11,9 @@ type Props = {
   point: EditPoint;
   imageWidth: number;
   imageHeight: number;
+  resizeMode: number;
   onChange: (EditPoint) => void;
+  onMethodChange: (number) => void;
   onAddPoint: () => void;
 }
 
@@ -49,10 +51,10 @@ function EditPanel(props: Props) {
         </CircleButton>
         <CircleButton
           border='none'
-          backgroundColor='#eee'
+          backgroundColor={props.resizeMode == 0 ? '#253158' : '#eee'}
           color='#fff'
           onClick={() => {
-            console.log('linear');
+            props.onMethodChange(0);
           }}
         >
           <img
@@ -62,10 +64,10 @@ function EditPanel(props: Props) {
         </CircleButton>
         <CircleButton
           border='none'
-          backgroundColor='#eee'
+          backgroundColor={props.resizeMode == 1 ? '#253158' : '#eee'}
           color='#fff'
           onClick={() => {
-            console.log('nonlinear');
+            props.onMethodChange(1);
           }}
         >
           <img
@@ -181,7 +183,6 @@ function EditPanel(props: Props) {
         }
         .edit-section {
           margin-top: 8px;
-          // margin-bottom: 3.5em;
         }
         .edit-buttons img {
           width: 1em;
@@ -192,4 +193,4 @@ function EditPanel(props: Props) {
   )
 }
 
-export default EditPanel;
+export default React.memo(EditPanel);

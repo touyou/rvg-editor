@@ -2,20 +2,22 @@
  * Preview Screen
  */
 import React, { useRef, useEffect, useState } from 'react';
-import EditPoint from 'lib/editPoint';
+import EditPoint from '../lib/editPoint';
 import { NDArray } from '@bluemath/common';
-import { MultiResizer } from 'lib/multi_resizer/multiResizer';
+import { MultiResizer, BaseResizer } from '../lib/multi_resizer/multiResizer';
 import Resizable, { NumberSize } from 're-resizable';
 import CircleButton from './atom/circleButton';
 import ListButton from './atom/listButton';
 import { templates, Device } from '../lib/templateSize';
+import { RbfResizer } from '../lib/multi_resizer/newResizer';
 
 type Props = {
   editPoints: EditPoint[];
   width: number;
   height: number;
   image: ImageData;
-  resizer?: MultiResizer;
+  resizer?: BaseResizer;
+  resizeMode: number;
   onChangeMode: () => void;
   isFullScreen: boolean;
 }
@@ -37,20 +39,23 @@ function Preview(props: Props) {
 
   function updateImage() {
     if (props.image != null && props.resizer != null) {
-      const originPoint = new NDArray([props.resizer.originX(canvasWidth), props.resizer.originY(canvasHeight)]);
-      const scaleX = props.resizer.scaleX(canvasWidth) * getScale();
-      const scaleY = props.resizer.scaleY(canvasHeight) * getScale();
+      let resizer: MultiResizer = props.resizer as MultiResizer;
+      const originPoint = new NDArray([resizer.originX(canvasWidth), resizer.originY(canvasHeight)]);
+      const scaleX = resizer.scaleX(canvasWidth) * getScale();
+      const scaleY = resizer.scaleY(canvasHeight) * getScale();
       drawImage(canvasWidth, canvasHeight, originPoint, scaleX, scaleY);
     }
   }
 
   function drawImage(width: number, height: number, origin: NDArray, hScale: number, vScale: number) {
+    let resizer: MultiResizer = props.resizer as MultiResizer;
+
     // Initialize
     const imageCanvas = document.createElement('canvas');
     const imageCtx = imageCanvas.getContext('2d');
     const canvasCtx = (canvasRefContainer.current as HTMLCanvasElement).getContext('2d');
     canvasCtx.clearRect(0, 0, width, height);
-    const newImage = props.resizer.seamImageData(width, height);
+    const newImage = resizer.seamImageData(width, height);
 
     // Prepare Image
     imageCanvas.width = newImage.width;
