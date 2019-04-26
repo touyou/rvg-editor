@@ -7,6 +7,8 @@ import { NDArray } from '@bluemath/common';
 import { MultiResizer } from 'lib/multi_resizer/multiResizer';
 import Resizable, { NumberSize } from 're-resizable';
 import CircleButton from './atom/circleButton';
+import ListButton from './atom/listButton';
+import { templates, Device } from '../lib/templateSize';
 
 type Props = {
   editPoints: EditPoint[];
@@ -22,6 +24,7 @@ function Preview(props: Props) {
   const canvasRefContainer = useRef();
   const [canvasWidth, setCanvasWidth] = useState(props.width);
   const [canvasHeight, setCanvasHeight] = useState(props.height);
+  const [isSizeList, setSizeList] = useState(false);
 
   useEffect(() => {
     setTimeout(updateImage, 10);
@@ -72,7 +75,7 @@ function Preview(props: Props) {
       right: 0;
       bottom: 0;
       left: 0;
-      margin: auto;
+      margin: 8px;
       background-color: #fff;
     }`;
 
@@ -100,6 +103,25 @@ function Preview(props: Props) {
 
   const style = props.isFullScreen ? (<style jsx>{fullScreenStyle}</style>) : (<style jsx>{sidePanelStyle}</style>);
 
+  const sizeList = [
+    <ListButton key='original-button' onClick={() => {
+      setCanvasHeight(props.image.height);
+      setCanvasWidth(props.image.width);
+      setTimeout(updateImage, 10);
+    }} value='Original'></ListButton>
+  ];
+  Object.entries(templates).forEach((value) => {
+    const key: string = value[0];
+    const device: Device = value[1];
+    sizeList.push(
+      <ListButton key={key} onClick={() => {
+        setCanvasWidth(device.width);
+        setCanvasHeight(device.height);
+        setTimeout(updateImage, 10);
+      }} value={device.name}></ListButton>
+    );
+  });
+
   return (
     <div className='preview'>
       <CircleButton
@@ -114,6 +136,50 @@ function Preview(props: Props) {
           style={{ width: '1em', verticalAlign: 'middle' }}
         />
       </CircleButton>
+      {props.isFullScreen ?
+        (<div className='devices'>
+          <div
+            className='handle'
+            onClick={() => {
+              setSizeList(!isSizeList);
+            }}
+          >
+          </div>
+          {isSizeList ? (<div className='size-wrapper'>{sizeList}</div>) : null}
+          <style jsx>{`
+          .handle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: ${isSizeList ? ((Object.entries(templates).length + 1) * 61).toString() + 'px' : '100%'};
+            vertical-align: middle;
+            cursor: pointer;
+            transition: .2s;
+            background-color: #888;
+          }
+          .handle:hover {
+            background-color: #ddd;
+          }
+          .devices {
+            position: fixed;
+            top: 0;
+            right: 0;
+            display: block;
+            overflow-y: scroll;
+            overflow-x: fixed;
+            width: ${isSizeList ? '20%' : '20px'};
+            height: 100%;
+            background-color: #fff;
+            z-index: 10;
+            transition: .2s;
+            box-shadow: 0 0 3px 5px rgba(0,0,0,0.1);
+          }
+          .size-wrapper {
+            padding-left: 20px;
+          }
+        `}</style>
+        </div>) : null}
       <Resizable
         style={{
           margin: 'auto'
