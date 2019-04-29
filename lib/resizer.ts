@@ -69,7 +69,7 @@ export class Resizer {
         horizontalSeamMap: seamCarver.consistentHorizontalMap,
       });
     } else {
-      return new RbfResizer(seamCarver.image, editPoints);
+      return new RbfResizer(seamCarver.image, editPoints, seamCarver.consistentHorizontalMap, seamCarver.consistentVerticalMap);
     }
   }
 }
