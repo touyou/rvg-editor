@@ -184,7 +184,7 @@ class Main extends React.Component<{}, IMainState> {
             width={this.state.image != null ? this.state.image.width : 0}
             height={this.state.image != null ? this.state.image.height : 0}
             image={this.state.image}
-            resizer={this._seamCarver != null ? this._resizer.getResizer(true, this.state.pointList, this._seamCarver) : null}
+            resizer={this._seamCarver != null ? this._resizer.getResizer(this.state.resizeMode == 0, this.state.pointList, this._seamCarver) : null}
             resizeMode={this.state.resizeMode}
             onChangeMode={() => {
               this.setState({ previewFullScreen: !this.state.previewFullScreen });

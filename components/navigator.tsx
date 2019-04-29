@@ -65,7 +65,7 @@ function Navigator(props: Props) {
   useEffect(updateView);
 
   function updateView() {
-    console.log('update at ' + isFullScreen);
+    // console.log('update at ' + isFullScreen);
     if (!isFullScreen) {
       drawPoints();
     }
@@ -212,8 +212,6 @@ function Navigator(props: Props) {
 
   const style = isFullScreen ? (<style jsx>{fullScreenStyle}</style>) : (<style jsx>{miniPanelStyle}</style>);
   const canvasList = generateCanvasPreview();
-
-  console.log(canvasList);
 
   return (
     <div className='navigator'

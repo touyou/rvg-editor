@@ -39,23 +39,34 @@ function Preview(props: Props) {
 
   function updateImage() {
     if (props.image != null && props.resizer != null) {
-      let resizer: MultiResizer = props.resizer as MultiResizer;
-      const originPoint = new NDArray([resizer.originX(canvasWidth), resizer.originY(canvasHeight)]);
-      const scaleX = resizer.scaleX(canvasWidth) * getScale();
-      const scaleY = resizer.scaleY(canvasHeight) * getScale();
-      drawImage(canvasWidth, canvasHeight, originPoint, scaleX, scaleY);
+      if (props.resizer.constructor === MultiResizer) {
+        let resizer: MultiResizer = props.resizer as MultiResizer;
+        const originPoint = new NDArray([resizer.originX(canvasWidth), resizer.originY(canvasHeight)]);
+        const scaleX = resizer.scaleX(canvasWidth) * getScale();
+        const scaleY = resizer.scaleY(canvasHeight) * getScale();
+        drawImage(canvasWidth, canvasHeight, originPoint, scaleX, scaleY);
+      } else {
+        let resizer: RbfResizer = props.resizer as RbfResizer;
+        const originPoint = new NDArray([resizer.originX(canvasWidth, canvasHeight), resizer.originY(canvasWidth, canvasHeight)]);
+        const scaleX = resizer.hScale(canvasWidth, canvasHeight) * getScale();
+        const scaleY = resizer.vScale(canvasWidth, canvasHeight) * getScale();
+        drawImage(canvasWidth, canvasHeight, originPoint, scaleX, scaleY);
+      }
     }
   }
 
   function drawImage(width: number, height: number, origin: NDArray, hScale: number, vScale: number) {
-    let resizer: MultiResizer = props.resizer as MultiResizer;
-
     // Initialize
     const imageCanvas = document.createElement('canvas');
     const imageCtx = imageCanvas.getContext('2d');
     const canvasCtx = (canvasRefContainer.current as HTMLCanvasElement).getContext('2d');
     canvasCtx.clearRect(0, 0, width, height);
-    const newImage = resizer.seamImageData(width, height);
+    let newImage: ImageData;
+    if (props.resizer.constructor === MultiResizer) {
+      newImage = (props.resizer as MultiResizer).seamImageData(width, height);
+    } else {
+      newImage = (props.resizer as RbfResizer).seamImageData(width, height);
+    }
 
     // Prepare Image
     imageCanvas.width = newImage.width;
