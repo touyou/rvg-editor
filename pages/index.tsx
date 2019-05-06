@@ -46,11 +46,11 @@ class Main extends React.Component<{}, IMainState> {
     return this.state.pointList[this.state.selectIndex]
   }
 
-  componentDidMount() {
+  loadImage(url) {
     const tmpCanvas = document.createElement('canvas');
     const tmpCtx = tmpCanvas.getContext('2d');
     let image = new Image();
-    image.src = 'static/bicycle2.png';
+    image.src = url;
     image.onload = () => {
       tmpCanvas.width = image.naturalWidth;
       tmpCanvas.height = image.naturalHeight;
@@ -212,6 +212,9 @@ class Main extends React.Component<{}, IMainState> {
               this.setState({
                 resizeMode: value,
               })
+            }}
+            onLoadImage={(value) => {
+              this.loadImage(value);
             }}
           ></EditPanel>
         </div>

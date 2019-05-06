@@ -15,18 +15,53 @@ type Props = {
   onChange: (EditPoint) => void;
   onMethodChange: (number) => void;
   onAddPoint: () => void;
+  onLoadImage: (string) => void;
 }
 
 function EditPanel(props: Props) {
   const [isLocked, setIsLocked] = useState(false);
 
+  const loadButton = (
+    <CircleButton
+      border='none'
+      backgroundColor='#eee'
+      color='#fff'
+      onClick={() => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/x-png,image/jpeg'
+        input.onchange = (event: any) => {
+          const files = event.target.files
+          if (files.length == 0) {
+            return;
+          }
+          props.onLoadImage(URL.createObjectURL(files[0]));
+        }
+        input.click();
+      }}
+    >
+      <img
+        src='../static/keyframe-icon.svg'
+        style={{ width: '1em', verticalAlign: 'middle' }}
+      />
+    </CircleButton>
+  );
+
   if (props.point == null) {
     return (
       <div className='editpanel'>
+        <div className='edit-buttons'>
+          {loadButton}
+        </div>
         <style jsx>{`
         .editpanel {
           flex: 1 1 auto;
           padding: 8px;
+          background-color: #707070;
+        }
+        .edit-buttons img {
+          width: 1em;
+          vertical-align: middle;
         }
         `}</style>
       </div >
@@ -36,6 +71,7 @@ function EditPanel(props: Props) {
   return (
     <div className='editpanel'>
       <div className='edit-buttons'>
+        {loadButton}
         <CircleButton
           border='none'
           backgroundColor='#eee'
