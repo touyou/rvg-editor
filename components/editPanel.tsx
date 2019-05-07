@@ -15,7 +15,7 @@ type Props = {
   onChange: (EditPoint) => void;
   onMethodChange: (number) => void;
   onAddPoint: () => void;
-  onLoadImage: (string) => void;
+  onLoadImage: (value: string, name: string) => void;
 }
 
 function EditPanel(props: Props) {
@@ -35,13 +35,13 @@ function EditPanel(props: Props) {
           if (files.length == 0) {
             return;
           }
-          props.onLoadImage(URL.createObjectURL(files[0]));
+          props.onLoadImage(URL.createObjectURL(files[0]), files[0].name);
         }
         input.click();
       }}
     >
       <img
-        src='../static/keyframe-icon.svg'
+        src='../static/file-icon.svg'
         style={{ width: '1em', verticalAlign: 'middle' }}
       />
     </CircleButton>
@@ -72,6 +72,19 @@ function EditPanel(props: Props) {
     <div className='editpanel'>
       <div className='edit-buttons'>
         {loadButton}
+        <CircleButton
+          border='none'
+          backgroundColor='#eee'
+          color='#fff'
+          onClick={() => {
+            console.log('save');
+          }}
+        >
+          <img
+            src='../static/save-icon.svg'
+            style={{ width: '1em', verticalAlign: 'middle' }}
+          />
+        </CircleButton>
         <CircleButton
           border='none'
           backgroundColor='#eee'

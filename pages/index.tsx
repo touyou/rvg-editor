@@ -23,6 +23,7 @@ interface IMainState {
   inputHeight: number,
   previewFullScreen: boolean,
   resizeMode: number;
+  imageName: string;
 }
 
 class Main extends React.Component<{}, IMainState> {
@@ -38,6 +39,7 @@ class Main extends React.Component<{}, IMainState> {
     inputHeight: 0,
     previewFullScreen: false,
     resizeMode: 0,
+    imageName: 'image.rvg',
   };
   private _seamCarver: SeamCarver;
   private _resizer: Resizer;
@@ -213,8 +215,12 @@ class Main extends React.Component<{}, IMainState> {
                 resizeMode: value,
               })
             }}
-            onLoadImage={(value) => {
+            onLoadImage={(value, name) => {
               this.loadImage(value);
+              const img = name.replace(/\.(png|svg|jpg|jpeg|gif|bmp|tiff)/, '') + '.rvg';
+              this.setState({
+                imageName: img,
+              })
             }}
           ></EditPanel>
         </div>
