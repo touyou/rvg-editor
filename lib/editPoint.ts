@@ -27,4 +27,17 @@ export default class EditPoint {
     result.vScale = this.vScale;
     return result;
   }
+
+  convertObject() {
+    return {
+      width: this.canvasWidth,
+      height: this.canvasHeight,
+      originX: this.x,
+      originY: this.y,
+      hScale: this.hScale,
+      vScale: this.vScale,
+      contentWidth: this.contentWidth,
+      contentHeight: this.contentHeight,
+    };
+  }
 }

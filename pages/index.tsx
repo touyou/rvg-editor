@@ -222,6 +222,9 @@ class Main extends React.Component<{}, IMainState> {
                 imageName: img,
               })
             }}
+            onSaveFile={() => {
+              this._resizer.saveFiles(this.state.resizeMode == 0, this.state.pointList, this._seamCarver, this.state.imageName);
+            }}
           ></EditPanel>
         </div>
         <div className={this.state.isModalOpen ? 'modal' : 'close'}>

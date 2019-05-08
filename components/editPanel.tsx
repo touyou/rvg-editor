@@ -16,6 +16,7 @@ type Props = {
   onMethodChange: (number) => void;
   onAddPoint: () => void;
   onLoadImage: (value: string, name: string) => void;
+  onSaveFile: () => void;
 }
 
 function EditPanel(props: Props) {
@@ -77,7 +78,7 @@ function EditPanel(props: Props) {
           backgroundColor='#eee'
           color='#fff'
           onClick={() => {
-            console.log('save');
+            props.onSaveFile();
           }}
         >
           <img
