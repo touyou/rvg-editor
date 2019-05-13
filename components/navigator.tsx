@@ -11,6 +11,14 @@ type Props = {
   height: number;
   editPoints: EditPoint[];
   selectedIndex: number;
+  isLinear: boolean;
+};
+
+type Key = {
+  key: number;
+  origin: number;
+  scale: number;
+  contentLength: number;
 };
 
 function getCanvasPos(length: number, minP: number, scale: number) {
@@ -52,6 +60,47 @@ function drawCoordinate(canvasCtx: CanvasRenderingContext2D, width: number, heig
   canvasCtx.fill();
   canvasCtx.closePath();
   canvasCtx.restore();
+}
+
+function makeShadowPoints(editPoints: EditPoint[]) {
+  let xKey: Key[] = [];
+  let yKey: Key[] = [];
+  let pointSet = new Set();
+  for (const editPoint of editPoints) {
+    xKey.push({
+      key: editPoint.canvasWidth,
+      origin: editPoint.x,
+      scale: editPoint.hScale,
+      contentLength: editPoint.contentWidth,
+    });
+    yKey.push({
+      key: editPoint.canvasHeight,
+      origin: editPoint.y,
+      scale: editPoint.vScale,
+      contentLength: editPoint.contentHeight,
+    });
+    pointSet.add(editPoint.canvasWidth + ',' + editPoint.canvasHeight);
+  }
+  xKey.sort((a, b) => {
+    if (a.key < b.key) return -1;
+    if (a.key > b.key) return 1;
+    return 0;
+  })
+  yKey.sort((a, b) => {
+    if (a.key < b.key) return -1;
+    if (a.key > b.key) return 1;
+    return 0;
+  })
+  let newEditPoints: EditPoint[] = [];
+  for (const x of xKey) {
+    for (const y of yKey) {
+      const editPoint = new EditPoint(x.key, y.key, x.origin, y.origin, x.contentLength, y.contentLength);
+      editPoint.hScale = x.scale;
+      editPoint.vScale = y.scale;
+      if (!pointSet.has(editPoint.canvasWidth + ',' + editPoint.canvasHeight)) newEditPoints.push(editPoint);
+    }
+  }
+  return newEditPoints;
 }
 
 function Navigator(props: Props) {
@@ -108,33 +157,72 @@ function Navigator(props: Props) {
       canvasCtx.closePath();
       canvasCtx.restore();
     }
+    if (props.isLinear) {
+      let shadowPoints = makeShadowPoints(props.editPoints);
+      for (let i = 0; i < shadowPoints.length; i++) {
+        let x = getCanvasPos(shadowPoints[i].canvasWidth, xmin, scaleX);
+        let y = getCanvasPos(shadowPoints[i].canvasHeight, ymin, scaleY);
+        canvasCtx.save();
+        canvasCtx.beginPath();
+        canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+        canvasCtx.moveTo(x, y);
+        canvasCtx.arc(x, y, 4, 0, 2 * Math.PI);
+        canvasCtx.fill();
+        canvasCtx.closePath();
+        canvasCtx.restore();
+      }
+    }
   }
 
   function generateCanvasPreview() {
     const margin = 16;
+    let xKey: Key[] = [];
+    let yKey: Key[] = [];
 
-    let xSet = new Set();
-    let ySet = new Set();
     for (let editPoint of props.editPoints) {
-      xSet.add(editPoint.canvasWidth);
-      ySet.add(editPoint.canvasHeight);
+
+      xKey.push({
+        key: editPoint.canvasWidth,
+        origin: editPoint.x,
+        scale: editPoint.hScale,
+        contentLength: editPoint.contentWidth,
+      });
+      yKey.push({
+        key: editPoint.canvasHeight,
+        origin: editPoint.y,
+        scale: editPoint.vScale,
+        contentLength: editPoint.contentHeight,
+      });
     }
 
     let canvasList = [];
     let originY = margin;
     let originX = margin;
-    const sortedYSet = Array.from(ySet).sort((a: number, b: number) => { return a - b; });
-    const sortedXSet = Array.from(xSet).sort((a: number, b: number) => { return a - b; });
-    for (let y of sortedYSet) {
+    xKey.sort((a, b) => {
+      if (a.key < b.key) return -1;
+      if (a.key > b.key) return 1;
+      return 0;
+    })
+    yKey.sort((a, b) => {
+      if (a.key < b.key) return -1;
+      if (a.key > b.key) return 1;
+      return 0;
+    })
+    for (let y of yKey) {
       originX = margin;
-      for (let x of sortedXSet) {
+      for (let x of xKey) {
         let currentPoint: EditPoint = null;
         let i = 0;
         for (; i < props.editPoints.length; i++) {
-          if (y == props.editPoints[i].canvasHeight && x == props.editPoints[i].canvasWidth) {
+          if (y.key == props.editPoints[i].canvasHeight && x.key == props.editPoints[i].canvasWidth) {
             currentPoint = props.editPoints[i];
             break;
           }
+        }
+        if (props.isLinear && currentPoint === null) {
+          currentPoint = new EditPoint(x.key, y.key, x.origin, y.origin, x.contentLength, y.contentLength);
+          currentPoint.hScale = x.scale;
+          currentPoint.vScale = y.scale;
         }
         if (currentPoint !== null) {
           canvasList.push(
@@ -144,8 +232,8 @@ function Navigator(props: Props) {
             >
               <ImageCanvas
                 key={'canvas' + x.toString() + ',' + y.toString()}
-                canvasWidth={x}
-                canvasHeight={y}
+                canvasWidth={x.key}
+                canvasHeight={y.key}
                 image={props.image}
                 currentEditPoint={currentPoint}
                 viewScale={1.0}
@@ -166,9 +254,9 @@ function Navigator(props: Props) {
             </div>
           );
         }
-        originX += margin + x;
+        originX += margin + x.key;
       }
-      originY += margin + y;
+      originY += margin + y.key;
     }
 
     return canvasList;

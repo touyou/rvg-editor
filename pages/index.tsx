@@ -48,6 +48,10 @@ class Main extends React.Component<{}, IMainState> {
     return this.state.pointList[this.state.selectIndex]
   }
 
+  get isLinear() {
+    return this.state.resizeMode == 0;
+  }
+
   loadImage(url) {
     const tmpCanvas = document.createElement('canvas');
     const tmpCtx = tmpCanvas.getContext('2d');
@@ -178,6 +182,7 @@ class Main extends React.Component<{}, IMainState> {
             height={200}
             editPoints={this.state.pointList}
             selectedIndex={this.state.selectIndex}
+            isLinear={this.isLinear}
           ></Navigator>
         </div>
         <div className='sidepanel'>
@@ -186,7 +191,7 @@ class Main extends React.Component<{}, IMainState> {
             width={this.state.image != null ? this.state.image.width : 0}
             height={this.state.image != null ? this.state.image.height : 0}
             image={this.state.image}
-            resizer={this._seamCarver != null ? this._resizer.getResizer(this.state.resizeMode == 0, this.state.pointList, this._seamCarver) : null}
+            resizer={this._seamCarver != null ? this._resizer.getResizer(this.isLinear, this.state.pointList, this._seamCarver) : null}
             resizeMode={this.state.resizeMode}
             onChangeMode={() => {
               this.setState({ previewFullScreen: !this.state.previewFullScreen });
@@ -223,7 +228,7 @@ class Main extends React.Component<{}, IMainState> {
               })
             }}
             onSaveFile={() => {
-              this._resizer.saveFiles(this.state.resizeMode == 0, this.state.pointList, this._seamCarver, this.state.imageName);
+              this._resizer.saveFiles(this.isLinear, this.state.pointList, this._seamCarver, this.state.imageName);
             }}
           ></EditPanel>
         </div>

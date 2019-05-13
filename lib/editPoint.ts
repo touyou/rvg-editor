@@ -9,6 +9,8 @@ export default class EditPoint {
   contentWidth: number;
   contentHeight: number;
 
+  isShadow: boolean;
+
   constructor(canvasWidth: number, canvasHeight: number, x: number, y: number, contentWidth: number, contentHeight: number) {
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
@@ -19,6 +21,7 @@ export default class EditPoint {
     this.vScale = 1.0;
     this.contentWidth = contentWidth;
     this.contentHeight = contentHeight;
+    this.isShadow = false;
   }
 
   clone(): EditPoint {
