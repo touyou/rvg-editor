@@ -128,36 +128,6 @@ function EditPanel(props: Props) {
       </div>
       <div className='edit-section'>
         <Slider
-          title='Canvas Width'
-          imageName='static/canvas_width.svg'
-          unit='px'
-          min={0}
-          max={3840}
-          value={props.point.canvasWidth}
-          step={1}
-          onChange={(value) => {
-            const newValue = props.point.clone();
-            newValue.canvasWidth = value;
-            props.onChange(newValue);
-          }}
-        />
-        <Slider
-          title='Canvas Height'
-          imageName='static/canvas_height.svg'
-          unit='px'
-          min={0}
-          max={3840}
-          value={props.point.canvasHeight}
-          step={1}
-          onChange={(value) => {
-            const newValue = props.point.clone();
-            newValue.canvasHeight = value;
-            props.onChange(newValue);
-          }}
-        />
-      </div>
-      <div className='edit-section'>
-        <Slider
           title='Horizontal Scale'
           imageName='static/width_scale.svg'
           unit='x'
@@ -221,6 +191,36 @@ function EditPanel(props: Props) {
           onChange={(value) => {
             const newValue = props.point.clone();
             newValue.contentHeight = value;
+            props.onChange(newValue);
+          }}
+        />
+      </div>
+      <div className='edit-section'>
+        <Slider
+          title='Canvas Width'
+          imageName='static/canvas_width.svg'
+          unit='px'
+          min={0}
+          max={3840}
+          value={props.point.canvasWidth}
+          step={1}
+          onChange={(value) => {
+            const newValue = props.point.clone();
+            newValue.canvasWidth = value;
+            props.onChange(newValue);
+          }}
+        />
+        <Slider
+          title='Canvas Height'
+          imageName='static/canvas_height.svg'
+          unit='px'
+          min={0}
+          max={3840}
+          value={props.point.canvasHeight}
+          step={1}
+          onChange={(value) => {
+            const newValue = props.point.clone();
+            newValue.canvasHeight = value;
             props.onChange(newValue);
           }}
         />

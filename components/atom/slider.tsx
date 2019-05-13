@@ -3,6 +3,7 @@
  */
 
 import React, { useState } from 'react';
+import CircleButton from './circleButton';
 
 type Props = {
   title: string;
@@ -12,14 +13,35 @@ type Props = {
   max: number;
   value: number;
   step: number;
-  onChange: (number) => void;
+  onChange: (number: number) => void;
 }
 
 function Slider(props: Props) {
+  const [isEditKeyboard, setKeyboadMode] = useState(false);
+  const [editValue, setEditValue] = useState(props.value);
 
   return (
     <div className='slider-container'>
-      <h3><img src={props.imageName}></img>{props.title}: {Number(props.value).toFixed(2)} {props.unit}</h3>
+      <h3>
+        <img src={props.imageName}></img>{props.title}: {isEditKeyboard ?
+          (<input type='number' value={editValue} min={props.min} max={props.max} onChange={(e) => {
+            setEditValue(Number(e.target.value));
+          }} />) : Number(props.value).toFixed(2)} {props.unit}
+        <CircleButton
+          border='none'
+          color='#fff'
+          backgroundColor='#707070'
+          onClick={() => {
+            if (isEditKeyboard) {
+              props.onChange(editValue);
+            }
+            setKeyboadMode(!isEditKeyboard);
+          }}
+        >
+          <img src={isEditKeyboard ? '../static/done-icon.svg' : '../static/edit-icon.svg'}
+            style={{ width: isEditKeyboard ? '1em' : '0.5em', verticalAlign: 'middle' }} />
+        </CircleButton>
+      </h3>
       <input
         type="range"
         min={props.min}
@@ -27,7 +49,8 @@ function Slider(props: Props) {
         value={props.value}
         step={props.step}
         onChange={(event) => {
-          props.onChange(event.target.value)
+          props.onChange(Number(event.target.value))
+          setEditValue(Number(event.target.value))
         }}
         className="slider"
       />
