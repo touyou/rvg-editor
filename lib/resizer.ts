@@ -135,11 +135,20 @@ export class Resizer {
         horizontalSeamMap: seamCarver.consistentHorizontalMap,
       }
     } else {
+      const resizer = new RbfResizer(seamCarver.image, editPoints, seamCarver.consistentHorizontalMap, seamCarver.consistentVerticalMap);
       metainfo = {
         linear: false,
         keys: editPoints.map(
           (value, _, __) => { return value.convertObject(); }
         ),
+        weights: {
+          originX: resizer.xWeight.toArray(),
+          originY: resizer.yWeight.toArray(),
+          hScale: resizer.hScaleWeight.toArray(),
+          vScale: resizer.vScaleWeight.toArray(),
+          contentWidth: resizer.widthWeight.toArray(),
+          contentHeight: resizer.heightWeight.toArray(),
+        },
         verticalSeamMap: seamCarver.consistentVerticalMap,
         horizontalSeamMap: seamCarver.consistentHorizontalMap,
       }
