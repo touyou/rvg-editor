@@ -26,6 +26,11 @@ function Preview(props: Props) {
   const canvasRefContainer = useRef();
   const [canvasWidth, setCanvasWidth] = useState(props.width);
   const [canvasHeight, setCanvasHeight] = useState(props.height);
+  useEffect(() => {
+    console.log('update canvas');
+    setTimeout(updateImage, 10);
+  }, [canvasHeight, canvasWidth])
+
   const [isSizeList, setSizeList] = useState(false);
 
   useEffect(() => {
@@ -38,6 +43,7 @@ function Preview(props: Props) {
   }, [props.width, props.height]);
 
   function updateImage() {
+    console.log('update: ' + canvasWidth + ', ' + canvasHeight);
     if (props.image != null && props.resizer != null) {
       if (props.resizer.constructor === MultiResizer) {
         let resizer: MultiResizer = props.resizer as MultiResizer;
@@ -123,7 +129,7 @@ function Preview(props: Props) {
     <ListButton key='original-button' onClick={() => {
       setCanvasHeight(props.image.height);
       setCanvasWidth(props.image.width);
-      setTimeout(updateImage, 10);
+      // setTimeout(updateImage, 1000);
     }} value='Original'></ListButton>
   ];
   Object.entries(templates).forEach((value) => {
@@ -133,7 +139,7 @@ function Preview(props: Props) {
       <ListButton key={key} onClick={() => {
         setCanvasWidth(device.width);
         setCanvasHeight(device.height);
-        setTimeout(updateImage, 10);
+        // setTimeout(updateImage, 10);
       }} value={device.name}></ListButton>
     );
   });
@@ -209,7 +215,7 @@ function Preview(props: Props) {
 
           setCanvasWidth(canvasWidth + delta.width);
           setCanvasHeight(canvasHeight + delta.height);
-          updateImage();
+          // updateImage();
         }}
       >
         <canvas
