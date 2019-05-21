@@ -218,8 +218,8 @@ class Main extends React.Component<{}, IMainState> {
             editPoints={this.state.pointList}
             selectedIndex={this.state.selectIndex}
             isLinear={this.isLinear}
-            xKeys={this.isLinear ? this.state.xKeys : null}
-            yKeys={this.isLinear ? this.state.yKeys : null}
+            xKeys={this.state.xKeys}
+            yKeys={this.state.yKeys}
           ></Navigator>
         </div>
         <div className='sidepanel'>
