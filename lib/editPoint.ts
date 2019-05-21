@@ -11,14 +11,14 @@ export default class EditPoint {
 
   isShadow: boolean;
 
-  constructor(canvasWidth: number, canvasHeight: number, x: number, y: number, contentWidth: number, contentHeight: number) {
+  constructor(canvasWidth: number, canvasHeight: number, x: number, y: number, contentWidth: number, contentHeight: number, hScale: number = 1.0, vScale: number = 1.0) {
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
 
     this.x = x;
     this.y = y;
-    this.hScale = 1.0;
-    this.vScale = 1.0;
+    this.hScale = hScale;
+    this.vScale = vScale;
     this.contentWidth = contentWidth;
     this.contentHeight = contentHeight;
     this.isShadow = false;

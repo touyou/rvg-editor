@@ -5,7 +5,7 @@ import { RbfResizer } from './multi_resizer/newResizer';
 import * as JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
-type Key = {
+export type Key = {
   key: number;
   origin: number;
   scale: number;

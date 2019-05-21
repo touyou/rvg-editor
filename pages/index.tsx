@@ -9,7 +9,7 @@ import SeamCarver from '../lib/seamCarver';
 import { templates, Device } from '../lib/templateSize';
 import ListButton from '../components/atom/listButton';
 import TextField from '../components/atom/textField';
-import { Resizer } from '../lib/resizer';
+import { Resizer, Key } from '../lib/resizer';
 import Navigator from '../components/navigator';
 
 interface IMainState {
@@ -22,14 +22,18 @@ interface IMainState {
   inputWidth: number,
   inputHeight: number,
   previewFullScreen: boolean,
-  resizeMode: number;
-  imageName: string;
+  resizeMode: number,
+  imageName: string,
+  xKeys: Key[],
+  yKeys: Key[],
 }
 
 class Main extends React.Component<{}, IMainState> {
   public state: IMainState = {
     pointList: [
     ],
+    xKeys: [],
+    yKeys: [],
     selectIndex: 0,
     viewScale: 1.0,
     isBottomAppear: false,
@@ -63,7 +67,10 @@ class Main extends React.Component<{}, IMainState> {
       tmpCtx.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
       this._seamCarver = new SeamCarver(tmpCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight));
       this.setState({
-        image: tmpCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight), pointList: [new EditPoint(image.naturalWidth, image.naturalHeight, 0, 0, image.naturalWidth, image.naturalHeight)],
+        image: tmpCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight),
+        pointList: [new EditPoint(image.naturalWidth, image.naturalHeight, 0, 0, image.naturalWidth, image.naturalHeight)],
+        xKeys: [{ key: image.naturalWidth, origin: 0, scale: 1.0, contentLength: image.naturalWidth }],
+        yKeys: [{ key: image.naturalHeight, origin: 0, scale: 1.0, contentLength: image.naturalHeight }],
         inputWidth: image.naturalWidth,
         inputHeight: image.naturalHeight,
       });
@@ -166,11 +173,39 @@ class Main extends React.Component<{}, IMainState> {
             }}
             onChangeOrigin={(value) => {
               const pointCopy = this.state.pointList.slice();
-              const newPoint = pointCopy[this.state.selectIndex].clone();
-              newPoint.x = value.data[0];
-              newPoint.y = value.data[1];
-              pointCopy[this.state.selectIndex] = newPoint;
-              this.setState({ pointList: pointCopy });
+              const newValue = pointCopy[this.state.selectIndex].clone();
+              newValue.x = value.data[0];
+              newValue.y = value.data[1];
+              pointCopy[this.state.selectIndex] = newValue;
+              const xKeyCopy = this.state.xKeys.slice();
+              const yKeyCopy = this.state.yKeys.slice();
+              for (let i = 0; i < xKeyCopy.length; i++) {
+                if (newValue.canvasWidth == xKeyCopy[i].key) {
+                  xKeyCopy[i].scale = newValue.hScale;
+                  if (this.isLinear) {
+                    for (let j = 0; j < pointCopy.length; j++) {
+                      if (newValue.canvasWidth == pointCopy[j].canvasWidth) {
+                        pointCopy[j].x = newValue.x;
+                      }
+                    }
+                  }
+                  break;
+                }
+              }
+              for (let i = 0; i < yKeyCopy.length; i++) {
+                if (newValue.canvasHeight == yKeyCopy[i].key) {
+                  yKeyCopy[i].origin = newValue.y;
+                  if (this.isLinear) {
+                    for (let j = 0; j < pointCopy.length; j++) {
+                      if (newValue.canvasHeight == pointCopy[j].canvasHeight) {
+                        pointCopy[j].y = newValue.y;
+                      }
+                    }
+                  }
+                  break;
+                }
+              }
+              this.setState({ pointList: pointCopy, xKeys: xKeyCopy, yKeys: yKeyCopy });
             }}
           />
           <div className='bottompanel'>
@@ -183,6 +218,8 @@ class Main extends React.Component<{}, IMainState> {
             editPoints={this.state.pointList}
             selectedIndex={this.state.selectIndex}
             isLinear={this.isLinear}
+            xKeys={this.isLinear ? this.state.xKeys : null}
+            yKeys={this.isLinear ? this.state.yKeys : null}
           ></Navigator>
         </div>
         <div className='sidepanel'>
@@ -210,9 +247,45 @@ class Main extends React.Component<{}, IMainState> {
             }}
             onChange={(value) => {
               const pointCopy = this.state.pointList.slice();
-              pointCopy[this.state.selectIndex] = value;
+              const xKeyCopy = this.state.xKeys.slice();
+              const yKeyCopy = this.state.yKeys.slice();
+              const newValue = value as EditPoint;
+              pointCopy[this.state.selectIndex] = newValue;
+              for (let i = 0; i < xKeyCopy.length; i++) {
+                if (newValue.canvasWidth == xKeyCopy[i].key) {
+                  xKeyCopy[i].contentLength = newValue.contentWidth;
+                  xKeyCopy[i].scale = newValue.hScale;
+                  if (this.isLinear) {
+                    for (let j = 0; j < pointCopy.length; j++) {
+                      if (newValue.canvasWidth == pointCopy[j].canvasWidth) {
+                        pointCopy[j].contentWidth = newValue.contentWidth;
+                        pointCopy[j].hScale = newValue.hScale;
+                      }
+                    }
+                  }
+                  break;
+                }
+              }
+              for (let i = 0; i < yKeyCopy.length; i++) {
+                if (newValue.canvasHeight == yKeyCopy[i].key) {
+                  yKeyCopy[i].contentLength = newValue.contentHeight;
+                  yKeyCopy[i].scale = newValue.vScale;
+                  if (this.isLinear) {
+                    for (let j = 0; j < pointCopy.length; j++) {
+                      if (newValue.canvasHeight == pointCopy[j].canvasHeight) {
+                        pointCopy[j].contentHeight = newValue.contentHeight;
+                        pointCopy[j].vScale = newValue.vScale;
+                      }
+                    }
+                  }
+                  break;
+                }
+              }
+
               this.setState({
-                pointList: pointCopy
+                pointList: pointCopy,
+                yKeys: yKeyCopy,
+                xKeys: xKeyCopy,
               });
             }}
             onMethodChange={(value) => {
@@ -265,15 +338,65 @@ class Main extends React.Component<{}, IMainState> {
               });
             }} value='Switch'></ListButton>
             <ListButton key='add-button' onClick={() => {
-              const newPoint = new EditPoint(this.state.inputWidth, this.state.inputHeight, 0, 0, this.state.image.width, this.state.image.height);
-              const pointCopy = this.state.pointList.slice();
-              pointCopy.push(newPoint);
-              this.setState({
-                pointList: pointCopy,
-                isModalOpen: false,
-                inputWidth: this.state.image.width,
-                inputHeight: this.state.image.height,
-              });
+              let xKey: Key | null = null;
+              let yKey: Key | null = null;
+              for (const x of this.state.xKeys) {
+                if (x.key == this.state.inputWidth) xKey = x;
+              }
+              for (const y of this.state.yKeys) {
+                if (y.key == this.state.inputHeight) yKey = y;
+              }
+              if (this.isLinear) {
+                const xKeyCopy = this.state.xKeys.slice();
+                const yKeyCopy = this.state.yKeys.slice();
+                if (xKey === null) {
+                  xKey = {
+                    key: this.state.inputWidth, origin: 0, scale: 1.0, contentLength: this.state.image.width,
+                  };
+                  xKeyCopy.push(xKey);
+                }
+                if (yKey == null) {
+                  yKey = {
+                    key: this.state.inputHeight, origin: 0, scale: 1.0, contentLength: this.state.image.height,
+                  };
+                  yKeyCopy.push(yKey);
+                }
+                const newPoint = new EditPoint(this.state.inputWidth, this.state.inputHeight, xKey.origin, yKey.origin, xKey.contentLength, yKey.contentLength, xKey.scale, yKey.scale);
+                const pointCopy = this.state.pointList.slice();
+                pointCopy.push(newPoint);
+                this.setState({
+                  pointList: pointCopy,
+                  isModalOpen: false,
+                  inputWidth: this.state.image.width,
+                  inputHeight: this.state.image.height,
+                  xKeys: xKeyCopy,
+                  yKeys: yKeyCopy,
+                });
+              } else {
+                const newPoint = new EditPoint(this.state.inputWidth, this.state.inputHeight, 0, 0, this.state.image.width, this.state.image.height);
+                const xKeyCopy = this.state.xKeys.slice();
+                const yKeyCopy = this.state.yKeys.slice();
+                if (xKey === null) {
+                  xKeyCopy.push({
+                    key: this.state.inputWidth, origin: 0, scale: 1.0, contentLength: this.state.image.width,
+                  });
+                }
+                if (yKey == null) {
+                  yKeyCopy.push({
+                    key: this.state.inputHeight, origin: 0, scale: 1.0, contentLength: this.state.image.height,
+                  })
+                }
+                const pointCopy = this.state.pointList.slice();
+                pointCopy.push(newPoint);
+                this.setState({
+                  pointList: pointCopy,
+                  isModalOpen: false,
+                  inputWidth: this.state.image.width,
+                  inputHeight: this.state.image.height,
+                  xKeys: xKeyCopy,
+                  yKeys: yKeyCopy,
+                });
+              }
             }} value='Add'></ListButton>
           </div>
         </div>

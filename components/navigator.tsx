@@ -4,6 +4,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import EditPoint from '../lib/editPoint';
 import ImageCanvas from './atom/imageCanvas';
+import { Key } from 'lib/resizer';
 
 type Props = {
   image: ImageData;
@@ -12,13 +13,8 @@ type Props = {
   editPoints: EditPoint[];
   selectedIndex: number;
   isLinear: boolean;
-};
-
-type Key = {
-  key: number;
-  origin: number;
-  scale: number;
-  contentLength: number;
+  xKeys?: Key[],
+  yKeys?: Key[],
 };
 
 function getCanvasPos(length: number, minP: number, scale: number) {
@@ -62,23 +58,9 @@ function drawCoordinate(canvasCtx: CanvasRenderingContext2D, width: number, heig
   canvasCtx.restore();
 }
 
-function makeShadowPoints(editPoints: EditPoint[]) {
-  let xKey: Key[] = [];
-  let yKey: Key[] = [];
+function makeShadowPoints(editPoints: EditPoint[], xKey: Key[], yKey: Key[]) {
   let pointSet = new Set();
   for (const editPoint of editPoints) {
-    xKey.push({
-      key: editPoint.canvasWidth,
-      origin: editPoint.x,
-      scale: editPoint.hScale,
-      contentLength: editPoint.contentWidth,
-    });
-    yKey.push({
-      key: editPoint.canvasHeight,
-      origin: editPoint.y,
-      scale: editPoint.vScale,
-      contentLength: editPoint.contentHeight,
-    });
     pointSet.add(editPoint.canvasWidth + ',' + editPoint.canvasHeight);
   }
   xKey.sort((a, b) => {
@@ -158,7 +140,7 @@ function Navigator(props: Props) {
       canvasCtx.restore();
     }
     if (props.isLinear) {
-      let shadowPoints = makeShadowPoints(props.editPoints);
+      let shadowPoints = makeShadowPoints(props.editPoints, props.xKeys, props.yKeys);
       for (let i = 0; i < shadowPoints.length; i++) {
         let x = getCanvasPos(shadowPoints[i].canvasWidth, xmin, scaleX);
         let y = getCanvasPos(shadowPoints[i].canvasHeight, ymin, scaleY);
@@ -176,24 +158,8 @@ function Navigator(props: Props) {
 
   function generateCanvasPreview() {
     const margin = 16;
-    let xKey: Key[] = [];
-    let yKey: Key[] = [];
-
-    for (let editPoint of props.editPoints) {
-
-      xKey.push({
-        key: editPoint.canvasWidth,
-        origin: editPoint.x,
-        scale: editPoint.hScale,
-        contentLength: editPoint.contentWidth,
-      });
-      yKey.push({
-        key: editPoint.canvasHeight,
-        origin: editPoint.y,
-        scale: editPoint.vScale,
-        contentLength: editPoint.contentHeight,
-      });
-    }
+    let xKey: Key[] = props.xKeys;
+    let yKey: Key[] = props.yKeys;
 
     let canvasList = [];
     let originY = margin;
