@@ -17,35 +17,60 @@ type Props = {
   onAddPoint: () => void;
   onLoadImage: (value: string, name: string) => void;
   onSaveFile: () => void;
+  onLoadFile: (value) => void;
 }
 
 function EditPanel(props: Props) {
   const [isLocked, setIsLocked] = useState(false);
 
   const loadButton = (
-    <CircleButton
-      border='none'
-      backgroundColor='#eee'
-      color='#fff'
-      onClick={() => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/x-png,image/jpeg'
-        input.onchange = (event: any) => {
-          const files = event.target.files
-          if (files.length == 0) {
-            return;
+    <>
+      <CircleButton
+        border='none'
+        backgroundColor='#eee'
+        color='#fff'
+        onClick={() => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/x-png,image/jpeg'
+          input.onchange = (event: any) => {
+            const files = event.target.files
+            if (files.length == 0) {
+              return;
+            }
+            props.onLoadImage(URL.createObjectURL(files[0]), files[0].name);
           }
-          props.onLoadImage(URL.createObjectURL(files[0]), files[0].name);
-        }
-        input.click();
-      }}
-    >
-      <img
-        src='../static/file-icon.svg'
-        style={{ width: '1em', verticalAlign: 'middle' }}
-      />
-    </CircleButton>
+          input.click();
+        }}
+      >
+        <img
+          src='../static/file-icon.svg'
+          style={{ width: '1em', verticalAlign: 'middle' }}
+        />
+      </CircleButton>
+      <CircleButton
+        border='none'
+        backgroundColor='#253158'
+        color='#fff'
+        onClick={() => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.onchange = (event: any) => {
+            const files = event.target.files
+            if (files.length == 0) {
+              return;
+            }
+            props.onLoadFile(files[0]);
+          }
+          input.click();
+        }}
+      >
+        <img
+          src='../static/file-icon.svg'
+          style={{ width: '1em', verticalAlign: 'middle' }}
+        />
+      </CircleButton>
+    </>
   );
 
   if (props.point == null) {

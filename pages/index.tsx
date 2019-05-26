@@ -11,6 +11,8 @@ import ListButton from '../components/atom/listButton';
 import TextField from '../components/atom/textField';
 import { Resizer, Key } from '../lib/resizer';
 import Navigator from '../components/navigator';
+// import * as zip from '../lib/multi_resizer/zip';
+import * as JSZip from 'jszip';
 
 interface IMainState {
   pointList?: Array<EditPoint>,
@@ -56,7 +58,7 @@ class Main extends React.Component<{}, IMainState> {
     return this.state.resizeMode == 0;
   }
 
-  loadImage(url) {
+  loadImage(url, metainfo: Object | null = null) {
     const tmpCanvas = document.createElement('canvas');
     const tmpCtx = tmpCanvas.getContext('2d');
     let image = new Image();
@@ -75,7 +77,102 @@ class Main extends React.Component<{}, IMainState> {
         inputHeight: image.naturalHeight,
       });
     }
+    if (metainfo === null) {
+      image.onload = () => {
+        tmpCanvas.width = image.naturalWidth;
+        tmpCanvas.height = image.naturalHeight;
+        tmpCtx.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
+        this._seamCarver = new SeamCarver(tmpCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight));
+        this.setState({
+          image: tmpCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight),
+          pointList: [new EditPoint(image.naturalWidth, image.naturalHeight, 0, 0, image.naturalWidth, image.naturalHeight)],
+          xKeys: [{ key: image.naturalWidth, origin: 0, scale: 1.0, contentLength: image.naturalWidth }],
+          yKeys: [{ key: image.naturalHeight, origin: 0, scale: 1.0, contentLength: image.naturalHeight }],
+          inputWidth: image.naturalWidth,
+          inputHeight: image.naturalHeight,
+        });
+      }
+    } else {
+      let linear: boolean = metainfo['linear'];
+      let pointList: EditPoint[] = [];
+      let xKeys: Key[] = [];
+      let yKeys: Key[] = [];
+      if (linear) {
+        let originXKeys: number[][] = metainfo['keys']['originXKeys'];
+        let originYKeys: number[][] = metainfo['keys']['originYKeys'];
+        let widthKeys: number[][] = metainfo['keys']['widthKeys'];
+        let heightKeys: number[][] = metainfo['keys']['heightKeys'];
+        let scaleXKeys: number[][] = metainfo['keys']['scaleXKeys'];
+        let scaleYKeys: number[][] = metainfo['keys']['scaleYKeys'];
+        for (let i = 0; i < originXKeys.length; i++) {
+          xKeys.push({
+            key: originXKeys[i][0],
+            origin: originXKeys[i][1],
+            scale: scaleXKeys[i][1],
+            contentLength: widthKeys[i][1],
+          });
+        }
+        for (let i = 0; i < originYKeys.length; i++) {
+          yKeys.push({
+            key: originYKeys[i][0],
+            origin: originYKeys[i][1],
+            scale: scaleYKeys[i][1],
+            contentLength: heightKeys[i][1],
+          });
+        }
+        for (const xKey of xKeys) {
+          for (const yKey of yKeys) {
+            pointList.push(new EditPoint(xKey.key, yKey.key, xKey.origin, yKey.origin, xKey.contentLength, yKey.contentLength, xKey.scale, yKey.scale));
+          }
+        }
+      } else {
+        let keys = metainfo['keys'];
+        for (const key of keys) {
+          const editPoint = new EditPoint(key['width'], key['height'], key['originX'], key['originY'], key['contentWidth'], key['contentHeight'], key['hScale'], key['vScale']);
+          pointList.push(editPoint);
+          xKeys.push({
+            key: editPoint.canvasWidth,
+            origin: editPoint.x,
+            scale: editPoint.hScale,
+            contentLength: editPoint.contentWidth,
+          });
+          yKeys.push({
+            key: editPoint.canvasHeight,
+            origin: editPoint.y,
+            scale: editPoint.vScale,
+            contentLength: editPoint.contentHeight,
+          });
+        }
+      }
+      image.onload = () => {
+        tmpCanvas.width = image.naturalWidth;
+        tmpCanvas.height = image.naturalHeight;
+        tmpCtx.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
+        this._seamCarver = new SeamCarver(tmpCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight));
+        this.setState({
+          image: tmpCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight),
+          pointList: pointList,
+          xKeys: xKeys,
+          yKeys: yKeys,
+          inputWidth: image.naturalWidth,
+          inputHeight: image.naturalHeight,
+          resizeMode: linear ? 0 : 1,
+        });
+      }
+    }
     this._resizer = new Resizer();
+  }
+
+  loadFile(file) {
+    const zip = new JSZip();
+    JSZip.loadAsync(file).then((zip) => {
+      zip.file('metainfo.json').async('string').then((text) => {
+        const metainfo = JSON.parse(text);
+        zip.file('image.png').async('blob').then((blob) => {
+          this.loadImage(URL.createObjectURL(blob), metainfo);
+        })
+      });
+    })
   }
 
   render() {
@@ -302,6 +399,9 @@ class Main extends React.Component<{}, IMainState> {
             }}
             onSaveFile={() => {
               this._resizer.saveFiles(this.isLinear, this.state.pointList, this._seamCarver, this.state.imageName);
+            }}
+            onLoadFile={(value) => {
+              this.loadFile(value);
             }}
           ></EditPanel>
         </div>
