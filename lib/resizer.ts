@@ -71,7 +71,12 @@ export class Resizer {
         horizontalSeamMap: seamCarver.consistentHorizontalMap,
       });
     } else {
-      return new RbfResizer(seamCarver.image, editPoints, seamCarver.consistentHorizontalMap, seamCarver.consistentVerticalMap);
+      return new RbfResizer({
+        image: seamCarver.image,
+        keyPoints: editPoints,
+        horizontalSeamMap: seamCarver.consistentHorizontalMap,
+        verticalSeamMap: seamCarver.consistentVerticalMap
+      });
     }
   }
 
@@ -135,7 +140,12 @@ export class Resizer {
         horizontalSeamMap: seamCarver.consistentHorizontalMap,
       }
     } else {
-      const resizer = new RbfResizer(seamCarver.image, editPoints, seamCarver.consistentHorizontalMap, seamCarver.consistentVerticalMap);
+      const resizer = new RbfResizer({
+        image: seamCarver.image,
+        keyPoints: editPoints,
+        horizontalSeamMap: seamCarver.consistentHorizontalMap,
+        verticalSeamMap: seamCarver.consistentVerticalMap
+      });
       metainfo = {
         linear: false,
         keys: editPoints.map(
