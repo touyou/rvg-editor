@@ -1,0 +1,94 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8" class="next-head"/><title class="jsx-2463915646 next-head">RVG Editor</title><meta name="viewport" content="initial-scale=1.0, width=device-width" class="jsx-2463915646 next-head"/><style class="next-head">
+              @font-face {
+                font-family: &#x27;Futura&#x27;;
+                src: url(&#x27;../static/Futura-Lig.ttf&#x27;) format(&#x27;truetype&#x27;);
+                font-weight: 300;
+              }
+              @font-face {
+                font-family: &#x27;Futura&#x27;;
+                src: url(&#x27;../static/Futura-Boo.ttf&#x27;) format(&#x27;truetype&#x27;);
+                font-weight: 400;
+              }
+              @font-face {
+                font-family: &#x27;Futura&#x27;;
+                src: url(&#x27;../static/Futura-Med.ttf&#x27;) format(&#x27;truetype&#x27;);
+                font-weight: 500;
+              }
+              @font-face {
+                font-family: &#x27;Futura&#x27;;
+                src: url(&#x27;../static/Futura-Dem.ttf&#x27;) format(&#x27;truetype&#x27;);
+                font-weight: 600;
+              }
+              @font-face {
+                font-family: &#x27;Futura&#x27;;
+                src: url(&#x27;../static/Futura-Bol.ttf&#x27;) format(&#x27;truetype&#x27;);
+                font-weight: 700;
+              }
+              @font-face {
+                font-family: &#x27;Futura&#x27;;
+                src: url(&#x27;../static/Futura-ExtBol.ttf&#x27;) format(&#x27;truetype&#x27;);
+                font-weight: 800;
+              }
+            </style><link rel="preload" href="/rvg-editor/_next/static/hS8mnuCdbYFrNwsSaLIFp/pages/index.js" as="script"/><link rel="preload" href="/rvg-editor/_next/static/hS8mnuCdbYFrNwsSaLIFp/pages/_app.js" as="script"/><link rel="preload" href="/rvg-editor/_next/static/hS8mnuCdbYFrNwsSaLIFp/pages/_error.js" as="script"/><link rel="preload" href="/rvg-editor/_next/static/runtime/webpack-f4542de9ce6104e90191.js" as="script"/><link rel="preload" href="/rvg-editor/_next/static/chunks/commons.7db948c76ff13db1d9fd.js" as="script"/><link rel="preload" href="/rvg-editor/_next/static/runtime/main-acee57dfed7bef358a2c.js" as="script"/><style id="__jsx-160374886">.circular-button.jsx-160374886{display:inline-block;width:42px;height:42px;overflow:hidden;border-radius:50%;margin:8px 8px;padding-bottom:6px;font-size:24px;-webkit-text-decoration:none;text-decoration:none;vertical-align:middle;text-align:center;cursor:pointer;white-space:nowrap;outline:none;border:none;background-color:#707070;color:#fff;-webkit-transition:.2s;transition:.2s;}
+.circular-button.jsx-160374886:hover{opacity:0.2;}</style><style id="__jsx-4031247406">.circular-button.jsx-4031247406{display:inline-block;width:42px;height:42px;overflow:hidden;border-radius:50%;margin:8px 8px;padding-bottom:6px;font-size:24px;-webkit-text-decoration:none;text-decoration:none;vertical-align:middle;text-align:center;cursor:pointer;white-space:nowrap;outline:none;border:1px #333 solid;background-color:#fff;color:#111;-webkit-transition:.2s;transition:.2s;}
+.circular-button.jsx-4031247406:hover{opacity:0.2;}</style><style id="__jsx-1121725674">.canvas.jsx-1121725674{position:absolute;display:block;top:0;right:0;left:0;bottom:0;margin:auto;}
+canvas.jsx-1121725674{background-color:#fff;}
+.list-canvas.jsx-1121725674{display:inline-block;margin:8px;}
+.selected.jsx-1121725674{border:4px #FFD380 solid;}</style><style id="__jsx-3346613416">.editor.jsx-3346613416{position:relative;width:100%;height:85%;background-color:#eeeeee;overflow:hidden;}
+.scale-editor.jsx-3346613416{position:absolute;top:8px;left:8px;z-index:1;}
+span.jsx-3346613416{font-family:'Futura',sans-serif;font-weight:300;font-size:16px;}</style><style id="__jsx-2191905252">.circular-button.jsx-2191905252{display:inline-block;width:42px;height:42px;overflow:hidden;border-radius:50%;margin:8px 8px;padding-bottom:6px;font-size:24px;-webkit-text-decoration:none;text-decoration:none;vertical-align:middle;text-align:center;cursor:pointer;white-space:nowrap;outline:none;border:none;background-color:#eee;color:#fff;-webkit-transition:.2s;transition:.2s;}
+.circular-button.jsx-2191905252:hover{opacity:0.2;}</style><style id="__jsx-1259156745">.circular-button.jsx-1259156745{display:inline-block;width:42px;height:42px;overflow:hidden;border-radius:50%;margin:8px 8px;padding-bottom:6px;font-size:24px;-webkit-text-decoration:none;text-decoration:none;vertical-align:middle;text-align:center;cursor:pointer;white-space:nowrap;outline:none;border:none;background-color:#253158;color:#fff;-webkit-transition:.2s;transition:.2s;}
+.circular-button.jsx-1259156745:hover{opacity:0.2;}</style><style id="__jsx-4146960694">.editpanel.jsx-4146960694{-webkit-flex:1 1 auto;-ms-flex:1 1 auto;flex:1 1 auto;padding:8px;background-color:#707070;}
+.edit-buttons.jsx-4146960694 img.jsx-4146960694{width:1em;vertical-align:middle;}</style><style id="__jsx-524986635">button.jsx-524986635{display:inline-block;width:90%;height:45px;-webkit-text-decoration:none;text-decoration:none;background-color:#f0f0f0;color:#707070;border:none;margin:8px;-webkit-transition:.4s;transition:.4s;font-family:"Futura",sans-serif;font-weight:500;font-size:0.8rem;cursor:pointer;outline:none;}
+button.jsx-524986635:hover{background-color:#707070;color:white;}</style><style id="__jsx-2333147491">.textfield.jsx-2333147491{display:block;}
+p.jsx-2333147491{display:inline-block;width:3em;margin-right:8px;font-family:'Futura',sans-serif;font-weight:500;font-size:1rem;}
+input[type=text].jsx-2333147491{display:inline-block;border:2px solid #f0f0f0;border-radius:4px;padding:4px;outline:none;-webkit-transition:0.3s;transition:0.3s;}
+input[type=text].jsx-2333147491:focus{border-color:#707070;}</style><style id="__jsx-1704628089">.root.jsx-2463915646{margin:0 auto;padding:0;height:100%;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:row;-ms-flex-direction:row;flex-direction:row;}
+.main.jsx-2463915646{display:block;position:relative;-webkit-flex:8 1 auto;-ms-flex:8 1 auto;flex:8 1 auto;clear:both;}
+.modal.jsx-2463915646{position:absolute;display:block;top:0;right:0;left:0;bottom:0;margin:auto;background-color:#ffffff;width:50%;height:50%;box-shadow:0 0 3px 5px rgba(0,0,0,0.1);}
+.close.jsx-2463915646{display:none;}
+.device-list.jsx-2463915646{display:inline-block;width:40%;height:100%;overflow-y:scroll;overflow-x:hidden;float:left;}
+.input-area.jsx-2463915646{display:inline-block;width:54%;height:90%;float:right;padding:8px;}
+.sidepanel.jsx-2463915646{-webkit-flex:1 1 auto;-ms-flex:1 1 auto;flex:1 1 auto;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;clear:both;border-left:4px solid #555;}
+.editpanel.jsx-2463915646{-webkit-flex:0 1 auto;-ms-flex:0 1 auto;flex:0 1 auto;clear:both;}
+.bottompanel.jsx-2463915646{position:absolute;overflow-x:scroll;bottom:0;left:0;width:100%;height:180px;white-space:nowrap;background-color:#eee;vertical-align:middle;clear:both;}
+.circular-button.jsx-2463915646{display:inline-block;width:24px;height:24px;overflow:hidden;margin:8px 8px;padding-bottom:4px;font-size:15px;-webkit-text-decoration:none;text-decoration:none;vertical-align:middle;text-align:center;cursor:pointer;white-space:nowrap;float:right;outline:none;border-radius:50%;border:none;background-color:#fff;color:#707070;-webkit-transition:0.3s;transition:0.3s;}
+.circular-button.jsx-2463915646:hover{background-color:#707070;color:#fff;}</style><style id="__jsx-1859950798">#__next{height:100vh;}
+body{margin:0 auto;height:100vh;}
+html{height:100vh;}</style></head><body><div id="__next"><div class="jsx-2463915646 root" data-reactroot=""><div class="jsx-2463915646 main"><div class="jsx-3346613416 editor"><div class="jsx-3346613416 scale-editor"><button class="jsx-160374886 circular-button">-</button><span class="jsx-3346613416">100<!-- --> %</span><button class="jsx-4031247406 circular-button">+</button></div><div class="jsx-1121725674 "><canvas width="0" height="0" class="jsx-1121725674 canvas"></canvas></div></div><div class="jsx-2463915646 bottompanel"></div><div class="navigator"><canvas class="nav-canvas" width="200" height="200"></canvas><style>
+    .nav-canvas {
+      position: absolute;
+      display: block;
+      top: 0;
+      left: 0;
+      margin: auto;
+    }
+    .navigator {
+      position: absolute;
+      top: 0;
+      right: 0;
+      margin: 16px;
+      border-radius: 5px;
+      border: 2px #707070 solid;
+      background-color: #fff;
+      width: 200px;
+      height: 200px;
+      cursor: zoom-in;
+    }</style></div></div><div class="jsx-2463915646 sidepanel"><div class="preview"><button class="jsx-160374886 circular-button"><img src="../static/scale-plus-icon.svg" style="width:1em;vertical-align:middle"/></button><div style="position:relative;user-select:auto;-moz-user-select:auto;-webkit-user-select:auto;-ms-user-select:auto;margin:auto;width:0px;height:0px;box-sizing:border-box"><canvas class="canvas" width="0" height="0"></canvas><span><div style="position:absolute;user-select:none;-ms-user-select:none;width:100%;height:10px;top:-5px;left:0px;cursor:row-resize"></div><div style="position:absolute;user-select:none;-ms-user-select:none;width:10px;height:100%;top:0px;right:-5px;cursor:col-resize"></div><div style="position:absolute;user-select:none;-ms-user-select:none;width:100%;height:10px;bottom:-5px;left:0px;cursor:row-resize"></div><div style="position:absolute;user-select:none;-ms-user-select:none;width:10px;height:100%;top:0px;left:-5px;cursor:col-resize"></div><div style="position:absolute;user-select:none;-ms-user-select:none;width:20px;height:20px;right:-10px;top:-10px;cursor:ne-resize"></div><div style="position:absolute;user-select:none;-ms-user-select:none;width:20px;height:20px;right:-10px;bottom:-10px;cursor:se-resize"></div><div style="position:absolute;user-select:none;-ms-user-select:none;width:20px;height:20px;left:-10px;bottom:-10px;cursor:sw-resize"></div><div style="position:absolute;user-select:none;-ms-user-select:none;width:20px;height:20px;left:-10px;top:-10px;cursor:nw-resize"></div></span></div><style>
+    .canvas {
+      position: absolute;
+      display: block;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      margin: 8px;
+      background-color: #fff;
+    }
+      .preview {
+        position: relative;
+        overflow: scroll;
+        flex: 1 1 auto;
+        background-color: #eee;
+        transition: .2s;
+      }</style></div><div class="jsx-4146960694 editpanel"><div class="jsx-4146960694 edit-buttons"><button class="jsx-2191905252 circular-button"><img src="../static/file-icon.svg" style="width:1em;vertical-align:middle"/></button><button class="jsx-1259156745 circular-button"><img src="../static/file-icon.svg" style="width:1em;vertical-align:middle"/></button></div></div></div><div class="jsx-2463915646 close"><div class="jsx-2463915646 device-list"><button class="jsx-524986635">Original</button><button class="jsx-524986635">iPhone XR/XS Max</button><button class="jsx-524986635">iPhone X/XS</button><button class="jsx-524986635">iPhone 6/7/8 Plus</button><button class="jsx-524986635">iPhone 6/7/8</button><button class="jsx-524986635">iPhone 5/SE</button><button class="jsx-524986635">iPad</button><button class="jsx-524986635">iPad Pro 10.5inch</button><button class="jsx-524986635">iPad Pro 11inch</button><button class="jsx-524986635">iPad Pro 12.9inch</button><button class="jsx-524986635">Watch 38mm</button><button class="jsx-524986635">Watch 40mm</button><button class="jsx-524986635">Watch 42mm</button><button class="jsx-524986635">Watch 44mm</button><button class="jsx-524986635">Android Mobile</button><button class="jsx-524986635">Android Tablet</button><button class="jsx-524986635">Android Wear</button><button class="jsx-524986635">Surface Pro 3</button><button class="jsx-524986635">Surface Pro 4/5/6</button><button class="jsx-524986635">Web 1280px</button><button class="jsx-524986635">Web 1366px</button><button class="jsx-524986635">Web 1920px</button></div><div class="jsx-2463915646 input-area"><button class="jsx-2463915646 circular-button">×</button><div class="jsx-2333147491 textfield"><p class="jsx-2333147491">width</p><input type="text" placeholder="width" value="0" class="jsx-2333147491"/></div><div class="jsx-2333147491 textfield"><p class="jsx-2333147491">height</p><input type="text" placeholder="height" value="0" class="jsx-2333147491"/></div><button class="jsx-524986635">Switch</button><button class="jsx-524986635">Add</button></div></div></div></div><script>__NEXT_DATA__ = {"props":{"pageProps":{}},"page":"/","query":{},"buildId":"hS8mnuCdbYFrNwsSaLIFp","assetPrefix":"/rvg-editor","nextExport":true};__NEXT_LOADED_PAGES__=[];__NEXT_REGISTER_PAGE=function(r,f){__NEXT_LOADED_PAGES__.push([r, f])}</script><script async="" id="__NEXT_PAGE__/" src="/rvg-editor/_next/static/hS8mnuCdbYFrNwsSaLIFp/pages/index.js"></script><script async="" id="__NEXT_PAGE__/_app" src="/rvg-editor/_next/static/hS8mnuCdbYFrNwsSaLIFp/pages/_app.js"></script><script async="" id="__NEXT_PAGE__/_error" src="/rvg-editor/_next/static/hS8mnuCdbYFrNwsSaLIFp/pages/_error.js"></script><script src="/rvg-editor/_next/static/runtime/webpack-f4542de9ce6104e90191.js" async=""></script><script src="/rvg-editor/_next/static/chunks/commons.7db948c76ff13db1d9fd.js" async=""></script><script src="/rvg-editor/_next/static/runtime/main-acee57dfed7bef358a2c.js" async=""></script></body></html>
